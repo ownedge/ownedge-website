@@ -120,7 +120,7 @@ const heroStyle = computed(() => {
       <defs>
         <filter id="spherical-warp" x="-1%" y="-1%" width="104%" height="104%">
           <!-- Use low frequency turbulence to simulate broad warping/curvature -->
-          <feTurbulence baseFrequency="0.003" numOctaves="1" result="noise" />
+          <feTurbulence baseFrequency="0.0028" numOctaves="1" result="noise" />
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" />
         </filter>
       </defs>

@@ -17,18 +17,43 @@ let charIndex = 0;
 let isDeleting = false;
 let typingTimeout = null;
 let titleTimeout = null;
+const isSubtitleActive = ref(false); // New state to control subtitle start
 
-const typeTitle = (index = 0) => {
-  if (index <= titleFull.length) {
-    titleText.value = titleFull.substring(0, index);
-    titleTimeout = setTimeout(() => typeTitle(index + 1), 150);
-  } else {
-    // Start subtitle typing after title finishes
-    typeWriter();
-  }
-};
+const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+const decodeEffect = () => {
+  let iterations = 0;
+  
+  // Clear any existing timeout just in case
+  clearTimeout(titleTimeout);
+
+  titleTimeout = setInterval(() => {
+    titleText.value = titleFull
+      .split("")
+      .map((letter, index) => {
+        if (index < iterations) {
+          return titleFull[index];
+        }
+        return chars[Math.floor(Math.random() * chars.length)];
+      })
+      .join("");
+
+    if (iterations >= titleFull.length) { 
+      clearInterval(titleTimeout);
+      // Wait a moment for impact before starting subtitles
+      setTimeout(() => {
+        isSubtitleActive.value = true;
+        typeWriter();
+      }, 200);
+    }
+    
+    iterations += 1 / 3; 
+  }, 50);
+}
 
 const typeWriter = () => {
+  if (!isSubtitleActive.value) return; // Guard clause
+
   const currentSubtitle = subtitles[currentSubtitleIndex];
 
   if (isDeleting) {
@@ -58,13 +83,13 @@ const typeWriter = () => {
 };
 
 onMounted(() => {
-  // Start typing title immediately
-  typeTitle();
+  // Start decode effect immediately
+  decodeEffect();
 });
 
 onUnmounted(() => {
   clearTimeout(typingTimeout);
-  clearTimeout(titleTimeout);
+  clearInterval(titleTimeout);
 });
 </script>
 
@@ -73,7 +98,7 @@ onUnmounted(() => {
     <div class="content">
       <h1 class="title">
         <span class="typing-wrapper">
-          {{ titleText }}<span v-if="titleText.length < titleFull.length" class="cursor">█</span>
+          {{ titleText }}
         </span>
       </h1>
       <div class="large-counter" aria-hidden="true">
@@ -81,7 +106,7 @@ onUnmounted(() => {
       </div>
       
       <p class="subtitle">
-        <span class="typing-wrapper">
+        <span class="typing-wrapper" v-if="isSubtitleActive">
           {{ displayedText }}<span class="cursor">█</span>
         </span>
       </p>
