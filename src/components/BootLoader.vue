@@ -4,6 +4,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 const emit = defineEmits(['start']);
 const progress = ref(0);
 const isReady = ref(false);
+const showHint = ref(false); // New ref for immediate hint display
 const loadingText = ref("INITIALIZING SYSTEM...");
 
 const isLaunching = ref(false);
@@ -23,12 +24,14 @@ const triggerLaunch = () => {
 }
 
 const handleKeydown = (e) => {
-  if (isReady.value) {
-      if (e.key === 'Enter') {
-        triggerLaunch();
-      } else if (activeKeys.value.hasOwnProperty(e.key)) {
-        activeKeys.value[e.key] = true;
-      }
+  // Allow arrow keys visual feedback anytime
+  if (activeKeys.value.hasOwnProperty(e.key)) {
+    activeKeys.value[e.key] = true;
+  }
+
+  // Only allow Enter when system is ready
+  if (isReady.value && e.key === 'Enter') {
+    triggerLaunch();
   }
 }
 
@@ -42,6 +45,11 @@ const handleKeyup = (e) => {
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown);
   window.addEventListener('keyup', handleKeyup);
+  
+  // Show hint immediately (will fade in via CSS)
+  setTimeout(() => {
+      showHint.value = true;
+  }, 100);
   
   const steps = [
     { p: 10, t: "LOADING KERNEL..." },
@@ -72,7 +80,8 @@ onMounted(() => {
     }, 20); // Speed of filling
   }
 
-  setTimeout(nextStep, 500);
+  // Delay loading start to let keys appear first
+  setTimeout(nextStep, 1500);
 });
 
 onUnmounted(() => {
@@ -107,7 +116,7 @@ const handleStart = () => {
         </button>
       </div>
       
-      <div class="keyboard-hint" :class="{ 'visible': isReady }">
+      <div class="keyboard-hint" :class="{ 'visible': showHint }">
           <!-- Width/Height ratio adjusted for 3 columns x 2 rows of these big keys -->
           <svg class="keyboard-svg" width="180" height="120" viewBox="0 0 280 180" fill="none" xmlns="http://www.w3.org/2000/svg">
               <defs>
@@ -290,7 +299,7 @@ const handleStart = () => {
     color: #fff;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 1s ease-out 1s; /* Delayed fade in */
+    transition: opacity 1s ease-out; /* Immediate fade in */
     display: flex;
     flex-direction: column;
     align-items: center;

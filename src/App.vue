@@ -103,6 +103,7 @@ onMounted(() => {
   document.addEventListener('mouseenter', hideCursor);
   
   document.addEventListener('mouseover', handleGlobalHover);
+  window.addEventListener('keydown', handleGlobalKeydown);
 })
 
 onUnmounted(() => {
@@ -113,9 +114,28 @@ onUnmounted(() => {
   
   document.removeEventListener('click', hideCursor) // Remove old ref if needed, but handled by handleGlobalClick now
   document.removeEventListener('mouseover', handleGlobalHover);
+  window.removeEventListener('keydown', handleGlobalKeydown);
   
   clearInterval(cursorInterval)
 })
+
+const handleGlobalKeydown = (e) => {
+  if (!isBooted.value) return;
+
+  // Check if we are currently at the top (Hero section)
+  const scrollContainer = document.querySelector('.scroll-content');
+  if (!scrollContainer) return;
+
+  const isAtTop = scrollContainer.scrollTop < window.innerHeight / 2;
+
+  if (isAtTop && (e.key === 'ArrowDown' || e.key === 'Enter')) {
+      // Scroll to next section (Portfolio)
+      const sections = document.querySelectorAll('.page-section');
+      if (sections.length > 1) {
+          sections[1].scrollIntoView({ behavior: 'smooth' });
+      }
+  }
+}
 
 
 

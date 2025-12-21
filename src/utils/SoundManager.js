@@ -200,7 +200,7 @@ class SoundManager {
         this.atmosphereOscillators = [osc1, osc2];
 
         // Fade in smoothly - Lower volume (0.05)
-        this.atmosphereGain.gain.setTargetAtTime(0.01, this.ctx.currentTime, 2);
+        this.atmosphereGain.gain.setTargetAtTime(0.005, this.ctx.currentTime, 2);
     }
     
     stopAtmosphere() {

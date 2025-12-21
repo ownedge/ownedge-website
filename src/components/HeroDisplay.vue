@@ -135,6 +135,11 @@ onUnmounted(() => {
         </span>
       </p>
     </div>
+    
+    <div class="scroll-indicator">
+      <div class="mouse-icon"></div>
+      <div class="arrow-scroll"></div>
+    </div>
   </div>
 </template>
 
@@ -243,4 +248,40 @@ onUnmounted(() => {
   }
 }
 
+.scroll-indicator {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  animation: fadeIn 1s ease-out 4s forwards; /* Delay appearance until after title decode */
+  pointer-events: none;
+}
+
+.scroll-text {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  color: var(--color-accent);
+  text-shadow: 0 0 5px var(--color-accent);
+  opacity: 0.7;
+}
+
+.arrow-scroll {
+  width: 15px;
+  height: 15px;
+  border-right: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(45deg);
+  animation: scrollBounce 2s infinite;
+}
+
+@keyframes scrollBounce {
+  0% { transform: rotate(45deg) translate(0, 0); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: rotate(45deg) translate(10px, 10px); opacity: 0; }
+}
 </style>
