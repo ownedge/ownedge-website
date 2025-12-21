@@ -7,6 +7,12 @@ const isReady = ref(false);
 const loadingText = ref("INITIALIZING SYSTEM...");
 
 const isLaunching = ref(false);
+const activeKeys = ref({
+  ArrowUp: false,
+  ArrowDown: false,
+  ArrowLeft: false,
+  ArrowRight: false
+});
 
 const triggerLaunch = () => {
     if (isLaunching.value) return;
@@ -17,21 +23,29 @@ const triggerLaunch = () => {
 }
 
 const handleKeydown = (e) => {
-  if (isReady.value && e.key === 'Enter') {
-    triggerLaunch();
+  if (isReady.value) {
+      if (e.key === 'Enter') {
+        triggerLaunch();
+      } else if (activeKeys.value.hasOwnProperty(e.key)) {
+        activeKeys.value[e.key] = true;
+      }
   }
+}
+
+const handleKeyup = (e) => {
+    if (activeKeys.value.hasOwnProperty(e.key)) {
+        activeKeys.value[e.key] = false;
+    }
 }
 
 // Fake loading sequence
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown);
+  window.addEventListener('keyup', handleKeyup);
   
   const steps = [
     { p: 10, t: "LOADING KERNEL..." },
-    { p: 30, t: "VERIFYING ENCRYPTION..." },
-    { p: 45, t: "MOUNTING VOLUMES..." },
-    { p: 70, t: "CALIBRATING PHOSPHORS..." },
-    { p: 90, t: "SYNCHRONIZING AUDIO..." },
+// ... existing code ...
     { p: 100, t: "SYSTEM READY." }
   ];
 
@@ -63,6 +77,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown);
+  window.removeEventListener('keyup', handleKeyup);
 });
 
 const handleStart = () => {
@@ -107,42 +122,42 @@ const handleStart = () => {
 
               <!-- UP KEY (Centered on top row) -->
               <g transform="translate(140, 30)">
-                  <use href="#big-iso-key" />
-                  <!-- UP Arrow (Pointing North-East) -->
-                  <!-- Shaft: Bottom-Left to Top-Right -->
-                  <path d="M40 25 L60 15" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                  <!-- Head -->
-                  <path d="M50 14 L60 15 L56 24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                  <g class="key-inner" :class="{ active: activeKeys.ArrowUp }">
+                      <use href="#big-iso-key" />
+                      <!-- UP Arrow (Pointing North-East) -->
+                      <path d="M40 25 L60 15" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                      <path d="M50 14 L60 15 L56 24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                  </g>
               </g>
 
               <!-- LEFT KEY (Bottom row left) -->
               <g transform="translate(40, 40)">
-                  <use href="#big-iso-key" />
-                  <!-- LEFT Arrow (Pointing North-West) -->
-                  <!-- Shaft: Bottom-Right to Top-Left -->
-                  <path d="M60 25 L40 15" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                  <!-- Head -->
-                  <path d="M50 14 L40 15 L44 24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                  <g class="key-inner" :class="{ active: activeKeys.ArrowLeft }">
+                      <use href="#big-iso-key" />
+                      <!-- LEFT Arrow (Pointing North-West) -->
+                      <path d="M60 25 L40 15" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                      <path d="M50 14 L40 15 L44 24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                  </g>
               </g>
 
               <!-- DOWN KEY (Bottom row center) -->
               <g transform="translate(90, 65)">
-                  <use href="#big-iso-key" />
-                  <!-- DOWN Arrow (Pointing South-West) -->
-                  <!-- Shaft: Top-Right to Bottom-Left -->
-                  <path d="M60 15 L40 25" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                  <!-- Head -->
-                  <path d="M50 26 L40 25 L44 16" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                  <g class="key-inner" :class="{ active: activeKeys.ArrowDown }">
+                      <use href="#big-iso-key" />
+                      <!-- DOWN Arrow (Pointing South-West) -->
+                      <path d="M60 15 L40 25" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                      <path d="M50 26 L40 25 L44 16" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                  </g>
               </g>
 
               <!-- RIGHT KEY (Bottom row right) -->
               <g transform="translate(140, 90)">
-                  <use href="#big-iso-key" />
-                  <!-- RIGHT Arrow (Pointing South-East) -->
-                  <!-- Shaft: Top-Left to Bottom-Right -->
-                  <path d="M40 15 L60 25" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                  <!-- Head -->
-                  <path d="M50 26 L60 25 L56 16" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                  <g class="key-inner" :class="{ active: activeKeys.ArrowRight }">
+                      <use href="#big-iso-key" />
+                      <!-- RIGHT Arrow (Pointing South-East) -->
+                      <path d="M40 15 L60 25" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                      <path d="M50 26 L60 25 L56 16" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                  </g>
               </g>
           </svg>
           <div class="hint-text">KEYBOARD FRIENDLY</div>
@@ -279,7 +294,7 @@ const handleStart = () => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 5px; /* Reduced gap */
 }
 
 .keyboard-hint.visible {
@@ -297,6 +312,23 @@ const handleStart = () => {
     width: 180px; /* Increased to maintain visual size of keys */
     height: auto;
     filter: drop-shadow(0 0 5px var(--color-accent, #fff));
-    margin-bottom: 5px;
+    margin-bottom: 0px; /* Removed bottom margin */
+    overflow: visible; /* Ensure globs don't clip */
 }
+
+/* Active state: Fill the path inside the "use" shadow DOM equivalent or targeted group */
+.key-inner {
+    transition: transform 0.1s;
+    transform-origin: center;
+}
+
+.key-inner.active {
+    transform: translateY(2px); /* Slight press down effect */
+}
+
+.key-inner.active use {
+    fill: var(--color-accent, #fff);
+    fill-opacity: 0.2;
+}
+
 </style>
