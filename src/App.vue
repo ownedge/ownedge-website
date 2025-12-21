@@ -87,7 +87,7 @@ const handleBootStart = async () => {
   // 3. Start Chill Loop
   setTimeout(() => {
     SoundManager.startChillLoop();
-  }, 2500);
+  }, SoundManager.config.MUSIC_START_DELAY);
   
   // 4. Reveal Content
   isBooted.value = true;
@@ -192,7 +192,7 @@ const heroStyle = computed(() => {
       <defs>
         <filter id="spherical-warp" x="-1%" y="-1%" width="104%" height="104%">
           <!-- Use low frequency turbulence to simulate broad warping/curvature -->
-          <feTurbulence baseFrequency="0.0023" numOctaves="1" result="noise" />
+          <feTurbulence baseFrequency="0.0044" numOctaves="1" result="noise" />
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" />
         </filter>
       </defs>

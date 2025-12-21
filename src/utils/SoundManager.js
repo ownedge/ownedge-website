@@ -1,10 +1,14 @@
 const CONFIG = {
-    MASTER_VOL: 0.5,
+    MASTER_VOL: 0.6,
     
     // Volume Multipliers per section
-    BOOT_VOL: 0.4,       // Beeps and disk whirls
-    ATMOSPHERE_VOL: 0.2, // Startup drone
-    MUSIC_VOL: 0.6,      // Background music scaler
+    BOOT_VOL: 0.5,       
+    ATMOSPHERE_VOL: 0.15, 
+    MUSIC_VOL: 0.3,      
+    
+    // Music Timing
+    MUSIC_START_DELAY: 3500,     // Milliseconds before music starts after boot
+    MUSIC_FADE_IN_DURATION: 5.0, // Seconds to fade in music
     
     // Boot Details
     BOOT_SPIN_DURATION: 3.0, 
@@ -19,15 +23,17 @@ class SoundManager {
         this.atmosphereOscillators = [];
         this.atmosphereGain = null;
         this.initialized = false;
-        this.config = CONFIG; // Expose for runtime tweaking if needed
+        this.config = CONFIG;
     }
 
     init() {
         if (this.initialized) return;
 
+        // Initialize Audio Context
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         this.ctx = new AudioContext();
 
+        // Create Master Gain for Volume Control
         this.masterGain = this.ctx.createGain();
         this.masterGain.gain.value = this.config.MASTER_VOL;
         this.masterGain.connect(this.ctx.destination);
@@ -47,6 +53,7 @@ class SoundManager {
     playBootSequence() {
         if (!this.ctx || this.isMuted) return;
         const t = this.ctx.currentTime;
+        const vol = this.config.BOOT_VOL;
 
         // 1. BIOS POST Beep (The classic single beep)
         const beepOsc = this.ctx.createOscillator();
@@ -58,7 +65,7 @@ class SoundManager {
         beepOsc.frequency.setValueAtTime(800, t + 0.1); 
         
         beepGain.gain.setValueAtTime(0, t);
-        beepGain.gain.setValueAtTime(0.1, t + 0.1);
+        beepGain.gain.setValueAtTime(0.1 * vol, t + 0.1);
         beepGain.gain.setValueAtTime(0, t + 0.25); // Short beep
 
         beepOsc.start(t);
@@ -72,14 +79,14 @@ class SoundManager {
 
         spinOsc.type = 'sawtooth'; // Gritty motor sound
         spinOsc.frequency.setValueAtTime(40, t);
-        spinOsc.frequency.exponentialRampToValueAtTime(300, t + 2.5); // Spin up
+        spinOsc.frequency.exponentialRampToValueAtTime(300, t + this.config.BOOT_SPIN_DURATION * 0.8); 
 
         spinGain.gain.setValueAtTime(0, t);
-        spinGain.gain.linearRampToValueAtTime(0.05, t + 0.5); // Fade in
-        spinGain.gain.linearRampToValueAtTime(0, t + 3.0); // Fade out
+        spinGain.gain.linearRampToValueAtTime(0.05 * vol, t + 0.5); // Fade in
+        spinGain.gain.linearRampToValueAtTime(0, t + this.config.BOOT_SPIN_DURATION); // Fade out
 
         spinOsc.start(t);
-        spinOsc.stop(t + 3.0);
+        spinOsc.stop(t + this.config.BOOT_SPIN_DURATION);
 
         // 3. Disk Seek Chatter (Random pulses)
         const makeClick = (time) => {
@@ -91,7 +98,7 @@ class SoundManager {
             clickOsc.type = 'sawtooth';
             clickOsc.frequency.setValueAtTime(Math.random() * 30 + 100, time);
             
-            clickGain.gain.setValueAtTime(0.05, time);
+            clickGain.gain.setValueAtTime(0.05 * vol, time);
             clickGain.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
             
             clickOsc.start(time);
@@ -100,7 +107,7 @@ class SoundManager {
 
         // Rhythmic seeking pattern
         let seekTime = t + 0.5;
-        for(let i=0; i<8; i++) {
+        for(let i=0; i<this.config.BOOT_SEEK_COUNT; i++) {
              makeClick(seekTime);
              seekTime += Math.random() * 0.1 + 0.05;
         }
@@ -211,8 +218,8 @@ class SoundManager {
 
         this.atmosphereOscillators = [osc1, osc2];
 
-        // Fade in smoothly - Lower volume (0.05)
-        this.atmosphereGain.gain.setTargetAtTime(0.01, this.ctx.currentTime, 2);
+        // Fade in smoothly - Lower volume
+        this.atmosphereGain.gain.setTargetAtTime(0.05 * this.config.ATMOSPHERE_VOL, this.ctx.currentTime, 2);
     }
     
     stopAtmosphere() {
@@ -234,6 +241,11 @@ class SoundManager {
 
     setupEffects() {
         if (!this.ctx || this.delayNode) return;
+        
+        // Music Bus for global music volume/fade control
+        this.musicGain = this.ctx.createGain();
+        this.musicGain.gain.value = 1.0;
+        this.musicGain.connect(this.masterGain);
 
         // Stereo Delay Line (Longer, softer echoes)
         this.delayNode = this.ctx.createDelay();
@@ -249,14 +261,15 @@ class SoundManager {
         this.fxBus = this.ctx.createGain();
         this.fxBus.gain.value = 1.0;
         
-        this.fxBus.connect(this.masterGain); 
+        // FX Bus now routes to Music Bus so it fades with music
+        this.fxBus.connect(this.musicGain); 
         
         this.fxBus.connect(this.delayNode);
         this.delayNode.connect(delayFilter);
         delayFilter.connect(this.delayFeedback);
         this.delayFeedback.connect(this.delayNode);
         
-        this.delayNode.connect(this.masterGain); 
+        this.delayNode.connect(this.musicGain); // Delay output also to Music Bus
     }
 
     playPad(freq, startTime, duration, vol=0.1) {
@@ -274,11 +287,15 @@ class SoundManager {
         osc.connect(gain);
         gain.connect(panner);
         
-        // Fix: Don't double mix. Use FX Bus if available.
-        if (this.fxBus) {
-             panner.connect(this.fxBus);
+        // Connect to Music Bus instead of Master
+        if (this.musicGain) {
+             panner.connect(this.musicGain);
         } else {
              panner.connect(this.masterGain);
+        }
+        
+        if (this.fxBus) {
+             panner.connect(this.fxBus);
         }
 
         // Slow Attack / Release Envelope (The "Soft" part)
@@ -303,10 +320,14 @@ class SoundManager {
         osc.connect(gain);
         gain.connect(panner);
         
-        if (this.fxBus) {
-             panner.connect(this.fxBus);
+        if (this.musicGain) {
+             panner.connect(this.musicGain);
         } else {
              panner.connect(this.masterGain);
+        }
+        
+        if (this.fxBus) {
+             panner.connect(this.fxBus);
         }
 
         // Bell-like envelope
@@ -340,7 +361,12 @@ class SoundManager {
 
         noise.connect(filter);
         filter.connect(gain);
-        gain.connect(this.masterGain);
+        
+        if (this.musicGain) {
+             gain.connect(this.musicGain);
+        } else {
+             gain.connect(this.masterGain);
+        }
         
         noise.start(startTime);
     }
@@ -349,6 +375,16 @@ class SoundManager {
         if (!this.ctx || this.isMuted) return;
         this.stopAtmosphere(); 
         this.setupEffects();
+        
+        // FADE IN MUSIC
+        const fadeInDur = this.config.MUSIC_FADE_IN_DURATION;
+        if (this.musicGain) {
+            const t = this.ctx.currentTime;
+            this.musicGain.gain.setValueAtTime(0, t);
+            this.musicGain.gain.linearRampToValueAtTime(1.0, t + fadeInDur);
+        }
+        
+        const vol = this.config.MUSIC_VOL; // Master scaler for music
 
         const bpm = 90; 
         const beatDur = 60 / bpm; 
@@ -362,7 +398,6 @@ class SoundManager {
             [220.00, 261.63, 329.63, 392.00]  // Am7
         ];
         
-        // Bass roots
         const roots = [65.41, 43.65, 41.20, 55.00];
 
         this.jazzInterval = setInterval(() => {
@@ -371,18 +406,16 @@ class SoundManager {
             
             const bar = Math.floor(beatCounter / 4);
             const beat = beatCounter % 4;
-            
-            // Change chord every bar
             const chordIdx = bar % 4;
             const currentChord = chords[chordIdx];
 
             // 1. Lush Pads (Beat 1)
             if (beat === 0) {
                 currentChord.forEach((freq, i) => {
-                    this.playPad(freq, t + (i*0.05), beatDur * 4, 0.02);
+                    this.playPad(freq, t + (i*0.05), beatDur * 4, 0.02 * vol);
                 });
                 // Bass (Reduced volume)
-                this.playPad(roots[chordIdx], t, beatDur * 4, 0.06);
+                this.playPad(roots[chordIdx], t, beatDur * 4, 0.06 * vol);
             }
 
             // 2. Soft Lead Melody (Pentatonic wandering)
@@ -390,14 +423,14 @@ class SoundManager {
             if (Math.random() > 0.4) {
                 const note = currentChord[Math.floor(Math.random() * currentChord.length)] * 2; 
                 const offset = (Math.random() > 0.5) ? beatDur / 2 : 0; 
-                this.playSoftLead(note, t + offset, beatDur, 0.03); 
+                this.playSoftLead(note, t + offset, beatDur, 0.03 * vol); 
             }
 
             // 3. Brush Drums
             if (beat % 2 === 0) {
-                 this.playBrush(t, 0.015);
+                 this.playBrush(t, 0.015 * vol);
             } else {
-                 this.playBrush(t, 0.02);
+                 this.playBrush(t, 0.02 * vol);
             }
 
             beatCounter++;

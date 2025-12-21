@@ -18,6 +18,7 @@
   height: 100%;
   pointer-events: none;
   z-index: 10;
+  opacity: 0.35;
 }
 
 .grid-lines {
@@ -52,7 +53,7 @@
 .crosshair.center::before, .crosshair.center::after {
     content: '';
     position: absolute;
-    background-color: rgba(255,255,255,0.4);
+    background-color: rgba(255,255,255,0.5);
 }
 /* Cross shape */
 .crosshair.center::before {
