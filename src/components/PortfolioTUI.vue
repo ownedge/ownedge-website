@@ -80,6 +80,12 @@ const projects = [
       2. Decrypt header
       3. Verify checksum
       4. Execute payload
+      5. Verify signature
+      6. Update system
+      7. Restart
+      8. Reboot
+      9. Shutdown
+      10. Power off
 
       DO NOT DEVIATE.
     `
@@ -88,6 +94,8 @@ const projects = [
 
 const selectedIndex = ref(0);
 const activePane = ref('left'); // 'left' or 'right'
+const activeKey = ref(null);
+const viewContent = ref(null);
 
 const selectProject = (index) => {
   if (selectedIndex.value !== index) {
@@ -98,25 +106,65 @@ const selectProject = (index) => {
 
 // Keyboard Navigation
 const handleKeydown = (e) => {
-    if (e.key === 'ArrowDown') {
+    // Check for F-keys
+    if (e.key.startsWith('F')) {
         e.preventDefault();
-        const next = (selectedIndex.value + 1) % projects.length;
-        selectedIndex.value = next;
-        SoundManager.playTypingSound();
-    } else if (e.key === 'ArrowUp') {
+        // Only play sound if the key wasn't already active (prevent rapid fire on hold)
+        if (activeKey.value !== e.key) {
+            SoundManager.playTypingSound();
+        }
+        activeKey.value = e.key;
+        return;
+    }
+
+    // Tab to switch panes
+    if (e.key === 'Tab') {
         e.preventDefault();
-        const prev = (selectedIndex.value - 1 + projects.length) % projects.length;
-        selectedIndex.value = prev;
-        SoundManager.playTypingSound();
+        activePane.value = activePane.value === 'left' ? 'right' : 'left';
+        SoundManager.playTypingSound(); // Feedback for switch
+        return;
+    }
+
+    if (activePane.value === 'left') {
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const next = (selectedIndex.value + 1) % projects.length;
+            selectedIndex.value = next;
+            SoundManager.playTypingSound();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const prev = (selectedIndex.value - 1 + projects.length) % projects.length;
+            selectedIndex.value = prev;
+            SoundManager.playTypingSound();
+        }
+    } else {
+        // Right Pane Scroll
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (viewContent.value) viewContent.value.scrollTop += 20;
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (viewContent.value) viewContent.value.scrollTop -= 20;
+        }
+    }
+}
+
+const handleKeyup = (e) => {
+    console.log('Key up:', e.key);
+    if (e.key.startsWith('F')) {
+        activeKey.value = null;
+        console.log('Active key cleared');
     }
 }
 
 onMounted(() => {
     window.addEventListener('keydown', handleKeydown);
+    window.addEventListener('keyup', handleKeyup);
 });
 
 onUnmounted(() => {
     window.removeEventListener('keydown', handleKeydown);
+    window.removeEventListener('keyup', handleKeyup);
 });
 
 </script>
@@ -134,7 +182,7 @@ onUnmounted(() => {
       <div class="tui-panes">
         
         <!-- Left Pane: File List -->
-        <div class="tui-pane left-pane">
+        <div class="tui-pane left-pane" :class="{ 'active-pane': activePane === 'left' }">
           <div class="pane-header">
              <div class="pane-title"> C:\PROJECTS\*.* </div>
           </div>
@@ -166,11 +214,11 @@ onUnmounted(() => {
         </div>
 
         <!-- Right Pane: Viewer -->
-        <div class="tui-pane right-pane">
+        <div class="tui-pane right-pane" :class="{ 'active-pane': activePane === 'right' }">
           <div class="pane-header">
              <div class="pane-title"> VIEW: {{ projects[selectedIndex].name }} </div>
           </div>
-          <div class="pane-content view-content">
+          <div class="pane-content view-content" ref="viewContent">
              <pre>{{ projects[selectedIndex].description }}</pre>
           </div>
           <div class="pane-footer">
@@ -181,12 +229,16 @@ onUnmounted(() => {
 
       <!-- Bottom Function Keys -->
       <div class="tui-footer">
-        <div class="f-key"><span>F1</span> HELP</div>
-        <div class="f-key"><span>F3</span> VIEW</div>
-        <div class="f-key"><span>F5</span> COPY</div>
-        <div class="f-key"><span>F6</span> MOVE</div>
-        <div class="f-key"><span>F8</span> DELETE</div>
-        <div class="f-key"><span>F10</span> QUIT</div>
+        <div class="f-key" :class="{ active: activeKey === 'F1' }"><span>F1</span> HELP</div>
+        <div class="f-key" :class="{ active: activeKey === 'F2' }"><span>F2</span> MENU</div>
+        <div class="f-key" :class="{ active: activeKey === 'F3' }"><span>F3</span> VIEW</div>
+        <div class="f-key" :class="{ active: activeKey === 'F4' }"><span>F4</span> EDIT</div>
+        <div class="f-key" :class="{ active: activeKey === 'F5' }"><span>F5</span> COPY</div>
+        <div class="f-key" :class="{ active: activeKey === 'F6' }"><span>F6</span> MOVE</div>
+        <div class="f-key" :class="{ active: activeKey === 'F7' }"><span>F7</span> MKDIR</div>
+        <div class="f-key" :class="{ active: activeKey === 'F8' }"><span>F8</span> DELETE</div>
+        <div class="f-key" :class="{ active: activeKey === 'F9' }"><span>F9</span> PULLDN</div>
+        <div class="f-key" :class="{ active: activeKey === 'F10' }"><span>F10</span> QUIT</div>
       </div>
     </div>
   </div>
@@ -240,7 +292,7 @@ onUnmounted(() => {
 
 .tui-pane {
   flex: 1;
-  border: none;
+  border: 1px solid transparent;
   display: flex;
   flex-direction: column;
   padding: 20px;
@@ -307,7 +359,7 @@ onUnmounted(() => {
     padding: 15px 20px; /* More breathing room */
     cursor: pointer;
     transition: all 0.2s ease;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    /* border-bottom removed */
 }
 
 .file-row:hover {
@@ -353,8 +405,8 @@ pre {
 .tui-footer {
     display: flex;
     padding: 20px 40px;
-    gap: 30px;
-    justify-content: flex-start; /* Align left */
+    gap: 15px; /* Reduced gap to fit all keys */
+    justify-content: space-between; /* Spread evenly */
     border-top: 2px solid #fff;
     background: #000; /* Contrast stripe */
 }
@@ -376,14 +428,43 @@ pre {
     font-weight: bold;
 }
 
-.f-key:hover {
+.f-key:hover, .f-key.active {
     color: #fff;
 }
 
-.f-key:hover span {
+.f-key:hover span, .f-key.active span {
     background: var(--color-accent);
     color: #000;
 }
+
+/* Active Pane Indicator */
+.active-pane .pane-header {
+    background: var(--color-accent);
+    color: #000;
+}
+
+.active-pane .pane-title {
+    opacity: 1;
+    font-weight: bold;
+}
+
+/* Update default pane to have transparent border to prevent jump */
+.tui-pane {
+  flex: 1;
+  border: 1px solid transparent; /* Placeholder for active state */
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.left-pane {
+  flex: 0.8; 
+  /* We previously had right border here, let's keep it but manage conflict with active border */
+  border-right: 1px solid #fff; 
+  max-width: 40%;
+}
+
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
