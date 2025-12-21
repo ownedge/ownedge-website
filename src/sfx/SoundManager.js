@@ -7,7 +7,7 @@ const CONFIG = {
     
     // Volume Multipliers per section
     BOOT_VOL: 0.9,       
-    ATMOSPHERE_VOL: 0.15,
+    ATMOSPHERE_VOL: 0.04,
     MUSIC_VOL: 0.25,      
     
     // Music Timing
@@ -222,12 +222,12 @@ class SoundManager {
 
         // Osc 1: Mid-low drone (Higher pitch than sub-bass)
         const osc1 = this.ctx.createOscillator();
-        osc1.type = 'sawtooth';
+        osc1.type = 'square';
         osc1.frequency.setValueAtTime(110, this.ctx.currentTime);
         
         // Filter 1: Lowpass 
         const filter1 = this.ctx.createBiquadFilter();
-        filter1.type = 'lowpass';
+        filter1.type = 'highpass';
         filter1.frequency.value = 300;
         osc1.connect(filter1);
         filter1.connect(this.atmosphereGain);
@@ -280,8 +280,8 @@ class SoundManager {
         // Filter for "click" characteristic (Bandpass)
         const filter = this.ctx.createBiquadFilter();
         filter.type = 'bandpass';
-        filter.frequency.value = 2500 + Math.random() * 500; // High pitch mechanical tick
-        filter.Q.value = 1.0;
+        filter.frequency.value = 2800 + Math.random() * 500; // High pitch mechanical tick
+        filter.Q.value = 7.0;
 
         const gain = this.ctx.createGain();
         // Very quite, subtle click
