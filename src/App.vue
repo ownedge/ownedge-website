@@ -83,8 +83,13 @@ const handleBootStart = async () => {
   
   // 2. Play Boot Sound
   SoundManager.playBootSequence();
+
+  // 3. Start Chill Loop
+  setTimeout(() => {
+    SoundManager.startChillLoop();
+  }, 2500);
   
-  // 3. Reveal Content
+  // 4. Reveal Content
   isBooted.value = true;
 }
 

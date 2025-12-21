@@ -169,7 +169,7 @@ const handleStart = () => {
                   </g>
               </g>
           </svg>
-          <div class="hint-text">KEYBOARD FRIENDLY</div>
+          <div class="hint-text"> -> KEYBOARD FRIENDLY</div>
       </div>
     </div>
   </div>
@@ -299,7 +299,7 @@ const handleStart = () => {
     color: #fff;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 1s ease-out; /* Immediate fade in */
+    transition: opacity 1.5s ease-out; /* Immediate fade in */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -311,7 +311,7 @@ const handleStart = () => {
 }
 
 .hint-text {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     letter-spacing: 2px;
     opacity: 0.8;
 }
@@ -332,7 +332,7 @@ const handleStart = () => {
 }
 
 .key-inner.active {
-    transform: translateY(2px); /* Slight press down effect */
+    transform: translateY(5px); /* Slight press down effect */
 }
 
 .key-inner.active use {

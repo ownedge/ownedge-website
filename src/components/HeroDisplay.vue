@@ -250,7 +250,7 @@ onUnmounted(() => {
 
 .scroll-indicator {
   position: absolute;
-  bottom: 40px;
+  bottom: 90px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
