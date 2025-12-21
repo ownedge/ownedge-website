@@ -22,6 +22,10 @@ const isSubtitleActive = ref(false); // New state to control subtitle start
 
 const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
+const heroRoot = ref(null);
+const isVisible = ref(true);
+let observer = null;
+
 const decodeEffect = () => {
   let iterations = 0;
   
@@ -36,7 +40,7 @@ const decodeEffect = () => {
           return titleFull[index];
         }
         // Play grit sound for active decoding
-        SoundManager.playDecodeSound();
+        if (isVisible.value) SoundManager.playDecodeSound();
         return chars[Math.floor(Math.random() * chars.length)];
       })
       .join("");
@@ -46,7 +50,7 @@ const decodeEffect = () => {
       // Wait a moment for impact before starting subtitles
       setTimeout(() => {
         isSubtitleActive.value = true;
-        typeWriter();
+        if (isVisible.value) typeWriter();
       }, 200);
     }
     
@@ -55,17 +59,13 @@ const decodeEffect = () => {
 }
 
 const typeWriter = () => {
-  if (!isSubtitleActive.value) return; // Guard clause
+  if (!isSubtitleActive.value || !isVisible.value) return; // Guard clause
 
   const currentSubtitle = subtitles[currentSubtitleIndex];
 
   if (isDeleting) {
     displayedText.value = currentSubtitle.substring(0, charIndex - 1);
     charIndex--;
-
-
-// ...
-
   } else {
     displayedText.value = currentSubtitle.substring(0, charIndex + 1);
     charIndex++;
@@ -87,22 +87,38 @@ const typeWriter = () => {
     typeSpeed = 500; // Pause before typing new
   }
 
+  clearTimeout(typingTimeout);
   typingTimeout = setTimeout(typeWriter, typeSpeed);
 };
 
 onMounted(() => {
+  // Setup Intersection Observer
+  observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+          isVisible.value = entry.isIntersecting;
+          if (isVisible.value && isSubtitleActive.value) {
+              // Create a small delay to avoid double invocation if timer is pending
+              clearTimeout(typingTimeout); 
+              typeWriter();
+          }
+      });
+  }, { threshold: 0.1 });
+
+  if (heroRoot.value) observer.observe(heroRoot.value);
+
   // Start decode effect immediately
   decodeEffect();
 });
 
 onUnmounted(() => {
+  if (observer) observer.disconnect();
   clearTimeout(typingTimeout);
   clearInterval(titleTimeout);
 });
 </script>
 
 <template>
-  <div class="hero-display">
+  <div class="hero-display" ref="heroRoot">
     <div class="content">
       <h1 class="title">
         <span class="typing-wrapper">

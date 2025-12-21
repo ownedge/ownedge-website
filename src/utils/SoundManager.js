@@ -77,7 +77,7 @@ class SoundManager {
             clickGain.connect(this.masterGain);
             
             clickOsc.type = 'sawtooth';
-            clickOsc.frequency.setValueAtTime(Math.random() * 20 + 100, time);
+            clickOsc.frequency.setValueAtTime(Math.random() * 30 + 100, time);
             
             clickGain.gain.setValueAtTime(0.05, time);
             clickGain.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
@@ -200,7 +200,7 @@ class SoundManager {
         this.atmosphereOscillators = [osc1, osc2];
 
         // Fade in smoothly - Lower volume (0.05)
-        this.atmosphereGain.gain.setTargetAtTime(0.02, this.ctx.currentTime, 2);
+        this.atmosphereGain.gain.setTargetAtTime(0.01, this.ctx.currentTime, 2);
     }
     
     stopAtmosphere() {

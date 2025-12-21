@@ -1,7 +1,7 @@
 <script setup>
 import GridOverlay from './components/GridOverlay.vue'
 import HeroDisplay from './components/HeroDisplay.vue'
-import ChildrenCompanies from './components/ChildrenCompanies.vue'
+import PortfolioTUI from './components/PortfolioTUI.vue'
 import PhosphorOverlay from './components/PhosphorOverlay.vue'
 import NoiseOverlay from './components/NoiseOverlay.vue'
 import SoundManager from './utils/SoundManager'
@@ -148,7 +148,9 @@ const heroStyle = computed(() => {
             <HeroDisplay />
           </section>
           
-          <ChildrenCompanies />
+          <section class="page-section">
+            <PortfolioTUI />
+          </section>
         </div>
         
         <!-- Phosphor Burn Layer (simulates screen persistence) -->
