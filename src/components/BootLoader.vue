@@ -103,7 +103,7 @@ const handleStart = () => {
   width: 100%;
   height: 100%;
   z-index: 30;
-  background-color: #050505;
+  background-color: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -115,10 +115,8 @@ const handleStart = () => {
 .terminal-window {
   width: 90%;
   max-width: 600px;
-  border: 1px solid #333;
+  border: 0px solid #333;
   padding: 40px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-  background: rgba(10, 10, 10, 0.95);
 }
 
 .header {

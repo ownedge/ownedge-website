@@ -42,7 +42,7 @@ class SoundManager {
         beepOsc.connect(beepGain);
         beepGain.connect(this.masterGain);
 
-        beepOsc.type = 'square';
+        beepOsc.type = 'sawtooth';
         beepOsc.frequency.setValueAtTime(800, t + 0.1); 
         
         beepGain.gain.setValueAtTime(0, t);
@@ -76,8 +76,8 @@ class SoundManager {
             clickOsc.connect(clickGain);
             clickGain.connect(this.masterGain);
             
-            clickOsc.type = 'square';
-            clickOsc.frequency.setValueAtTime(Math.random() * 500 + 100, time);
+            clickOsc.type = 'sawtooth';
+            clickOsc.frequency.setValueAtTime(Math.random() * 20 + 100, time);
             
             clickGain.gain.setValueAtTime(0.05, time);
             clickGain.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
@@ -131,7 +131,7 @@ class SoundManager {
         // Randomize pitch slightly for "organic" feel
         const baseFreq = 800 + Math.random() * 20; // 800-850Hz range (much tighter)
         osc.frequency.setValueAtTime(baseFreq, t);
-        osc.type = 'square'; // Crisper "digital" click
+        osc.type = 'sawtooth'; // Crisper "digital" click
 
         // Envelope: Instant attack, faster decay for sharpness
         gain.gain.setValueAtTime(0.03, t); // Slightly lower volume for square wave
@@ -175,22 +175,22 @@ class SoundManager {
         this.atmosphereGain.gain.value = 0.0; // Start silent -> fade in
         this.atmosphereGain.connect(this.masterGain);
 
-        // Osc 1: Deep sub-bass (50-60Hz)
+        // Osc 1: Mid-low drone (Higher pitch than sub-bass)
         const osc1 = this.ctx.createOscillator();
         osc1.type = 'sawtooth';
-        osc1.frequency.setValueAtTime(55, this.ctx.currentTime);
+        osc1.frequency.setValueAtTime(110, this.ctx.currentTime);
         
-        // Filter 1: Lowpass to remove harshness
+        // Filter 1: Lowpass 
         const filter1 = this.ctx.createBiquadFilter();
         filter1.type = 'lowpass';
-        filter1.frequency.value = 120;
+        filter1.frequency.value = 300;
         osc1.connect(filter1);
         filter1.connect(this.atmosphereGain);
 
-        // Osc 2: Slightly detuned harmonic (110Hz)
+        // Osc 2: High harmonic
         const osc2 = this.ctx.createOscillator();
         osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(112, this.ctx.currentTime); // Detuned slightly
+        osc2.frequency.setValueAtTime(220, this.ctx.currentTime); 
         osc2.connect(this.atmosphereGain);
 
         // Start
@@ -199,8 +199,8 @@ class SoundManager {
 
         this.atmosphereOscillators = [osc1, osc2];
 
-        // Fade in smoothly over 5s
-        this.atmosphereGain.gain.setTargetAtTime(0.15, this.ctx.currentTime, 2);
+        // Fade in smoothly - Lower volume (0.05)
+        this.atmosphereGain.gain.setTargetAtTime(0.02, this.ctx.currentTime, 2);
     }
     
     stopAtmosphere() {

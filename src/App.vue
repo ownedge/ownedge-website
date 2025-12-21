@@ -138,7 +138,7 @@ const heroStyle = computed(() => {
         
         <BootLoader v-if="!isBooted" @start="handleBootStart" />
 
-        <div class="fixed-background" v-show="isBooted">
+        <div class="fixed-background">
             <GridOverlay />
         </div>
 
@@ -152,7 +152,7 @@ const heroStyle = computed(() => {
         </div>
         
         <!-- Phosphor Burn Layer (simulates screen persistence) -->
-        <PhosphorOverlay v-if="isBooted" />
+        <PhosphorOverlay />
         
         <!-- Fixed Foreground Overlays -->
         <div class="scanlines"></div>
@@ -165,7 +165,7 @@ const heroStyle = computed(() => {
       <defs>
         <filter id="spherical-warp" x="-1%" y="-1%" width="104%" height="104%">
           <!-- Use low frequency turbulence to simulate broad warping/curvature -->
-          <feTurbulence baseFrequency="0.0028" numOctaves="1" result="noise" />
+          <feTurbulence baseFrequency="0.0033" numOctaves="1" result="noise" />
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" />
         </filter>
       </defs>
