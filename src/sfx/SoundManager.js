@@ -7,15 +7,15 @@ const CONFIG = {
     
     // Volume Multipliers per section
     BOOT_VOL: 0.9,       
-    ATMOSPHERE_VOL: 0.04,
-    MUSIC_VOL: 0.25,      
+    ATMOSPHERE_VOL: 0.03,
+    MUSIC_VOL: 0.18,      
     
     // Music Timing
-    MUSIC_START_DELAY: 4500,     // Milliseconds before music starts after boot
-    MUSIC_FADE_IN_DURATION: 6.0, // Seconds to fade in music
+    MUSIC_START_DELAY: 5500,     // Milliseconds before music starts after boot
+    MUSIC_FADE_IN_DURATION: 5.0, // Seconds to fade in music
     
     // Boot Details
-    BOOT_SPIN_DURATION: 3.0, 
+    BOOT_SPIN_DURATION: 3.0,
     BOOT_SEEK_COUNT: 8
 };
 
@@ -131,9 +131,9 @@ class SoundManager {
         
         // Grittier low data sound
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(200 + Math.random() * 50, t); 
+        osc.frequency.setValueAtTime(200 + Math.random() * 20, t); 
         
-        gain.gain.setValueAtTime(0.02, t);
+        gain.gain.setValueAtTime(0.005, t);
         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
         
         osc.connect(gain);
@@ -234,7 +234,7 @@ class SoundManager {
 
         // Osc 2: High harmonic
         const osc2 = this.ctx.createOscillator();
-        osc2.type = 'sine';
+        osc2.type = 'sawtooth';
         osc2.frequency.setValueAtTime(220, this.ctx.currentTime); 
         osc2.connect(this.atmosphereGain);
 

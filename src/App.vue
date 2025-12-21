@@ -172,7 +172,7 @@ const handleGlobalKeydown = (e) => {
 }
 
 // Glitch Effect
-const turbulenceFreq = ref(0.0001);
+const turbulenceFreq = ref(0.0003);
 
 const triggerGlitch = () => {
     // Removed isBooted check to allow glitching during load
@@ -181,7 +181,7 @@ const triggerGlitch = () => {
     const spike = () => {
        turbulenceFreq.value = 0.0044 * Math.random();
        setTimeout(() => {
-           turbulenceFreq.value = 0.0001; 
+           turbulenceFreq.value = 0.0003; 
        }, 50 + Math.random() * 100);
     };
 
@@ -216,7 +216,7 @@ const heroStyle = computed(() => {
         </div>
         <div class="led-group">
             <div class="led hdd-led" :class="{ active: isHddActive }"></div>
-            <span class="led-label">HDD</span>
+            <span class="led-label">DISK</span>
         </div>
         <div class="led-group">
             <div class="led turbo-led" :class="{ active: isTurbo }"></div>
@@ -268,7 +268,7 @@ const heroStyle = computed(() => {
     <!-- SVG Filter for Glitch/Distortion (Efficient) -->
     <svg width="0" height="0" style="position: absolute; pointer-events: none;">
       <defs>
-        <filter id="spherical-warp" x="-1%" y="-1%" width="104%" height="104%">
+        <filter id="spherical-warp" x="-10%" y="-10%" width="200%" height="200%">
           <!-- Simple Turbulence for Glitch Effect -->
           <feTurbulence :baseFrequency="turbulenceFreq" numOctaves="1" result="noise" />
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" />
