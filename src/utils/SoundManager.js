@@ -373,7 +373,7 @@ class SoundManager {
 
     startChillLoop() {
         if (!this.ctx || this.isMuted) return;
-        this.stopAtmosphere(); 
+        //this.stopAtmosphere(); 
         this.setupEffects();
         
         // FADE IN MUSIC

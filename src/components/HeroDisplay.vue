@@ -163,6 +163,8 @@ onUnmounted(() => {
 .typing-wrapper {
   display: inline-block;
   position: relative;
+  min-height: 1.2rem; /* Match subtitle font size/line-height to prevent collapse */
+  vertical-align: bottom;
 }
 
 .title {

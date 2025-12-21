@@ -192,7 +192,7 @@ const heroStyle = computed(() => {
       <defs>
         <filter id="spherical-warp" x="-1%" y="-1%" width="104%" height="104%">
           <!-- Use low frequency turbulence to simulate broad warping/curvature -->
-          <feTurbulence baseFrequency="0.0044" numOctaves="1" result="noise" />
+          <feTurbulence baseFrequency="0.0034" numOctaves="1" result="noise" />
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" />
         </filter>
       </defs>
@@ -313,7 +313,7 @@ html, body, .crt-wrapper, * {
 
 /* Page Sections */
 .page-section {
-  height: 100vh;
+  height: 100%; /* Fit the scroll-content container exactly */
   width: 100%;
   display: flex;
   align-items: center;

@@ -248,7 +248,7 @@ onUnmounted(() => {
 /* Modern TUI Styles */
 .tui-container {
   width: 100%;
-  height: 100vh;
+  height: 100%; /* Fit parent section, not viewport */
   display: flex;
   flex-direction: column;
   padding: 0; /* Full bleed */
