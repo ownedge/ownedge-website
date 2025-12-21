@@ -213,11 +213,11 @@ const heroStyle = computed(() => {
       </div>
     </div>
     
-    <!-- SVG Filter for Spherical Distortion -->
+    <!-- SVG Filter for Glitch/Distortion (Efficient) -->
     <svg width="0" height="0" style="position: absolute; pointer-events: none;">
       <defs>
         <filter id="spherical-warp" x="-1%" y="-1%" width="104%" height="104%">
-          <!-- Use low frequency turbulence to simulate broad warping/curvature -->
+          <!-- Simple Turbulence for Glitch Effect -->
           <feTurbulence :baseFrequency="turbulenceFreq" numOctaves="1" result="noise" />
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" />
         </filter>
@@ -284,17 +284,17 @@ html, body, .crt-wrapper, * {
   height: 100%;
   max-width: 100%;
   max-height: 100%;
-  border-radius: 30px; /* More pronounced curve */
+  border-radius: 20px; /* Slight curve at corners */
   position: relative;
   overflow: hidden;
+  /* Strong inner shadow to simulate curved glass depth */
   box-shadow: 
-    inset 0 0 100px rgba(0,0,0,0.9), /* Internal tube shadow */
-    0 0 20px rgba(0,0,0,0.5);
-  transform: perspective(1000px); 
+    inset 0 0 80px rgba(0,0,0,0.9), 
+    0 0 90px rgba(100, 100, 100, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid #111; /* Bezel edge */
+  border: 1px solid #1d1d1d; 
 }
 
 .app-container {
@@ -363,8 +363,8 @@ html, body, .crt-wrapper, * {
   /* Create a 'mask' of black with transparent holes */
   background: radial-gradient(
     circle,
-    transparent 62%,
-    #000 45%
+    transparent 43%,
+    rgb(17, 17, 17) 95%
   );
   background-size: 2.5px 2.5px; /* Dot density */
   pointer-events: none;
@@ -381,8 +381,8 @@ html, body, .crt-wrapper, * {
   height: 100%;
   pointer-events: none;
   z-index: 60;
-  box-shadow: inset 0 0 110px rgba(0,0,0,0.5);
-  border-radius: 10px;
+  box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
+  border-radius: 5px;
 }
 
 

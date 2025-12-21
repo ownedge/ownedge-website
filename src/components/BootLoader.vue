@@ -169,7 +169,7 @@ const handleStart = () => {
                   </g>
               </g>
           </svg>
-          <div class="hint-text"> -> KEYBOARD FRIENDLY</div>
+          <div class="hint-text"> ▶ KEYBOARD FRIENDLY</div>
       </div>
     </div>
   </div>
