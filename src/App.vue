@@ -4,6 +4,8 @@ import HeroDisplay from './components/HeroDisplay.vue'
 import ChildrenCompanies from './components/ChildrenCompanies.vue'
 import PhosphorOverlay from './components/PhosphorOverlay.vue'
 import NoiseOverlay from './components/NoiseOverlay.vue'
+import SoundManager from './utils/SoundManager'
+import BootLoader from './components/BootLoader.vue'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 let cursorInterval = null;
@@ -16,6 +18,7 @@ const mouseX = ref(window.innerWidth / 2)
 const mouseY = ref(window.innerHeight / 2)
 
 const isCursorVisible = ref(false)
+const isBooted = ref(false)
 let hideCursorTimeout = null
 
 const handleMouseMove = (e) => {
@@ -66,12 +69,51 @@ onMounted(() => {
   document.addEventListener('click', hideCursor);
 })
 
+const handleGlobalHover = (e) => {
+  // Check if target is interactive
+  if (e.target.matches('button, a, input, [role="button"]')) {
+     SoundManager.playHoverSound();
+  }
+}
+
+const handleBootStart = async () => {
+  // 1. Initialize Audio (User gesture is the click on "GO!")
+  if (!SoundManager.initialized) SoundManager.init();
+  if (SoundManager.ctx.state === 'suspended') await SoundManager.resume();
+  
+  // 2. Play Boot Sound
+  SoundManager.playBootSequence();
+  
+  // 3. Reveal Content
+  isBooted.value = true;
+}
+
+
+
+onMounted(() => {
+  window.addEventListener('mousemove', handleMouseMove)
+  window.addEventListener('resize', handleResize)
+  
+  // Aggressively hide cursor
+  hideCursor();
+  cursorInterval = setInterval(hideCursor, 500);
+
+  // Re-hide on focus/entry (fixes Alt-Tab issue)
+  window.addEventListener('focus', hideCursor);
+  document.addEventListener('mouseenter', hideCursor);
+  
+  document.addEventListener('mouseover', handleGlobalHover);
+})
+
 onUnmounted(() => {
   window.removeEventListener('mousemove', handleMouseMove)
   window.removeEventListener('resize', handleResize)
   window.removeEventListener('focus', hideCursor)
   document.removeEventListener('mouseenter', hideCursor)
-  document.removeEventListener('click', hideCursor)
+  
+  document.removeEventListener('click', hideCursor) // Remove old ref if needed, but handled by handleGlobalClick now
+  document.removeEventListener('mouseover', handleGlobalHover);
+  
   clearInterval(cursorInterval)
 })
 
@@ -93,12 +135,15 @@ const heroStyle = computed(() => {
       <div class="app-container">
         <!-- Fixed Background/Overlays -->
         <NoiseOverlay />
-        <div class="fixed-background">
+        
+        <BootLoader v-if="!isBooted" @start="handleBootStart" />
+
+        <div class="fixed-background" v-show="isBooted">
             <GridOverlay />
         </div>
 
         <!-- Scrollable Content -->
-        <div class="scroll-content">
+        <div class="scroll-content" v-if="isBooted">
           <section class="page-section hero-section" :style="heroStyle">
             <HeroDisplay />
           </section>
@@ -107,7 +152,7 @@ const heroStyle = computed(() => {
         </div>
         
         <!-- Phosphor Burn Layer (simulates screen persistence) -->
-        <PhosphorOverlay />
+        <PhosphorOverlay v-if="isBooted" />
         
         <!-- Fixed Foreground Overlays -->
         <div class="scanlines"></div>

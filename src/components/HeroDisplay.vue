@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import SoundManager from '../utils/SoundManager';
 
 const titleFull = "OWNEDGE";
 const titleText = ref("");
@@ -34,6 +35,8 @@ const decodeEffect = () => {
         if (index < iterations) {
           return titleFull[index];
         }
+        // Play grit sound for active decoding
+        SoundManager.playDecodeSound();
         return chars[Math.floor(Math.random() * chars.length)];
       })
       .join("");
@@ -59,9 +62,14 @@ const typeWriter = () => {
   if (isDeleting) {
     displayedText.value = currentSubtitle.substring(0, charIndex - 1);
     charIndex--;
+
+
+// ...
+
   } else {
     displayedText.value = currentSubtitle.substring(0, charIndex + 1);
     charIndex++;
+    SoundManager.playTypingSound();
   }
 
   let typeSpeed = 100; // Type speed
