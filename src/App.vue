@@ -301,7 +301,7 @@ html, body, .crt-wrapper, * {
   width: 100%;
   height: 100%;
   position: relative;
-  background: radial-gradient(circle at center, #222 0%, #101010 100%);
+  background: radial-gradient(circle at center, #212121 0%, #131313 100%);
   overflow: hidden; /* Container is fixed window */
   filter: url(#spherical-warp); /* Apply content distortion */
 }
@@ -384,9 +384,5 @@ html, body, .crt-wrapper, * {
   box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
   border-radius: 5px;
 }
-
-
-
-
 
 </style>

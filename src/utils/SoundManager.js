@@ -1,14 +1,14 @@
 const CONFIG = {
-    MASTER_VOL: 0.6,
+    MASTER_VOL: 0.9,
     
     // Volume Multipliers per section
-    BOOT_VOL: 0.5,       
-    ATMOSPHERE_VOL: 0.15, 
-    MUSIC_VOL: 0.3,      
+    BOOT_VOL: 0.9,       
+    ATMOSPHERE_VOL: 0.2, 
+    MUSIC_VOL: 0.2,      
     
     // Music Timing
-    MUSIC_START_DELAY: 3500,     // Milliseconds before music starts after boot
-    MUSIC_FADE_IN_DURATION: 5.0, // Seconds to fade in music
+    MUSIC_START_DELAY: 4500,     // Milliseconds before music starts after boot
+    MUSIC_FADE_IN_DURATION: 6.0, // Seconds to fade in music
     
     // Boot Details
     BOOT_SPIN_DURATION: 3.0, 

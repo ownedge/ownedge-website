@@ -408,7 +408,6 @@ pre {
     gap: 15px; /* Reduced gap to fit all keys */
     justify-content: space-between; /* Spread evenly */
     border-top: 2px solid #fff;
-    background: #000; /* Contrast stripe */
 }
 
 .f-key {
