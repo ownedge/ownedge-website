@@ -229,16 +229,16 @@ onUnmounted(() => {
 
       <!-- Bottom Function Keys -->
       <div class="tui-footer">
-        <div class="f-key" :class="{ active: activeKey === 'F1' }"><span>F1</span> HELP</div>
-        <div class="f-key" :class="{ active: activeKey === 'F2' }"><span>F2</span> MENU</div>
-        <div class="f-key" :class="{ active: activeKey === 'F3' }"><span>F3</span> VIEW</div>
-        <div class="f-key" :class="{ active: activeKey === 'F4' }"><span>F4</span> EDIT</div>
-        <div class="f-key" :class="{ active: activeKey === 'F5' }"><span>F5</span> COPY</div>
-        <div class="f-key" :class="{ active: activeKey === 'F6' }"><span>F6</span> MOVE</div>
-        <div class="f-key" :class="{ active: activeKey === 'F7' }"><span>F7</span> MKDIR</div>
-        <div class="f-key" :class="{ active: activeKey === 'F8' }"><span>F8</span> DELETE</div>
-        <div class="f-key" :class="{ active: activeKey === 'F9' }"><span>F9</span> PULLDN</div>
-        <div class="f-key" :class="{ active: activeKey === 'F10' }"><span>F10</span> QUIT</div>
+        <div class="f-key" :class="{ active: activeKey === 'F1' }"><span>F1</span> <span class="f-label">HELP</span></div>
+        <div class="f-key" :class="{ active: activeKey === 'F2' }"><span>F2</span> <span class="f-label">MENU</span></div>
+        <div class="f-key" :class="{ active: activeKey === 'F3' }"><span>F3</span> <span class="f-label">VIEW</span></div>
+        <div class="f-key" :class="{ active: activeKey === 'F4' }"><span>F4</span> <span class="f-label">EDIT</span></div>
+        <div class="f-key" :class="{ active: activeKey === 'F5' }"><span>F5</span> <span class="f-label">COPY</span></div>
+        <div class="f-key" :class="{ active: activeKey === 'F6' }"><span>F6</span> <span class="f-label">MOVE</span></div>
+        <div class="f-key" :class="{ active: activeKey === 'F7' }"><span>F7</span> <span class="f-label">MKDIR</span></div>
+        <div class="f-key" :class="{ active: activeKey === 'F8' }"><span>F8</span> <span class="f-label">DELETE</span></div>
+        <div class="f-key" :class="{ active: activeKey === 'F9' }"><span>F9</span> <span class="f-label">PULLDN</span></div>
+        <div class="f-key" :class="{ active: activeKey === 'F10' }"><span>F10</span> <span class="f-label">QUIT</span></div>
       </div>
     </div>
   </div>
@@ -418,7 +418,8 @@ pre {
     transition: color 0.2s;
 }
 
-.f-key span {
+/* Target ONLY the first span (the Key Name "F1") for the block style */
+.f-key > span:first-child {
     background: #333;
     color: #fff;
     border: none;
@@ -431,7 +432,8 @@ pre {
     color: #fff;
 }
 
-.f-key:hover span, .f-key.active span {
+/* Hover effect only changes the Key background */
+.f-key:hover > span:first-child, .f-key.active > span:first-child {
     background: var(--color-accent);
     color: #000;
 }

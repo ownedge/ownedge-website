@@ -201,7 +201,7 @@ onUnmounted(() => {
 .logo-img {
   width: 25vw;
   height: auto;
-  opacity: 0.05; 
+  opacity: 0.1; 
   display: block;
   filter: brightness(0) invert(1) drop-shadow(0 0 10px rgba(255,255,255,0.1));
   transition: all 1s ease;
