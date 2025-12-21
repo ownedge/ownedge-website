@@ -93,12 +93,10 @@ const handleBootStart = async () => {
   isBooted.value = true;
 }
 
-
-
 onMounted(() => {
   window.addEventListener('mousemove', handleMouseMove)
   window.addEventListener('resize', handleResize)
-  
+
   // Aggressively hide cursor
   hideCursor();
   cursorInterval = setInterval(hideCursor, 500);
@@ -109,9 +107,9 @@ onMounted(() => {
   
   document.addEventListener('mouseover', handleGlobalHover);
   window.addEventListener('keydown', handleGlobalKeydown);
-  
-  // Start glitch loop
-  setTimeout(triggerGlitch, 5000);
+
+  // Start glitch loop immediately
+  triggerGlitch();
 })
 
 onUnmounted(() => {
@@ -149,7 +147,7 @@ const handleGlobalKeydown = (e) => {
 const turbulenceFreq = ref(0.0001);
 
 const triggerGlitch = () => {
-    if (!isBooted.value) return;
+    // Removed isBooted check to allow glitching during load
 
     // Glitch sequence: Spike -> Recover -> Minor Spike -> Recover
     const spike = () => {
@@ -219,7 +217,6 @@ const heroStyle = computed(() => {
     <svg width="0" height="0" style="position: absolute; pointer-events: none;">
       <defs>
         <filter id="spherical-warp" x="-1%" y="-1%" width="104%" height="104%">
-          <!-- Use low frequency turbulence to simulate broad warping/curvature -->
           <!-- Use low frequency turbulence to simulate broad warping/curvature -->
           <feTurbulence :baseFrequency="turbulenceFreq" numOctaves="1" result="noise" />
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" />
