@@ -19,35 +19,61 @@ let animationFrameId = null;
     ctx.fillRect(0, 0, rect.width, rect.height);
   };
   
+  const mouseX = ref(-100);
+  const mouseY = ref(-100);
+
+  const updateMouse = (e) => {
+    mouseX.value = e.clientX;
+    mouseY.value = e.clientY;
+  };
+
   onMounted(() => {
-  window.addEventListener('resize', resize);
-  
-  // Call resize immediately to set initial size
-  // Note: we need to wait for next tick or just rely on the fact we are mounted.
-  setTimeout(resize, 0);
-
-  const render = () => {
-    if (!canvasRef.value) return;
-    const canvas = canvasRef.value; // Access canvas ref directly in loop to be safe
-    const ctx = canvas.getContext('2d', { alpha: false });
-    const width = canvas.width;
-    const height = canvas.height;
-
-    // 1. Decay (Fade out previous frames)
-    ctx.globalCompositeOperation = 'source-over';
-    // Increased opacity to 0.15 to make trails fade faster ("less burn in")
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; 
-    ctx.fillRect(0, 0, width, height);
-
-    // 2. Draw new light sources
-    ctx.globalCompositeOperation = 'lighter';
+    window.addEventListener('resize', resize);
+    window.addEventListener('mousemove', updateMouse);
     
-    // Get canvas position relative to viewport to correct offsets
-    const canvasRect = canvas.getBoundingClientRect();
-    
-    // Find targets - Updated to use wrappers for precision
-    // We target .logo-img and .typing-wrapper (which wraps all our typing text)
-    const targets = document.querySelectorAll('.logo-img, .typing-wrapper');
+    // Call resize immediately to set initial size
+    setTimeout(resize, 0);
+
+    const render = () => {
+      if (!canvasRef.value) return;
+      const canvas = canvasRef.value; 
+      const ctx = canvas.getContext('2d', { alpha: false });
+      const width = canvas.width;
+      const height = canvas.height;
+
+      // 1. Decay 
+      ctx.globalCompositeOperation = 'source-over';
+      // Decreased opacity to 0.05 to make trails fade slower ("more burn in")
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)'; 
+      ctx.fillRect(0, 0, width, height);
+
+      // 2. Draw cursor trail
+      if (mouseX.value > 0 && mouseY.value > 0) {
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = '#ff0055'; // Pink trail color
+
+        ctx.save();
+        ctx.translate(mouseX.value-15, mouseY.value-15);
+        
+        // Draw the arrow shape from App.vue custom-cursor
+        ctx.beginPath();
+        ctx.moveTo(0.5, 1.19);   // Top Tip
+        ctx.lineTo(11.78, 12.36); // Right Wing
+        ctx.lineTo(5.65, 12.36);  // Inner corner
+        ctx.lineTo(5.31, 12.49);  // Inner detail
+        ctx.lineTo(0.5, 16.88);   // Bottom Tip
+        ctx.closePath();
+        
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // 3. Draw new light sources
+      ctx.globalCompositeOperation = 'lighter';
+      
+      const canvasRect = canvas.getBoundingClientRect();
+      const targets = document.querySelectorAll('.logo-img, .typing-wrapper');
+
 
     targets.forEach(el => {
       const rect = el.getBoundingClientRect();
@@ -57,13 +83,23 @@ let animationFrameId = null;
       
       // Check visibility/opacity approximate
       const style = window.getComputedStyle(el);
-      // Note: wrapper might not have opacity set, but parent does. 
-      // check el.closest opacity? Or just assume visible.
       if (style.display === 'none' || style.visibility === 'hidden') return;
+
+      // Check parent opacity (specifically for logo container fade-in)
+      let fadeInOp = 1.0;
+      if (el.parentElement) {
+        const parentStyle = window.getComputedStyle(el.parentElement);
+        fadeInOp = parseFloat(parentStyle.opacity);
+        // If effective opacity is near zero, skip drawing cleanly
+        if (fadeInOp < 0.01) return;
+      }
 
       // Use computed color from element to match perfectly
       // We use globalAlpha to make it a ghost trail
-      ctx.globalAlpha = 0.5;
+      // Reduce alpha for images (logo) to avoid blown-out glow
+      // MULTIPLY by fadeInOp so the trail fades in exactly with the element
+      const baseAlpha = el.tagName === 'IMG' ? 0.1 : 0.5;
+      ctx.globalAlpha = baseAlpha * fadeInOp;
       
       const x = rect.left - canvasRect.left;
       const y = rect.top - canvasRect.top;
@@ -117,6 +153,7 @@ let animationFrameId = null;
 
 onUnmounted(() => {
   window.removeEventListener('resize', resize);
+  window.removeEventListener('mousemove', updateMouse);
   cancelAnimationFrame(animationFrameId);
 });
 </script>
@@ -134,7 +171,7 @@ onUnmounted(() => {
   height: 100%;
   pointer-events: none;
   z-index: 40; /* Above content (20), below Grid/Scanlines (50) */
-  mix-blend-mode: screen; 
+  mix-blend-mode: screen;
   opacity: 0.13;
 }
 </style>

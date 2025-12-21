@@ -153,7 +153,7 @@ html, body, .crt-wrapper, * {
   left: 0;
   width: 24px;
   height: 24px;
-  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19135L11.7841 12.3673H5.65376Z' fill='rgba(233, 18, 18, 0.9)' stroke='rgba(255, 255, 255, 0.7)' stroke-width='1'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='34' height='34' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19135L11.7841 12.3673H5.65376Z' fill='rgba(233, 18, 18, 0.6)'/%3E%3C/svg%3E");
   background-size: contain;
   background-repeat: no-repeat;
   pointer-events: none;

@@ -67,7 +67,7 @@ const typeWriter = () => {
   let typeSpeed = 100; // Type speed
 
   if (isDeleting) {
-    typeSpeed /= 4; // Delete faster
+    typeSpeed /= 5; // Delete faster
   }
 
   if (!isDeleting && charIndex === currentSubtitle.length) {
@@ -115,6 +115,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+
 .hero-display {
   display: flex;
   align-items: center;
@@ -156,28 +157,24 @@ onUnmounted(() => {
   line-height: 1;
   color: rgba(255, 255, 255, 0.03);
   position: absolute;
-  top: 50%;
+  top: 40%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: -1;
   font-family: var(--font-mono);
   font-weight: bold;
   opacity: 0;
-  animation: fadeInUp 1.5s ease-out 0.2s forwards;
+  animation: fadeIn 3s ease-in-out 0.3s forwards;
 }
 
 .logo-img {
   width: 25vw;
   height: auto;
-  opacity: 0.1; 
+  opacity: 0.05; 
   display: block;
-  filter: brightness(0) invert(1) drop-shadow(0 0 10px rgba(255,255,255,0.3));
-  transition: all 1.5s ease;
+  filter: brightness(0) invert(1) drop-shadow(0 0 10px rgba(255,255,255,0.1));
+  transition: all 1s ease;
   pointer-events: auto; 
-}
-
-.logo-img:hover {
-  opacity: 0.18;
 }
 
 .subtitle {
@@ -213,14 +210,13 @@ onUnmounted(() => {
   50% { opacity: 0; }
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  to { 
+    opacity: 1; 
   }
 }
+
 </style>
