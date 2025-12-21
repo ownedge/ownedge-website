@@ -152,12 +152,12 @@ class SoundManager {
 
         // High-tech blip: High pitch, very short decay
         // Randomize pitch slightly for "organic" feel
-        const baseFreq = 100 + Math.random() * 20; // 800-850Hz range (much tighter)
+        const baseFreq = 9500 + Math.random() * 20; // 800-850Hz range (much tighter)
         osc.frequency.setValueAtTime(baseFreq, t);
         osc.type = 'square'; // Crisper "digital" click
 
         // Envelope: Instant attack, faster decay for sharpness
-        gain.gain.setValueAtTime(0.01, t); // Slightly lower volume for square wave
+        gain.gain.setValueAtTime(0.005, t); // Slightly lower volume for square wave
         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
 
         osc.connect(gain);
@@ -261,6 +261,40 @@ class SoundManager {
              }, 2000);
          }
     }
+
+    playHddSound() {
+        if (!this.ctx || this.isMuted) return;
+        const t = this.ctx.currentTime;
+
+        // Create noise buffer
+        const bufferSize = this.ctx.sampleRate * 0.05; // 50ms buffer
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        // Filter for "click" characteristic (Bandpass)
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 2500 + Math.random() * 500; // High pitch mechanical tick
+        filter.Q.value = 1.0;
+
+        const gain = this.ctx.createGain();
+        // Very quite, subtle click
+        gain.gain.setValueAtTime(0.005, t); 
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.masterGain);
+
+        noise.start(t);
+    }
+
     // --- 16-bit Soft Retro "Chill" Music Generator ---
     // Style: Elevator Music / RPG Town / Chillwave
     // Tempo: 90 BPM, Smooth envelopes, extended chords

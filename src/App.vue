@@ -54,6 +54,26 @@ const handleResize = () => {
 }
 
 
+const isCapsLock = ref(false);
+const isTurbo = ref(true); // Always fast!
+const isHddActive = ref(false);
+
+const updateLockStates = (e) => {
+  if (e.getModifierState) {
+    isCapsLock.value = e.getModifierState('CapsLock');
+  }
+};
+
+const simulateHddActivity = () => {
+    // Random bursts of activity
+    if (Math.random() > 0.7) {
+        isHddActive.value = true;
+        SoundManager.playHddSound();
+        setTimeout(() => { isHddActive.value = false }, 50 + Math.random() * 100);
+    }
+    // Schedule next check
+    setTimeout(simulateHddActivity, 50 + Math.random() * 200);
+};
 
 onMounted(() => {
   window.addEventListener('mousemove', handleMouseMove)
@@ -67,6 +87,14 @@ onMounted(() => {
   window.addEventListener('focus', hideCursor);
   document.addEventListener('mouseenter', hideCursor);
   document.addEventListener('click', hideCursor);
+
+  // Monitor Lock States
+  window.addEventListener('keydown', updateLockStates);
+  window.addEventListener('keyup', updateLockStates);
+  window.addEventListener('mousedown', updateLockStates);
+  window.addEventListener('mousemove', updateLockStates); 
+  
+  simulateHddActivity();
 })
 
 const handleGlobalHover = (e) => {
@@ -180,6 +208,30 @@ const heroStyle = computed(() => {
 <template>
   <div class="crt-wrapper">
     
+    <!-- Fixed Status LEDs -->
+    <div class="led-panel">
+        <div class="led-group">
+            <div class="led active-caps" :class="{ active: isCapsLock }"></div>
+            <span class="led-label">CAPS</span>
+        </div>
+        <div class="led-group">
+            <div class="led hdd-led" :class="{ active: isHddActive }"></div>
+            <span class="led-label">HDD</span>
+        </div>
+        <div class="led-group">
+            <div class="led turbo-led" :class="{ active: isTurbo }"></div>
+            <span class="led-label">TURBO</span>
+        </div>
+    </div>
+
+    <!-- Power LED (Right Side) -->
+    <div class="power-panel">
+        <div class="led-group">
+            <div class="led power-led active"></div>
+            <span class="led-label">POWER</span>
+        </div>
+    </div>
+
     <div class="crt-screen">
       <!-- Apply 'crt-content' class for filter -->
       <!-- Apply 'crt-content' class for filter -->
@@ -274,7 +326,7 @@ html, body, .crt-wrapper, * {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px; /* Bezel thickness */
+  padding: 30px 30px 80px 30px; /* Thicker chin */
   cursor: none; /* Ensure hidden here too */
 }
 
@@ -284,7 +336,7 @@ html, body, .crt-wrapper, * {
   height: 100%;
   max-width: 100%;
   max-height: 100%;
-  border-radius: 20px; /* Slight curve at corners */
+  border-radius: 40px; /* Slight curve at corners */
   position: relative;
   overflow: hidden;
   /* Strong inner shadow to simulate curved glass depth */
@@ -294,7 +346,7 @@ html, body, .crt-wrapper, * {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #1d1d1d; 
+  border: 12px solid #1d1d1d; 
 }
 
 .app-container {
@@ -383,6 +435,125 @@ html, body, .crt-wrapper, * {
   z-index: 60;
   box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
   border-radius: 5px;
+}
+
+/* LED Status Panel */
+.led-panel {
+    position: fixed;
+    bottom: 1.5rem; /* Sit in the bottom bezel padding */
+    left: 4rem;
+    display: flex;
+    gap: 1.5rem;
+    pointer-events: none;
+    z-index: 10000;
+}
+
+.led-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    width: 60px; /* Enforce overlapping width to keep centers equidistant */
+}
+
+.led {
+    width: 20px;
+    height: 8px;
+    background-color: #0b1d0b;
+    border: 1px solid #142e14;
+    box-shadow: inset 0 0 2px rgba(0,0,0,0.8);
+    transition: all 0.1s ease;
+}
+
+/* CAPS (Standard Green) */
+.active-caps.active {
+    background-color: #33ff33;
+    box-shadow: 0 0 5px #33ff33, 0 0 10px #33ff33, 0 0 40px rgba(51, 255, 51, 0.4), inset 0 0 1px rgba(255,255,255,0.5);
+    border-color: #55ff55;
+    z-index: 10002;
+}
+
+/* HDD (Amber/Orange) */
+.hdd-led {
+    background-color: #3b2400; /* Dark Amber (Off) */
+    border-color: #553300;
+}
+
+.hdd-led.active {
+    background-color: #ffaa00;
+    box-shadow: 0 0 5px #ffaa00, 0 0 10px #ffaa00, 0 0 40px rgba(255, 170, 0, 0.4), inset 0 0 1px rgba(255,255,255,0.5);
+    border-color: #ffcc00;
+    z-index: 10002;
+}
+
+.led-group:has(.hdd-led.active) .led-label {
+    text-shadow: -1px -1px 0px rgba(0, 0, 0, 0.9), 0 0 15px rgba(255, 170, 0, 0.5);
+    color: #776644;
+}
+
+/* TURBO (Yellow) */
+.turbo-led {
+    background-color: #3b3b00; /* Dark Yellow (Off) */
+    border-color: #555500;
+}
+
+.turbo-led.active {
+    background-color: #ffff00;
+    box-shadow: 0 0 5px #ffff00, 0 0 10px #ffff00, 0 0 40px rgba(255, 255, 0, 0.4), inset 0 0 1px rgba(255,255,255,0.5);
+    border-color: #ffff88;
+    z-index: 10002;
+}
+
+.led-group:has(.turbo-led.active) .led-label {
+    text-shadow: -1px -1px 0px rgba(0, 0, 0, 0.9), 0 0 15px rgba(255, 255, 0, 0.5);
+    color: #777744;
+}
+
+/* Power LED Specifics */
+
+.led-label {
+    font-family: 'MicrogrammaDMedExt', 'Courier New', monospace;
+    font-size: 0.6rem;
+    color: #444; 
+    letter-spacing: 1px;
+    font-weight: bold;
+    text-shadow: -1px -1px 0px rgba(0, 0, 0, 0.9);
+    transition: all 0.2s ease;
+}
+
+/* Simulate light spilling onto the engraved text */
+.led-group:has(.led.active) .led-label {
+    text-shadow: 
+        -1px -1px 0px rgba(0, 0, 0, 0.9),
+        0 0 15px rgba(51, 255, 51, 0.5); /* Green wash */
+    color: #667766; /* Tinted by green light */
+}
+
+/* Power LED Specifics */
+.power-panel {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 4rem;
+    display: flex;
+    pointer-events: none;
+    z-index: 10000;
+}
+
+.power-led.active {
+    background-color: #33ff33; 
+    box-shadow: 
+        0 0 5px #33ff33,
+        0 0 10px #33ff33,
+        0 0 40px rgba(51, 255, 51, 0.4), /* Green Spill */
+        inset 0 0 1px rgba(255,255,255,0.5);
+    border-color: #55ff55;
+}
+
+.power-panel .led-group:has(.power-led.active) .led-label {
+    text-shadow: 
+        -1px -1px 0px rgba(0, 0, 0, 0.9),
+        0 0 15px rgba(51, 255, 51, 0.5); /* Green wash */
+    color: #667766; /* Tinted by green light */
 }
 
 </style>
