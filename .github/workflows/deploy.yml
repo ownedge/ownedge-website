@@ -31,6 +31,6 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/ 
-          # Assuming you want to deploy to the root of the FTP user's directory. 
-          # If a specific subfolder is needed, add 'server-dir: /public_html/' or similar.
+          local-dir: ./dist/
+          server-dir: /dist/
+
