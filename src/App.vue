@@ -109,6 +109,9 @@ onMounted(() => {
   
   document.addEventListener('mouseover', handleGlobalHover);
   window.addEventListener('keydown', handleGlobalKeydown);
+  
+  // Start glitch loop
+  setTimeout(triggerGlitch, 5000);
 })
 
 onUnmounted(() => {
@@ -141,6 +144,31 @@ const handleGlobalKeydown = (e) => {
       }
   }
 }
+
+// Glitch Effect
+const turbulenceFreq = ref(0.0001);
+
+const triggerGlitch = () => {
+    if (!isBooted.value) return;
+
+    // Glitch sequence: Spike -> Recover -> Minor Spike -> Recover
+    const spike = () => {
+       turbulenceFreq.value = 0.0044 * Math.random();
+       setTimeout(() => {
+           turbulenceFreq.value = 0.0001; 
+       }, 50 + Math.random() * 100);
+    };
+
+    spike();
+    
+    // Occasionally double glith
+    if (Math.random() > 0.5) {
+        setTimeout(spike, 150);
+    }
+    
+    // Schedule next glitch
+    setTimeout(triggerGlitch, Math.random() * 8000 + 2000); 
+};
 
 
 
@@ -192,7 +220,8 @@ const heroStyle = computed(() => {
       <defs>
         <filter id="spherical-warp" x="-1%" y="-1%" width="104%" height="104%">
           <!-- Use low frequency turbulence to simulate broad warping/curvature -->
-          <feTurbulence baseFrequency="0.0034" numOctaves="1" result="noise" />
+          <!-- Use low frequency turbulence to simulate broad warping/curvature -->
+          <feTurbulence :baseFrequency="turbulenceFreq" numOctaves="1" result="noise" />
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" />
         </filter>
       </defs>
