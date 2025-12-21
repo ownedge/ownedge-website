@@ -4,7 +4,7 @@ import HeroDisplay from './components/HeroDisplay.vue'
 import PortfolioTUI from './components/PortfolioTUI.vue'
 import PhosphorOverlay from './components/PhosphorOverlay.vue'
 import NoiseOverlay from './components/NoiseOverlay.vue'
-import SoundManager from './utils/SoundManager'
+import SoundManager from './sfx/SoundManager'
 import BootLoader from './components/BootLoader.vue'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 
@@ -86,8 +86,8 @@ const handleBootStart = async () => {
 
   // 3. Start Chill Loop
   setTimeout(() => {
-    SoundManager.startChillLoop();
-  }, SoundManager.config.MUSIC_START_DELAY);
+    SoundManager.startMusicRotation();
+  }, 4500); // Wait for boot sound to finish
   
   // 4. Reveal Content
   isBooted.value = true;
@@ -364,7 +364,7 @@ html, body, .crt-wrapper, * {
   background: radial-gradient(
     circle,
     transparent 43%,
-    rgb(17, 17, 17) 95%
+    rgb(20, 52, 57) 95%
   );
   background-size: 2.5px 2.5px; /* Dot density */
   pointer-events: none;

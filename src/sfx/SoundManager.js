@@ -1,10 +1,14 @@
+import ChillSong from './ChillSong';
+import EnergeticSong from './EnergeticSong';
+import FlowSong from './FlowSong';
+
 const CONFIG = {
     MASTER_VOL: 0.9,
     
     // Volume Multipliers per section
     BOOT_VOL: 0.9,       
-    ATMOSPHERE_VOL: 0.2, 
-    MUSIC_VOL: 0.2,      
+    ATMOSPHERE_VOL: 0.15,
+    MUSIC_VOL: 0.25,      
     
     // Music Timing
     MUSIC_START_DELAY: 4500,     // Milliseconds before music starts after boot
@@ -148,7 +152,7 @@ class SoundManager {
 
         // High-tech blip: High pitch, very short decay
         // Randomize pitch slightly for "organic" feel
-        const baseFreq = 800 + Math.random() * 20; // 800-850Hz range (much tighter)
+        const baseFreq = 100 + Math.random() * 20; // 800-850Hz range (much tighter)
         osc.frequency.setValueAtTime(baseFreq, t);
         osc.type = 'square'; // Crisper "digital" click
 
@@ -261,6 +265,8 @@ class SoundManager {
     // Style: Elevator Music / RPG Town / Chillwave
     // Tempo: 90 BPM, Smooth envelopes, extended chords
 
+    // --- Music System ---
+    
     setupEffects() {
         if (!this.ctx || this.delayNode) return;
         
@@ -294,169 +300,88 @@ class SoundManager {
         this.delayNode.connect(this.musicGain); // Delay output also to Music Bus
     }
 
-    playPad(freq, startTime, duration, vol=0.1) {
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        
-        // Sine/Triangle mix for "flute-like" pad
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, startTime);
-        
-        const panner = this.ctx.createStereoPanner();
-        // Gentle random wander for pads
-        panner.pan.value = (Math.random() * 0.4) - 0.2; 
-
-        osc.connect(gain);
-        gain.connect(panner);
-        
-        // Connect to Music Bus instead of Master
-        if (this.musicGain) {
-             panner.connect(this.musicGain);
-        } else {
-             panner.connect(this.masterGain);
-        }
-        
-        if (this.fxBus) {
-             panner.connect(this.fxBus);
-        }
-
-        // Slow Attack / Release Envelope (The "Soft" part)
-        gain.gain.setValueAtTime(0, startTime);
-        gain.gain.linearRampToValueAtTime(vol, startTime + (duration * 0.4));
-        gain.gain.linearRampToValueAtTime(0, startTime + duration);
-        
-        osc.start(startTime);
-        osc.stop(startTime + duration);
-    }
-
-    playSoftLead(freq, startTime, duration, vol=0.1) {
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        
-        osc.type = 'sine'; // Pure tone
-        osc.frequency.setValueAtTime(freq, startTime);
-
-        const panner = this.ctx.createStereoPanner();
-        panner.pan.value = 0;
-
-        osc.connect(gain);
-        gain.connect(panner);
-        
-        if (this.musicGain) {
-             panner.connect(this.musicGain);
-        } else {
-             panner.connect(this.masterGain);
-        }
-        
-        if (this.fxBus) {
-             panner.connect(this.fxBus);
-        }
-
-        // Bell-like envelope
-        gain.gain.setValueAtTime(0, startTime);
-        gain.gain.linearRampToValueAtTime(vol, startTime + 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-
-        osc.start(startTime);
-        osc.stop(startTime + duration);
-    }
-
-    playBrush(startTime, vol=0.05) {
-        const bufferSize = this.ctx.sampleRate * 0.1;
-        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-            data[i] = Math.random() * 2 - 1;
-        }
-        const noise = this.ctx.createBufferSource();
-        noise.buffer = buffer;
-        
-        // Soften the noise
-        const filter = this.ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.value = 800; 
-
-        const gain = this.ctx.createGain();
-        gain.gain.setValueAtTime(0, startTime);
-        gain.gain.linearRampToValueAtTime(vol, startTime + 0.02);
-        gain.gain.linearRampToValueAtTime(0, startTime + 0.1);
-
-        noise.connect(filter);
-        filter.connect(gain);
-        
-        if (this.musicGain) {
-             gain.connect(this.musicGain);
-        } else {
-             gain.connect(this.masterGain);
-        }
-        
-        noise.start(startTime);
-    }
-
-    startChillLoop() {
+    startMusicRotation() {
         if (!this.ctx || this.isMuted) return;
-        //this.stopAtmosphere(); 
         this.setupEffects();
         
-        // FADE IN MUSIC
+        // Initialize playlist
+        this.playlist = [new ChillSong(), new FlowSong(), new EnergeticSong()];
+        this.currentSongIndex = 0;
+        this.currentSongInstance = null;
+        this.currentSongGain = null;
+
+        // FADE IN INITIAL SONG
         const fadeInDur = this.config.MUSIC_FADE_IN_DURATION;
         if (this.musicGain) {
             const t = this.ctx.currentTime;
             this.musicGain.gain.setValueAtTime(0, t);
-            this.musicGain.gain.linearRampToValueAtTime(1.0, t + fadeInDur);
+            this.musicGain.gain.linearRampToValueAtTime(this.config.MUSIC_VOL, t + fadeInDur);
         }
+
+        // Start first song
+        this.playSong(this.playlist[0]);
+
+        // Schedule rotation every 60 seconds
+        setInterval(() => {
+            this.rotateSong();
+        }, 30000); 
+    }
+
+    playSong(songInstance) {
+        if (!this.ctx) return;
         
-        const vol = this.config.MUSIC_VOL; // Master scaler for music
-
-        const bpm = 90; 
-        const beatDur = 60 / bpm; 
-        let beatCounter = 0;
-
-        // Progression: Cmaj7 - Fmaj7 - Em7 - Am9
-        const chords = [
-            [261.63, 329.63, 392.00, 493.88], // Cmaj7
-            [174.61, 220.00, 261.63, 329.63], // Fmaj7
-            [164.81, 196.00, 246.94, 293.66], // Em7
-            [220.00, 261.63, 329.63, 392.00]  // Am7
-        ];
+        // Create a specific gain node for this song to allow crossfading
+        const songGain = this.ctx.createGain();
+        songGain.connect(this.musicGain); // Connect to main music bus
         
-        const roots = [65.41, 43.65, 41.20, 55.00];
+        // Start full volume (global music bus handles the master fade-in)
+        songGain.gain.value = 1.0; 
 
-        this.jazzInterval = setInterval(() => {
-            if (!this.ctx) return;
-            const t = this.ctx.currentTime;
-            
-            const bar = Math.floor(beatCounter / 4);
-            const beat = beatCounter % 4;
-            const chordIdx = bar % 4;
-            const currentChord = chords[chordIdx];
+        songInstance.start(this.ctx, songGain);
+        
+        this.currentSongInstance = songInstance;
+        this.currentSongGain = songGain;
+    }
 
-            // 1. Lush Pads (Beat 1)
-            if (beat === 0) {
-                currentChord.forEach((freq, i) => {
-                    this.playPad(freq, t + (i*0.05), beatDur * 4, 0.02 * vol);
-                });
-                // Bass (Reduced volume)
-                this.playPad(roots[chordIdx], t, beatDur * 4, 0.06 * vol);
-            }
+    rotateSong() {
+        if (!this.ctx) return;
+        
+        const nextIndex = (this.currentSongIndex + 1) % this.playlist.length;
+        const nextSong = this.playlist[nextIndex];
+        const prevSongInstance = this.currentSongInstance;
+        const prevSongGain = this.currentSongGain;
 
-            // 2. Soft Lead Melody (Pentatonic wandering)
-            // Play sparse notes
-            if (Math.random() > 0.4) {
-                const note = currentChord[Math.floor(Math.random() * currentChord.length)] * 2; 
-                const offset = (Math.random() > 0.5) ? beatDur / 2 : 0; 
-                this.playSoftLead(note, t + offset, beatDur, 0.03 * vol); 
-            }
+        // 1. Prepare Next Song
+        const nextSongGain = this.ctx.createGain();
+        nextSongGain.connect(this.musicGain);
+        nextSongGain.gain.value = 0; // Start silent
 
-            // 3. Brush Drums
-            if (beat % 2 === 0) {
-                 this.playBrush(t, 0.015 * vol);
-            } else {
-                 this.playBrush(t, 0.02 * vol);
-            }
+        nextSong.start(this.ctx, nextSongGain);
 
-            beatCounter++;
-        }, beatDur * 1000);
+        // 2. Crossfade (10 seconds)
+        const t = this.ctx.currentTime;
+        const fadeDur = 10;
+
+        // Fade out old
+        if (prevSongGain) {
+            prevSongGain.gain.setValueAtTime(1, t);
+            prevSongGain.gain.linearRampToValueAtTime(0, t + fadeDur);
+        }
+
+        // Fade in new
+        nextSongGain.gain.setValueAtTime(0, t);
+        nextSongGain.gain.linearRampToValueAtTime(1, t + fadeDur);
+
+        // 3. Update State
+        this.currentSongInstance = nextSong;
+        this.currentSongGain = nextSongGain;
+        this.currentSongIndex = nextIndex;
+
+        // 4. Cleanup Old Song
+        setTimeout(() => {
+            if (prevSongInstance) prevSongInstance.stop();
+            // Old gain node will be garbage collected once disconnected/dereferenced
+        }, fadeDur * 1000 + 100);
     }
 }
 
