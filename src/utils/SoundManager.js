@@ -186,6 +186,28 @@ class SoundManager {
         osc.stop(t + 0.05);
     }
 
+    playErrorSound() {
+        if (!this.ctx || this.isMuted) return;
+        const t = this.ctx.currentTime;
+        
+        // Classic "Error" square wave burst
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, t);
+        osc.frequency.linearRampToValueAtTime(100, t + 0.3); // Pitch down
+        
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        
+        gain.gain.setValueAtTime(0.1, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+        
+        osc.start(t);
+        osc.stop(t + 0.3);
+    }
+
     playAtmosphere() {
         if (!this.ctx || this.isMuted || this.atmosphereOscillators.length > 0) return;
 

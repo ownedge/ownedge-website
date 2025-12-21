@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import SoundManager from '../utils/SoundManager';
 
 const emit = defineEmits(['start']);
 const progress = ref(0);
@@ -23,10 +24,37 @@ const triggerLaunch = () => {
     }, 500);
 }
 
-const handleKeydown = (e) => {
+const isEasterEggActive = ref(false);
+
+const checkEasterEgg = () => {
+    const k = activeKeys.value;
+    if (k.ArrowUp && k.ArrowDown && k.ArrowLeft && k.ArrowRight) {
+        if (!isEasterEggActive.value) {
+            triggerEasterEgg();
+        }
+    }
+}
+
+const triggerEasterEgg = () => {
+    isEasterEggActive.value = true;
+    SoundManager.playErrorSound();
+    
+    // Hide after 4 seconds
+    setTimeout(() => {
+        isEasterEggActive.value = false;
+    }, 4000);
+}
+
+const handleKeydown = async (e) => {
   // Allow arrow keys visual feedback anytime
   if (activeKeys.value.hasOwnProperty(e.key)) {
+    // Initialize sound on first interaction
+    if (!SoundManager.initialized) SoundManager.init();
+    if (SoundManager.ctx?.state === 'suspended') await SoundManager.resume();
+    
+    SoundManager.playTypingSound();
     activeKeys.value[e.key] = true;
+    checkEasterEgg();
   }
 
   // Only allow Enter when system is ready
@@ -38,6 +66,7 @@ const handleKeydown = (e) => {
 const handleKeyup = (e) => {
     if (activeKeys.value.hasOwnProperty(e.key)) {
         activeKeys.value[e.key] = false;
+        // Optimization: No need to check on keyup as it only removes keys
     }
 }
 
@@ -117,61 +146,69 @@ const handleStart = () => {
         </button>
       </div>
       
-      <div class="keyboard-hint" :class="{ 'visible': showHint }">
-          <!-- Width/Height ratio adjusted for 3 columns x 2 rows of these big keys -->
-          <svg class="keyboard-svg" width="180" height="120" viewBox="0 0 280 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                  <!-- The 'Key' shape the user liked (originally the keyboard body) -->
-                  <g id="big-iso-key">
-                      <!-- Preserving original path data but wrapped in group -->
-                      <path d="M10 20 L50 40 L90 20 L50 0 Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                      <path d="M10 20 L10 35 L50 55 L90 35 L90 20" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                      <path d="M50 55 L50 40" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                  </g>
-              </defs>
+       <div class="keyboard-hint" :class="{ 'visible': showHint }">
+           <!-- Width/Height ratio adjusted for 3 columns x 2 rows of these big keys -->
+           <svg class="keyboard-svg" width="180" height="120" viewBox="0 0 280 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+               <defs>
+                   <!-- The 'Key' shape the user liked (originally the keyboard body) -->
+                   <g id="big-iso-key">
+                       <!-- Preserving original path data but wrapped in group -->
+                       <path d="M10 20 L50 40 L90 20 L50 0 Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                       <path d="M10 20 L10 35 L50 55 L90 35 L90 20" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                       <path d="M50 55 L50 40" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                   </g>
+               </defs>
 
-              <!-- UP KEY (Centered on top row) -->
-              <g transform="translate(140, 30)">
-                  <g class="key-inner" :class="{ active: activeKeys.ArrowUp }">
-                      <use href="#big-iso-key" />
-                      <!-- UP Arrow (Pointing North-East) -->
-                      <path d="M40 25 L60 15" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                      <path d="M50 14 L60 15 L56 24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                  </g>
-              </g>
+               <!-- UP KEY (Centered on top row) -->
+               <g transform="translate(140, 30)">
+                   <g class="key-inner" :class="{ active: activeKeys.ArrowUp }">
+                       <use href="#big-iso-key" />
+                       <!-- UP Arrow (Pointing North-East) -->
+                       <path d="M40 25 L60 15" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                       <path d="M50 14 L60 15 L56 24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                   </g>
+               </g>
 
-              <!-- LEFT KEY (Bottom row left) -->
-              <g transform="translate(40, 40)">
-                  <g class="key-inner" :class="{ active: activeKeys.ArrowLeft }">
-                      <use href="#big-iso-key" />
-                      <!-- LEFT Arrow (Pointing North-West) -->
-                      <path d="M60 25 L40 15" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                      <path d="M50 14 L40 15 L44 24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                  </g>
-              </g>
+               <!-- LEFT KEY (Bottom row left) -->
+               <g transform="translate(40, 40)">
+                   <g class="key-inner" :class="{ active: activeKeys.ArrowLeft }">
+                       <use href="#big-iso-key" />
+                       <!-- LEFT Arrow (Pointing North-West) -->
+                       <path d="M60 25 L40 15" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                       <path d="M50 14 L40 15 L44 24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                   </g>
+               </g>
 
-              <!-- DOWN KEY (Bottom row center) -->
-              <g transform="translate(90, 65)">
-                  <g class="key-inner" :class="{ active: activeKeys.ArrowDown }">
-                      <use href="#big-iso-key" />
-                      <!-- DOWN Arrow (Pointing South-West) -->
-                      <path d="M60 15 L40 25" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                      <path d="M50 26 L40 25 L44 16" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                  </g>
-              </g>
+               <!-- DOWN KEY (Bottom row center) -->
+               <g transform="translate(90, 65)">
+                   <g class="key-inner" :class="{ active: activeKeys.ArrowDown }">
+                       <use href="#big-iso-key" />
+                       <!-- DOWN Arrow (Pointing South-West) -->
+                       <path d="M60 15 L40 25" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                       <path d="M50 26 L40 25 L44 16" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                   </g>
+               </g>
 
-              <!-- RIGHT KEY (Bottom row right) -->
-              <g transform="translate(140, 90)">
-                  <g class="key-inner" :class="{ active: activeKeys.ArrowRight }">
-                      <use href="#big-iso-key" />
-                      <!-- RIGHT Arrow (Pointing South-East) -->
-                      <path d="M40 15 L60 25" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                      <path d="M50 26 L60 25 L56 16" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                  </g>
-              </g>
-          </svg>
-          <div class="hint-text"> ▶ KEYBOARD FRIENDLY</div>
-      </div>
+               <!-- RIGHT KEY (Bottom row right) -->
+               <g transform="translate(140, 90)">
+                   <g class="key-inner" :class="{ active: activeKeys.ArrowRight }">
+                       <use href="#big-iso-key" />
+                       <!-- RIGHT Arrow (Pointing South-East) -->
+                       <path d="M40 15 L60 25" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                       <path d="M50 26 L60 25 L56 16" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                   </g>
+               </g>
+           </svg>
+           <div class="hint-text"> ▶ KEYBOARD FRIENDLY</div>
+       </div>
+
+       <!-- GURU MEDITATION OVERLAY -->
+       <div class="guru-overlay" v-if="isEasterEggActive">
+            <div class="guru-box">
+                <div class="guru-title">Software Failure.  Press Left Mouse Button to Continue.</div>
+                <div class="guru-code">Guru Meditation #80000004.0000AAC0</div>
+            </div>
+       </div>
     </div>
   </div>
 </template>
@@ -341,4 +378,45 @@ const handleStart = () => {
     fill-opacity: 0.2;
 }
 
+/* GURU MEDITATION EASTER EGG */
+.guru-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: guruFlash 0.5s infinite; /* The classic flashing border effect */
+    border: 20px solid #ff0000;
+}
+
+.guru-box {
+    text-align: center;
+    color: #ff0000;
+    font-family: inherit;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.guru-title {
+    margin-bottom: 20px;
+    border: 2px solid #ff0000;
+    padding: 10px 20px;
+    background: #000;
+}
+
+.guru-code {
+    font-size: 1.2rem;
+}
+
+@keyframes guruFlash {
+    0%, 49% { border-color: #ff0000; }
+    50%, 100% { border-color: #000; }
+}
 </style>
