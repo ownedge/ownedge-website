@@ -49,11 +49,17 @@ let animationFrameId = null;
 
       // 2. Draw cursor trail
       if (mouseX.value > 0 && mouseY.value > 0) {
+        const rect = canvas.getBoundingClientRect();
+        // Convert global mouse coordinates to canvas-relative coordinates
+        const x = mouseX.value - rect.left;
+        const y = mouseY.value - rect.top;
+
         ctx.globalCompositeOperation = 'lighter';
         ctx.fillStyle = '#ff0055'; // Pink trail color
 
         ctx.save();
-        ctx.translate(mouseX.value-15, mouseY.value-15);
+        // Translate to exact position (no offset needed as SVG origin is tip)
+        ctx.translate(x, y);
         
         // Draw the arrow shape from App.vue custom-cursor
         ctx.beginPath();
