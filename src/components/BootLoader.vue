@@ -378,10 +378,11 @@ const handleStart = () => {
 
 .energy-star-easter-egg {
     position: absolute;
-    top: 40px;
-    right: 40px;
-    width: 200px;
+    top: 10px;
+    right: 10px;
+    width: 250px;
     height: auto;
+    filter: drop-shadow(0 0 5px var(--color-accent, #fff));
     animation: fadeInOutLogo 3s ease-in-out;
 }
 
@@ -391,11 +392,11 @@ const handleStart = () => {
         transform: translateY(-10px);
     }
     10% { 
-        opacity: 1;
+        opacity: 0.75; /* Match desired opacity */
         transform: translateY(0);
     }
     90% {
-        opacity: 1;
+        opacity: 0.75; /* Match desired opacity */
         transform: translateY(0);
     }
     100% { 

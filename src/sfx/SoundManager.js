@@ -216,27 +216,30 @@ class SoundManager {
         if (!this.ctx || this.isMuted) return;
         const t = this.ctx.currentTime;
         
-        // Magical sparkle: Multiple ascending tones with shimmer
-        const frequencies = [1200, 1600, 2000, 2400, 3000];
+        // Crisp 16-bit ring sound: Fast ascending arpeggio with bright triangle wave
+        const notes = [
+            { freq: 1047, time: 0 },      // C6
+            { freq: 1319, time: 0.03 },   // E6
+            { freq: 1568, time: 0.06 }    // G6
+        ];
         
-        frequencies.forEach((freq, i) => {
+        notes.forEach(({ freq, time }) => {
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             
-            osc.type = 'sine'; // Pure, bell-like tone
-            osc.frequency.setValueAtTime(freq, t + i * 0.08);
-            osc.frequency.exponentialRampToValueAtTime(freq * 1.2, t + i * 0.08 + 0.15); // Slight pitch rise
+            osc.type = 'triangle'; // Bright, clear 16-bit tone
+            osc.frequency.setValueAtTime(freq, t + time);
             
-            // Envelope: Quick attack, gentle decay
-            gain.gain.setValueAtTime(0, t + i * 0.08);
-            gain.gain.linearRampToValueAtTime(0.03, t + i * 0.08 + 0.01);
-            gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.08 + 0.3);
+            // Sharp attack, quick decay for crisp sound
+            gain.gain.setValueAtTime(0, t + time);
+            gain.gain.linearRampToValueAtTime(0.08, t + time + 0.005); // Fast attack
+            gain.gain.exponentialRampToValueAtTime(0.001, t + time + 0.15); // Quick decay
             
             osc.connect(gain);
             gain.connect(this.masterGain);
             
-            osc.start(t + i * 0.08);
-            osc.stop(t + i * 0.08 + 0.35);
+            osc.start(t + time);
+            osc.stop(t + time + 0.2);
         });
     }
 
