@@ -2,23 +2,7 @@ import ChillSong from './ChillSong';
 import EnergeticSong from './EnergeticSong';
 import FlowSong from './FlowSong';
 
-const CONFIG = {
-    MASTER_VOL: 0.9,
-    
-    // Volume Multipliers per section
-    BOOT_VOL: 0.9,       
-    ATMOSPHERE_VOL: 0.025,
-    MUSIC_VOL: 0.18, 
-    EASTER_EGG_VOL: 0.15,     
-    
-    // Music Timing
-    MUSIC_START_DELAY: 5500,     // Milliseconds before music starts after boot
-    MUSIC_FADE_IN_DURATION: 5.0, // Seconds to fade in music
-    
-    // Boot Details
-    BOOT_SPIN_DURATION: 3.0,
-    BOOT_SEEK_COUNT: 8
-};
+import { SYSTEM_CONFIG } from '../config';
 
 class SoundManager {
     constructor() {
@@ -28,8 +12,8 @@ class SoundManager {
         this.atmosphereOscillators = [];
         this.atmosphereGain = null;
         this.initialized = false;
-        this.config = CONFIG;
-        this.userVolume = CONFIG.MASTER_VOL; // Track volume state
+        this.config = SYSTEM_CONFIG.AUDIO; // Helper alias
+        this.userVolume = SYSTEM_CONFIG.AUDIO.MASTER_VOL;
     }
 
     init() {
@@ -134,7 +118,7 @@ class SoundManager {
         // 4. Transitions to Atmosphere
         setTimeout(() => {
             this.playAtmosphere();
-        }, 2000);
+        }, 1500);
     }
 
     playDecodeSound() {

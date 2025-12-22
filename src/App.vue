@@ -242,45 +242,103 @@ const heroStyle = computed(() => {
   return { transform: `translate(${-x}px, ${-y}px)` } // Inverse movement for depth
 })
 
-// --- Volume Knob Logic ---
-const volume = ref(0.9); // Default match CONFIG.MASTER_VOL
-const isDraggingKnob = ref(false);
-const startY = ref(0);
-const startVol = ref(0);
+// --- Power Controls Logic ---
+import { SYSTEM_CONFIG } from './config';
 
-const handleKnobDown = (e) => {
-    isDraggingKnob.value = true;
+const volume = ref(SYSTEM_CONFIG.AUDIO.MASTER_VOL);
+const brightness = ref(SYSTEM_CONFIG.VISUALS.BRIGHTNESS_DEFAULT);
+const contrast = ref(SYSTEM_CONFIG.VISUALS.CONTRAST_DEFAULT);
+const hue = ref(SYSTEM_CONFIG.VISUALS.HUE_DEFAULT);
+
+// Generic Knob State
+const activeKnob = ref(null); // 'vol', 'brt', 'con', 'hue'
+const startY = ref(0);
+const startValue = ref(0);
+
+const handleKnobDown = (e, type) => {
+    activeKnob.value = type;
     startY.value = e.clientY;
-    startVol.value = volume.value;
+    
+    // Capture distinct start values
+    if (type === 'vol') startValue.value = volume.value;
+    if (type === 'brt') startValue.value = brightness.value;
+    if (type === 'con') startValue.value = contrast.value;
+    if (type === 'hue') startValue.value = hue.value;
+
     document.addEventListener('mousemove', handleKnobMove);
     document.addEventListener('mouseup', handleKnobUp);
-    e.preventDefault(); // Prevent text selection
+    e.preventDefault(); 
 };
 
 const handleKnobMove = (e) => {
-    if (!isDraggingKnob.value) return;
-    const deltaY = startY.value - e.clientY; // Drag up to increase
+    if (!activeKnob.value) return;
+    const deltaY = startY.value - e.clientY; 
     const sensitivity = 0.005; 
-    let newVol = startVol.value + deltaY * sensitivity;
-    newVol = Math.max(0, Math.min(1, newVol));
-    
-    volume.value = newVol;
-    SoundManager.setMasterVolume(newVol);
+    let newVal = startValue.value + deltaY * sensitivity;
+
+    if (activeKnob.value === 'vol') {
+        newVal = Math.max(0, Math.min(1, newVal));
+        volume.value = newVal;
+        SoundManager.setMasterVolume(newVal);
+    } 
+    else if (activeKnob.value === 'brt') {
+        newVal = Math.max(0.5, Math.min(1.5, newVal)); // 50% to 150%
+        brightness.value = newVal;
+    }
+    else if (activeKnob.value === 'con') {
+        newVal = Math.max(0.5, Math.min(1.5, newVal)); // 50% to 150%
+        contrast.value = newVal;
+    }
+    else if (activeKnob.value === 'hue') {
+        // 0.0 to 1.0 cycle
+        newVal = Math.max(0, Math.min(1, newVal));
+        hue.value = newVal;
+    }
 };
 
 const handleKnobUp = () => {
-    isDraggingKnob.value = false;
+    activeKnob.value = null;
     document.removeEventListener('mousemove', handleKnobMove);
     document.removeEventListener('mouseup', handleKnobUp);
 };
 
-const knobStyle = computed(() => {
-    // Map 0-1 to -135deg to +135deg (270 degree range)
-    const deg = (volume.value * 270) - 135;
-    return {
-        transform: `rotate(${deg}deg)`
-    };
+// Computed Styles
+const getKnobRotation = (val, min, max) => {
+    // Normalize to 0-1
+    const norm = (val - min) / (max - min);
+    // Map to -135deg to +135deg
+    return `rotate(${(norm * 270) - 135}deg)`;
+};
+
+const volKnobStyle = computed(() => ({ transform: getKnobRotation(volume.value, 0, 1) }));
+const brtKnobStyle = computed(() => ({ transform: getKnobRotation(brightness.value, 0.5, 1.5) }));
+const conKnobStyle = computed(() => ({ transform: getKnobRotation(contrast.value, 0.5, 1.5) }));
+const hueKnobStyle = computed(() => ({ transform: getKnobRotation(hue.value, 0, 1) }));
+
+// --- Hue Logic ---
+// 0.5 (Center) should map to Teal (approx 188deg)
+// Let's assume range 0-1 maps to 0-360 shift relative to base
+const currentHueDeg = computed(() => {
+   // Base teal is ~188. 
+   // We want knob 0-1 to span spectrum.
+   // Map 0 -> 1 to maybe (188 - 180) -> (188 + 180) to cover full circle centered on Teal?
+   // Or standard 0-360 mapping.
+   // Requirement: Center (0.5) is default Teal.
+   // 0.5 -> 188. 
+   // 0.0 -> 8deg (Red/Orange)
+   // 1.0 -> 368deg (Red/Orange)
+   // So: (val - 0.5) * 360 + 188
+   return (hue.value - 0.5) * 360 + 188;
 });
+
+const scanlineColor = computed(() => `hsl(${currentHueDeg.value}, 42%, 7%)`);
+const ledColor = computed(() => `hsl(${currentHueDeg.value}, 100%, 50%)`);
+
+const ledMarkerStyle = computed(() => ({
+    backgroundColor: ledColor.value,
+    boxShadow: `0 0 2px ${ledColor.value}, 0 0 5px ${ledColor.value}`
+}));
+
 </script>
 
 <template>
@@ -305,18 +363,63 @@ const knobStyle = computed(() => {
     <!-- Power LED (Right Side) -->
     <div class="power-panel">
         <!-- Volume Knob -->
-        <div class="volume-control" @mousedown="handleKnobDown">
+        <div class="volume-control" @mousedown="(e) => handleKnobDown(e, 'vol')">
              <div class="knob-container">
                  <div class="knob-ring"></div>
                  <div class="knob-arrows">
                      <span class="arrow-up">▲</span>
                      <span class="arrow-down">▼</span>
                  </div>
-                 <div class="knob" :style="knobStyle">
+                 <div class="knob" :style="volKnobStyle">
                      <div class="knob-marker"></div>
                  </div>
              </div>
              <span class="led-label">VOL</span>
+        </div>
+
+        <!-- Brightness Knob -->
+        <div class="volume-control" @mousedown="(e) => handleKnobDown(e, 'brt')">
+             <div class="knob-container">
+                 <div class="knob-ring"></div>
+                 <div class="knob-arrows">
+                     <span class="arrow-up">▲</span>
+                     <span class="arrow-down">▼</span>
+                 </div>
+                 <div class="knob" :style="brtKnobStyle">
+                     <div class="knob-marker"></div>
+                 </div>
+             </div>
+             <span class="led-label">BRT</span>
+        </div>
+
+        <!-- Contrast Knob -->
+        <div class="volume-control" @mousedown="(e) => handleKnobDown(e, 'con')">
+             <div class="knob-container">
+                 <div class="knob-ring"></div>
+                 <div class="knob-arrows">
+                     <span class="arrow-up">▲</span>
+                     <span class="arrow-down">▼</span>
+                 </div>
+                 <div class="knob" :style="conKnobStyle">
+                     <div class="knob-marker"></div>
+                 </div>
+             </div>
+             <span class="led-label">CON</span>
+        </div>
+
+        <!-- Hue Knob -->
+        <div class="volume-control" @mousedown="(e) => handleKnobDown(e, 'hue')">
+             <div class="knob-container">
+                 <div class="knob-ring"></div>
+                 <div class="knob-arrows">
+                     <span class="arrow-up">▲</span>
+                     <span class="arrow-down">▼</span>
+                 </div>
+                 <div class="knob" :style="hueKnobStyle">
+                     <div class="knob-marker" :style="ledMarkerStyle"></div>
+                 </div>
+             </div>
+             <span class="led-label">HUE</span>
         </div>
 
         <div class="led-group">
@@ -449,7 +552,8 @@ html, body, .crt-wrapper, * {
   position: relative;
   background: radial-gradient(circle at center, #1d1d1d 0%, #000000 100%);
   overflow: hidden; /* Container is fixed window */
-  filter: url(#spherical-warp); /* Apply content distortion */
+  overflow: hidden; /* Container is fixed window */
+  filter: url(#spherical-warp) brightness(v-bind(brightness*1.5)) contrast(v-bind(contrast)); /* Apply content distortion + Settings */
 }
 
 /* Fixed Background Layer */
@@ -509,10 +613,10 @@ html, body, .crt-wrapper, * {
   /* Create a 'mask' of black with transparent holes */
   background: radial-gradient(
     circle,
-    transparent 43%,
-    rgb(11, 25, 27) 95%
+    transparent 1%,
+    v-bind(scanlineColor) 95%
   );
-  background-size: 2.5px 2.5px; /* Dot density */
+  background-size: 2px 2px; /* Dot density */
   pointer-events: none;
   z-index: 50;
   opacity: 0.9;

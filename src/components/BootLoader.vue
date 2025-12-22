@@ -83,8 +83,8 @@ onMounted(() => {
   
   const steps = [
     { p: 10, t: "LOADING KERNEL..." },
-    { p: 30, t: "DOWNLOADING..." },
-    { p: 50, t: "AUTHENTICATING..." },
+    { p: 30, t: "INSTALLING DRIVERS..." },
+    { p: 50, t: "BOOTING OPERATING SYSTEM..." },
     { p: 100, t: "SYSTEM READY." }
   ];
 
