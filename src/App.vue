@@ -392,7 +392,7 @@ html, body, .crt-wrapper, * {
   width: 100%;
   height: 100%;
   position: relative;
-  background: radial-gradient(circle at center, #181818 0%, #000000 100%);
+  background: radial-gradient(circle at center, #1d1d1d 0%, #000000 100%);
   overflow: hidden; /* Container is fixed window */
   filter: url(#spherical-warp); /* Apply content distortion */
 }
@@ -455,7 +455,7 @@ html, body, .crt-wrapper, * {
   background: radial-gradient(
     circle,
     transparent 43%,
-    rgb(20, 52, 57) 95%
+    rgb(11, 25, 27) 95%
   );
   background-size: 2.5px 2.5px; /* Dot density */
   pointer-events: none;

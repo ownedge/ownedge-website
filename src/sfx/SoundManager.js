@@ -7,7 +7,7 @@ const CONFIG = {
     
     // Volume Multipliers per section
     BOOT_VOL: 0.9,       
-    ATMOSPHERE_VOL: 0.03,
+    ATMOSPHERE_VOL: 0.025,
     MUSIC_VOL: 0.18,      
     
     // Music Timing

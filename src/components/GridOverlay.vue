@@ -18,7 +18,7 @@
   height: 100%;
   pointer-events: none;
   z-index: 10;
-  opacity: 0.2;
+  opacity: 0.25;
 }
 
 .grid-lines {
