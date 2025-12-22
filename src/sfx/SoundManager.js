@@ -212,6 +212,34 @@ class SoundManager {
         osc.stop(t + 0.3);
     }
 
+    playSparkleSound() {
+        if (!this.ctx || this.isMuted) return;
+        const t = this.ctx.currentTime;
+        
+        // Magical sparkle: Multiple ascending tones with shimmer
+        const frequencies = [1200, 1600, 2000, 2400, 3000];
+        
+        frequencies.forEach((freq, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            
+            osc.type = 'sine'; // Pure, bell-like tone
+            osc.frequency.setValueAtTime(freq, t + i * 0.08);
+            osc.frequency.exponentialRampToValueAtTime(freq * 1.2, t + i * 0.08 + 0.15); // Slight pitch rise
+            
+            // Envelope: Quick attack, gentle decay
+            gain.gain.setValueAtTime(0, t + i * 0.08);
+            gain.gain.linearRampToValueAtTime(0.03, t + i * 0.08 + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.08 + 0.3);
+            
+            osc.connect(gain);
+            gain.connect(this.masterGain);
+            
+            osc.start(t + i * 0.08);
+            osc.stop(t + i * 0.08 + 0.35);
+        });
+    }
+
     playAtmosphere() {
         if (!this.ctx || this.isMuted || this.atmosphereOscillators.length > 0) return;
 

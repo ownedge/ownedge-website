@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import SoundManager from '../sfx/SoundManager';
+import energyStarLogo from '../assets/energy-star-logo.png';
 
 const emit = defineEmits(['start']);
 const progress = ref(0);
@@ -37,12 +38,12 @@ const checkEasterEgg = () => {
 
 const triggerEasterEgg = () => {
     isEasterEggActive.value = true;
-    SoundManager.playErrorSound();
+    SoundManager.playSparkleSound();
     
-    // Hide after 4 seconds
+    // Hide after 3 seconds
     setTimeout(() => {
         isEasterEggActive.value = false;
-    }, 4000);
+    }, 3000);
 }
 
 const handleKeydown = async (e) => {
@@ -202,12 +203,9 @@ const handleStart = () => {
            <div class="hint-text"> ▶ KEYBOARD FRIENDLY</div>
        </div>
 
-       <!-- GURU MEDITATION OVERLAY -->
-       <div class="guru-overlay" v-if="isEasterEggActive">
-            <div class="guru-box">
-                <div class="guru-title">Software Failure.  Press Left Mouse Button to Continue.</div>
-                <div class="guru-code">Guru Meditation #80000004.0000AAC0</div>
-            </div>
+       <!-- ENERGY STAR EASTER EGG OVERLAY -->
+       <div class="energy-star-overlay" v-if="isEasterEggActive">
+            <img :src="energyStarLogo" class="energy-star-easter-egg" alt="Energy Star" />
        </div>
     </div>
   </div>
@@ -378,45 +376,31 @@ const handleStart = () => {
     fill-opacity: 0.2;
 }
 
-/* GURU MEDITATION EASTER EGG */
-.guru-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: #000;
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: guruFlash 0.5s infinite; /* The classic flashing border effect */
-    border: 20px solid #ff0000;
+.energy-star-easter-egg {
+    position: absolute;
+    top: 40px;
+    right: 40px;
+    width: 200px;
+    height: auto;
+    animation: fadeInOutLogo 3s ease-in-out;
 }
 
-.guru-box {
-    text-align: center;
-    color: #ff0000;
-    font-family: inherit;
-    font-size: 1.5rem;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-}
-
-.guru-title {
-    margin-bottom: 20px;
-    border: 2px solid #ff0000;
-    padding: 10px 20px;
-    background: #000;
-}
-
-.guru-code {
-    font-size: 1.2rem;
-}
-
-@keyframes guruFlash {
-    0%, 49% { border-color: #ff0000; }
-    50%, 100% { border-color: #000; }
+@keyframes fadeInOutLogo {
+    0% { 
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    10% { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+    90% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% { 
+        opacity: 0;
+        transform: translateY(-10px);
+    }
 }
 </style>

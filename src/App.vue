@@ -7,6 +7,7 @@ import NoiseOverlay from './components/NoiseOverlay.vue'
 import SoundManager from './sfx/SoundManager'
 import BootLoader from './components/BootLoader.vue'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import sonyLogo from './assets/sony-logo.png' // Import logo
 
 let cursorInterval = null;
 
@@ -195,7 +196,7 @@ const handleGlobalKeydown = (e) => {
 }
 
 // Glitch Effect
-const turbulenceFreq = ref(0.0003);
+const turbulenceFreq = ref(0.0002);
 
 const triggerGlitch = () => {
     // Removed isBooted check to allow glitching during load
@@ -204,7 +205,7 @@ const triggerGlitch = () => {
     const spike = () => {
        turbulenceFreq.value = 0.0044 * Math.random();
        setTimeout(() => {
-           turbulenceFreq.value = 0.0003; 
+           turbulenceFreq.value = 0.0002; 
        }, 50 + Math.random() * 100);
     };
 
@@ -268,6 +269,9 @@ const heroStyle = computed(() => {
             <span class="led-label">POWER</span>
         </div>
     </div>
+
+    <!-- Monitor Brand Logo (Image) -->
+    <img :src="sonyLogo" class="monitor-brand" alt="SONY" />
 
     <div class="crt-screen">
       <!-- Apply 'crt-content' class for filter -->
@@ -589,6 +593,22 @@ html, body, .crt-wrapper, * {
         -1px -1px 0px rgba(0, 0, 0, 0.9),
         0 0 15px rgba(51, 255, 51, 0.5); /* Green wash */
     color: #667766; /* Tinted by green light */
+}
+
+/* Monitor Brand Styling */
+.monitor-brand {
+    position: absolute;
+    bottom: 30px; /* Adjust for image height */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95px; /* Realistic size for a bezel logo */
+    height: 20px;
+    opacity: 0.09; /* Printed label look */
+    filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.2)); /* Slight bevel highlight */
+    -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0.9), rgba(0,0,0,1), rgba(0,0,0,0.9));
+    mask-image: linear-gradient(to right, rgba(0,0,0,0.9), rgba(0,0,0,1), rgba(0,0,0,0.9));
+    pointer-events: none;
+    z-index: 10001;
 }
 
 </style>

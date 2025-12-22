@@ -6,7 +6,6 @@ const projects = [
   {
     id: 'p1',
     name: 'OWNEDGEOS.SYS',
-    type: 'SYSTEM',
     date: '2024-12-01',
     description: `
       > SYSTEM KERNEL ARCHITECTURE
@@ -27,7 +26,6 @@ const projects = [
   {
     id: 'p2',
     name: 'FLUX_ENGINE.EXE',
-    type: 'BINARY',
     date: '2024-10-15',
     description: `
       > FLUX GENERATION ENGINE
@@ -48,7 +46,6 @@ const projects = [
   {
     id: 'p3',
     name: 'NEURAL_LINK.DAT',
-    type: 'DATA',
     date: '2024-08-20',
     description: `
       > NEURAL INTERFACE DATA
@@ -67,7 +64,6 @@ const projects = [
   {
     id: 'p4',
     name: 'PROTOCOL_7.TXT',
-    type: 'DOC',
     date: '2024-06-01',
     description: `
       > PROTOCOL 7 SPECIFICATION
@@ -189,7 +185,6 @@ onUnmounted(() => {
           <div class="pane-content custom-scroll">
              <div class="column-headers">
                 <span class="col-name">NAME</span>
-                <span class="col-type">EXT</span>
                 <span class="col-date">DATE</span>
              </div>
              <div 
@@ -200,7 +195,6 @@ onUnmounted(() => {
                 @click="selectProject(index)"
              >
                 <span class="col-name">{{ p.name }}</span>
-                <span class="col-type">{{ p.type }}</span>
                 <span class="col-date">{{ p.date }}</span>
              </div>
              <!-- Empty rows filler -->
@@ -253,7 +247,7 @@ onUnmounted(() => {
   flex-direction: column;
   padding: 0; /* Full bleed */
   background-color: transparent;
-  font-family: var(--font-mono, monospace);
+  font-family: 'Microgramma', monospace; 
   color: #fff;
   box-sizing: border-box;
 }
@@ -385,7 +379,6 @@ onUnmounted(() => {
 }
 
 .col-name { flex: 2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.col-type { flex: 0.5; opacity: 0.7; font-size: 0.9em; }
 .col-date { flex: 0.8; text-align: right; opacity: 0.7; font-size: 0.9em; }
 
 /* Viewer Styles */
