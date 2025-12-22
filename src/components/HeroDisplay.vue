@@ -7,7 +7,6 @@ const titleText = ref("");
 
 const subtitles = [
   "ORCHESTRATING VALUE",
-  "STRATEGIC INVESTMENT",
   "SOFTWARE ENGINEERING",
   "OPERATIONAL EXCELLENCE"
 ];
@@ -20,7 +19,7 @@ let typingTimeout = null;
 let titleTimeout = null;
 const isSubtitleActive = ref(false); // New state to control subtitle start
 
-const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const chars = "ABCDEFGHIJKLДMNOPQRЯSTUVWXYZ0123456789";
 
 const heroRoot = ref(null);
 const isVisible = ref(true);
@@ -209,8 +208,8 @@ onUnmounted(() => {
 }
 
 .subtitle {
-  font-size: 1.2rem;
-  letter-spacing: 0.4em;
+  font-size: 1.4rem;
+  letter-spacing: 0.14em;
   color: var(--color-accent);
   text-transform: uppercase;
   /* Removed animation: fadeInUp/opacity:0 because it needs to be visible for typing */
