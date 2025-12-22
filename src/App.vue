@@ -557,7 +557,7 @@ html, body, .crt-wrapper, * {
 /* Power LED Specifics */
 
 .led-label {
-    font-family: 'MicrogrammaDMedExt', 'Courier New', monospace;
+    font-family: 'Microgramma', 'Courier New', monospace;
     font-size: 0.6rem;
     color: #444; 
     letter-spacing: 1px;
