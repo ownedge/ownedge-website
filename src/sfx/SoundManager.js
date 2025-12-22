@@ -29,6 +29,7 @@ class SoundManager {
         this.atmosphereGain = null;
         this.initialized = false;
         this.config = CONFIG;
+        this.userVolume = CONFIG.MASTER_VOL; // Track volume state
     }
 
     init() {
@@ -40,7 +41,7 @@ class SoundManager {
 
         // Create Master Gain for Volume Control
         this.masterGain = this.ctx.createGain();
-        this.masterGain.gain.value = this.config.MASTER_VOL;
+        this.masterGain.gain.value = this.userVolume; // Apply stored volume
         this.masterGain.connect(this.ctx.destination);
 
         this.initialized = true;
@@ -51,6 +52,19 @@ class SoundManager {
             return this.ctx.resume();
         }
         return Promise.resolve();
+    }
+
+    setMasterVolume(value) {
+        // Clamp value between 0 and 1
+        const vol = Math.max(0, Math.min(1, value));
+        this.userVolume = vol; // Store for later init or re-init
+        
+        if (this.masterGain && this.ctx) {
+            // Use setValueAtTime for immediate, absolute update
+            const t = this.ctx.currentTime;
+            this.masterGain.gain.cancelScheduledValues(t);
+            this.masterGain.gain.setValueAtTime(vol, t);
+        }
     }
 
     // --- Sound Effects ---

@@ -241,6 +241,46 @@ const heroStyle = computed(() => {
   const y = (mouseY.value - windowHeight.value / 2) * 0.005
   return { transform: `translate(${-x}px, ${-y}px)` } // Inverse movement for depth
 })
+
+// --- Volume Knob Logic ---
+const volume = ref(0.9); // Default match CONFIG.MASTER_VOL
+const isDraggingKnob = ref(false);
+const startY = ref(0);
+const startVol = ref(0);
+
+const handleKnobDown = (e) => {
+    isDraggingKnob.value = true;
+    startY.value = e.clientY;
+    startVol.value = volume.value;
+    document.addEventListener('mousemove', handleKnobMove);
+    document.addEventListener('mouseup', handleKnobUp);
+    e.preventDefault(); // Prevent text selection
+};
+
+const handleKnobMove = (e) => {
+    if (!isDraggingKnob.value) return;
+    const deltaY = startY.value - e.clientY; // Drag up to increase
+    const sensitivity = 0.005; 
+    let newVol = startVol.value + deltaY * sensitivity;
+    newVol = Math.max(0, Math.min(1, newVol));
+    
+    volume.value = newVol;
+    SoundManager.setMasterVolume(newVol);
+};
+
+const handleKnobUp = () => {
+    isDraggingKnob.value = false;
+    document.removeEventListener('mousemove', handleKnobMove);
+    document.removeEventListener('mouseup', handleKnobUp);
+};
+
+const knobStyle = computed(() => {
+    // Map 0-1 to -135deg to +135deg (270 degree range)
+    const deg = (volume.value * 270) - 135;
+    return {
+        transform: `rotate(${deg}deg)`
+    };
+});
 </script>
 
 <template>
@@ -264,6 +304,21 @@ const heroStyle = computed(() => {
 
     <!-- Power LED (Right Side) -->
     <div class="power-panel">
+        <!-- Volume Knob -->
+        <div class="volume-control" @mousedown="handleKnobDown">
+             <div class="knob-container">
+                 <div class="knob-ring"></div>
+                 <div class="knob-arrows">
+                     <span class="arrow-up">▲</span>
+                     <span class="arrow-down">▼</span>
+                 </div>
+                 <div class="knob" :style="knobStyle">
+                     <div class="knob-marker"></div>
+                 </div>
+             </div>
+             <span class="led-label">VOL</span>
+        </div>
+
         <div class="led-group">
             <div class="led power-led active"></div>
             <span class="led-label">POWER</span>
@@ -580,6 +635,7 @@ html, body, .crt-wrapper, * {
     bottom: 1.5rem;
     right: 4rem;
     display: flex;
+    align-items: flex-end; /* Fix alignment issues with mixed height items */
     pointer-events: none;
     z-index: 10000;
 }
@@ -599,6 +655,91 @@ html, body, .crt-wrapper, * {
         -1px -1px 0px rgba(0, 0, 0, 0.9),
         0 0 15px rgba(51, 255, 51, 0.5); /* Green wash */
     color: #667766; /* Tinted by green light */
+}
+
+/* Volume Knob */
+.volume-control {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    margin-right: 1.5rem; /* Space from Power LED */
+    padding: 24px; /* Significantly increase hit area */
+    margin-top: -24px; /* Offset padding to keep layout stable */
+    margin-bottom: -24px;
+    margin-left: -12px;
+    margin-left: -12px;
+    margin-right: calc(1.5rem - 12px); /* Adjust spacing */
+    position: relative;
+    z-index: 10005; /* Ensure it's above other things */
+    pointer-events: auto; /* Capture hover in padded area */
+}
+
+.knob-container {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.knob-arrows {
+    position: absolute;
+    left: -15px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    opacity: 0;
+    transition: opacity 0.6s;
+    pointer-events: none;
+}
+
+.arrow-up, .arrow-down {
+    font-size: 8px;
+    color: #424242;
+}
+
+.volume-control:hover .knob-arrows {
+    opacity: 1;
+}
+
+.volume-control:hover .knob {
+    cursor: grab;
+}
+
+.volume-control:active .knob {
+    cursor: grabbing;
+}
+
+.knob {
+    width: 24px;
+    height: 24px;
+    background: radial-gradient(circle at 30% 30%, #333, #111);
+    border-radius: 50%;
+    border: 1px solid #000;
+    box-shadow: 
+        0 2px 5px rgba(0,0,0,0.8),
+        inset 0 1px 1px rgba(255,255,255,0.1);
+    position: relative;
+    cursor: ns-resize; /* Indicate drag */
+    pointer-events: auto; /* Enable interaction */
+}
+
+.knob-marker {
+    position: absolute;
+    top: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    background-color: #ff0000; /* Amber */
+    box-shadow: 
+        0 0 2px #ff0000, 
+        0 0 5px rgba(255, 0, 0, 0.6);
+    border-radius: 0%;
 }
 
 /* Monitor Brand Styling */
