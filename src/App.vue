@@ -499,9 +499,15 @@ html, body, .crt-wrapper, * {
     width: 20px;
     height: 8px;
     background-color: #0b1d0b;
-    border: 1px solid #142e14;
+    border: 1px solid #132a13;
     box-shadow: inset 0 0 2px rgba(0,0,0,0.8);
     transition: all 0.1s ease;
+    
+    /* Dot Matrix Effect */
+    background-image: 
+        radial-gradient(circle at center, rgba(0,0,0,0) 0.5px, rgba(0,0,0,0.24) 1.5px);
+    background-size: 2px 2px; /* 3px dots grid */
+    image-rendering: pixelated;
 }
 
 /* CAPS (Standard Green) */
@@ -515,7 +521,7 @@ html, body, .crt-wrapper, * {
 /* HDD (Amber/Orange) */
 .hdd-led {
     background-color: #3b2400; /* Dark Amber (Off) */
-    border-color: #553300;
+    border-color: #422700;
 }
 
 .hdd-led.active {
