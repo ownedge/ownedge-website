@@ -8,7 +8,8 @@ const CONFIG = {
     // Volume Multipliers per section
     BOOT_VOL: 0.9,       
     ATMOSPHERE_VOL: 0.025,
-    MUSIC_VOL: 0.18,      
+    MUSIC_VOL: 0.18, 
+    EASTER_EGG_VOL: 0.15,     
     
     // Music Timing
     MUSIC_START_DELAY: 5500,     // Milliseconds before music starts after boot
@@ -215,32 +216,125 @@ class SoundManager {
     playSparkleSound() {
         if (!this.ctx || this.isMuted) return;
         const t = this.ctx.currentTime;
+        const bpm = 150;
+        const beat = 60 / bpm;
         
-        // Crisp 16-bit ring sound: Fast ascending arpeggio with bright triangle wave
-        const notes = [
-            { freq: 1047, time: 0 },      // C6
-            { freq: 1319, time: 0.03 },   // E6
-            { freq: 1568, time: 0.06 }    // G6
-        ];
+        // --- INSTRUMENTS ---
         
-        notes.forEach(({ freq, time }) => {
+        const kick = (time) => {
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
-            
-            osc.type = 'triangle'; // Bright, clear 16-bit tone
-            osc.frequency.setValueAtTime(freq, t + time);
-            
-            // Sharp attack, quick decay for crisp sound
-            gain.gain.setValueAtTime(0, t + time);
-            gain.gain.linearRampToValueAtTime(0.08, t + time + 0.005); // Fast attack
-            gain.gain.exponentialRampToValueAtTime(0.001, t + time + 0.15); // Quick decay
-            
             osc.connect(gain);
             gain.connect(this.masterGain);
             
-            osc.start(t + time);
-            osc.stop(t + time + 0.2);
-        });
+            osc.frequency.setValueAtTime(150, time);
+            osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.5);
+            gain.gain.setValueAtTime(0.8 * this.config.EASTER_EGG_VOL, time);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + 0.5);
+            
+            osc.start(time);
+            osc.stop(time + 0.5);
+        };
+        
+        const snare = (time) => {
+            const noise = this.ctx.createOscillator(); 
+            // WebAudio doesn't have noise oscillator by default, usually involves buffer
+            // But for 8-bit style, we can use a high random periodic wave or create a buffer.
+            // Let's create a quick noise buffer
+            const bufferSize = this.ctx.sampleRate * 0.5; // 0.5 sec
+            const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            
+            const noiseSrc = this.ctx.createBufferSource();
+            noiseSrc.buffer = buffer;
+            const noiseFilter = this.ctx.createBiquadFilter();
+            noiseFilter.type = 'highpass';
+            noiseFilter.frequency.value = 1000;
+            const noiseGain = this.ctx.createGain();
+            
+            noiseSrc.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(this.masterGain);
+            
+            noiseGain.gain.setValueAtTime(0.6 * this.config.EASTER_EGG_VOL, time);
+            noiseGain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+            
+            noiseSrc.start(time);
+            noiseSrc.stop(time + 0.2);
+        };
+        
+        const melody = (freq, time, len) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.masterGain);
+            
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(freq, time);
+            
+            gain.gain.setValueAtTime(0.1 * this.config.EASTER_EGG_VOL, time);
+            gain.gain.linearRampToValueAtTime(0.1 * this.config.EASTER_EGG_VOL, time + len * 0.8);
+            gain.gain.linearRampToValueAtTime(0, time + len); // Staccato release
+            
+            osc.start(time);
+            osc.stop(time + len);
+        };
+
+        // --- SEQUENCE (Bar 1 & 2) ---
+        // Simple "Amen-ish" break or 4-on-floor
+        
+        // Drums
+        kick(t + 0 * beat);
+        snare(t + 1 * beat);
+        kick(t + 1.5 * beat); // Syncopated
+        kick(t + 2 * beat);
+        snare(t + 3 * beat);
+        
+        kick(t + 4 * beat);
+        snare(t + 5 * beat);
+        kick(t + 5.5 * beat); // Double kick
+        kick(t + 6 * beat);
+        // Crash/End
+        
+        // Melody (C Major Pentatonic Climb)
+        const C5 = 523.25;
+        const E5 = 659.25;
+        const G5 = 783.99;
+        const A5 = 880.00;
+        const C6 = 1046.50;
+        const E6 = 1318.51;
+        const G6 = 1567.98;
+        const C7 = 2093.00;
+        
+        // Fast 16th notes
+        const noteLen = beat / 2; 
+        
+        melody(C5, t + 0 * beat, noteLen);
+        melody(E5, t + 0.5 * beat, noteLen);
+        melody(G5, t + 1 * beat, noteLen);
+        melody(A5, t + 1.5 * beat, noteLen);
+        
+        melody(C6, t + 2 * beat, noteLen);
+        melody(E6, t + 2.5 * beat, noteLen);
+        melody(G6, t + 3 * beat, noteLen);
+        melody(C7, t + 3.5 * beat, noteLen); // Peak
+        
+        // Resolving Chords (stab)
+        const chord = (time) => {
+             melody(C6, time, beat * 2);
+             melody(E6, time, beat * 2);
+             melody(G6, time, beat * 2);
+        };
+        
+        chord(t + 4 * beat);
+        
+        // Final chime
+         setTimeout(() => {
+             // melody(C7, t + 7 * beat, beat * 2); // maybe too much?
+         }, 3000);
     }
 
     playAtmosphere() {

@@ -25,10 +25,10 @@ const projects = [
   },
   {
     id: 'p2',
-    name: 'FLUX_ENGINE.EXE',
+    name: 'FLUX_CAPACITOR.EXE',
     date: '2024-10-15',
     description: `
-      > FLUX GENERATION ENGINE
+      > FLUX CAPACITOR
       -----------------------
 
       Procedural content generation subsystem. 
