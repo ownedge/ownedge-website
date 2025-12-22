@@ -14,19 +14,41 @@ const windowWidth = ref(window.innerWidth)
 const windowHeight = ref(window.innerHeight)
 
 // Initialize to center to avoid initial jump/offset
+// Initialize to center to avoid initial jump/offset
 const mouseX = ref(window.innerWidth / 2)
 const mouseY = ref(window.innerHeight / 2)
 
 const isCursorVisible = ref(false)
 const isBooted = ref(false)
 let hideCursorTimeout = null
+const screenRect = ref(null); // Cache for performance
+
+const updateScreenRect = () => {
+    const el = document.querySelector('.app-container');
+    if (el) {
+        screenRect.value = el.getBoundingClientRect();
+    }
+};
 
 const handleMouseMove = (e) => {
   mouseX.value = e.clientX
   mouseY.value = e.clientY
   
-  // Show cursor on move
-  isCursorVisible.value = true
+  // Update rect if missing (lazy init)
+  if (!screenRect.value) updateScreenRect();
+
+  // Check bounds: Only show if inside the screen container
+  if (screenRect.value) {
+      const isInside = (
+          e.clientX >= screenRect.value.left && 
+          e.clientX <= screenRect.value.right &&
+          e.clientY >= screenRect.value.top && 
+          e.clientY <= screenRect.value.bottom
+      );
+      isCursorVisible.value = isInside;
+  } else {
+      isCursorVisible.value = true; // Fallback
+  }
   
   // Brute-force hide OS cursor on every move to fight MacOS persistence
   if (document.body.style.cursor !== 'none') {
@@ -51,6 +73,7 @@ const hideCursor = () => {
 const handleResize = () => {
     windowWidth.value = window.innerWidth
     windowHeight.value = window.innerHeight
+    updateScreenRect();
 }
 
 
@@ -196,7 +219,21 @@ const triggerGlitch = () => {
     setTimeout(triggerGlitch, Math.random() * 8000 + 2000); 
 };
 
-
+const cursorStyle = computed(() => {
+    // If no screen rect yet, hide or stick to 0,0
+    if (!screenRect.value) return { opacity: 0 };
+    
+    // Relative coordinates
+    const left = screenRect.value.left || 0;
+    const top = screenRect.value.top || 0;
+    const x = mouseX.value - left;
+    const y = mouseY.value - top;
+    
+    return {
+        transform: `translate3d(${x}px, ${y}px, 0)`,
+        opacity: isCursorVisible.value ? 0.8 : 0
+    };
+});
 
 const heroStyle = computed(() => {
   const x = (mouseX.value - windowWidth.value / 2) * 0.005
@@ -262,6 +299,12 @@ const heroStyle = computed(() => {
         <!-- Fixed Foreground Overlays -->
         <div class="scanlines"></div>
         <div class="vignette"></div>
+        
+        <!-- Synthetic Cursor (Now inside screen for clipping & glitches) -->
+        <div 
+          class="custom-cursor" 
+          :style="cursorStyle"
+        ></div>
       </div>
     </div>
     
@@ -275,14 +318,6 @@ const heroStyle = computed(() => {
         </filter>
       </defs>
     </svg>
-    
-    <div 
-      class="custom-cursor" 
-      :style="{ 
-        transform: `translate3d(${mouseX}px, ${mouseY}px, 0)`,
-        opacity: isCursorVisible ? 0.8 : 0
-      }"
-    ></div>
   </div>
 </template>
 
@@ -298,7 +333,7 @@ html, body, .crt-wrapper, * {
 /* Custom Cursor Element */
 /* Custom Cursor Element */
 .custom-cursor {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 24px;
