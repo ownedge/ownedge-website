@@ -296,15 +296,15 @@ const heroStyle = computed(() => {
         <!-- Phosphor Burn Layer (simulates screen persistence) -->
         <PhosphorOverlay />
         
-        <!-- Fixed Foreground Overlays -->
-        <div class="scanlines"></div>
-        <div class="vignette"></div>
-        
-        <!-- Synthetic Cursor (Now inside screen for clipping & glitches) -->
+        <!-- Synthetic Cursor (Inside screen, behind effects) -->
         <div 
           class="custom-cursor" 
           :style="cursorStyle"
         ></div>
+
+        <!-- Fixed Foreground Overlays -->
+        <div class="scanlines"></div>
+        <div class="vignette"></div>
       </div>
     </div>
     
@@ -342,7 +342,7 @@ html, body, .crt-wrapper, * {
   background-size: contain;
   background-repeat: no-repeat;
   pointer-events: none;
-  z-index: 9999;
+  z-index: 45; /* Below Scanlines (50) and Vignette (60) */
   /* Adjust transform to align tip of arrow */
   transform: translate(0, 0); 
   mix-blend-mode: normal; 
