@@ -147,11 +147,18 @@ const handleBootStart = async () => {
   // 3. Start Tracker Music
   setTimeout(() => {
     SoundManager.playTrackerMusic('/music/impulse.s3m');
-  }, 3800); // Sync with VFD visual transition
-
+  }, 3800); 
   
   // 4. Reveal Content
   isBooted.value = true;
+  vfdBootState.value = 'complete'; 
+  
+  // 5. Trigger Post-Boot SONY Logo
+  vfdMode.value = 'logo';
+  setTimeout(() => {
+        vfdMode.value = 'spectrum';
+        startSpectrumAnalyzer();
+  }, 3000); 
 }
 
 onMounted(() => {
@@ -172,33 +179,83 @@ onMounted(() => {
   // Start glitch loop immediately
   triggerGlitch();
   
-  // Start VFD Sequence
-  startVfdSequence();
+  // Start VFD Loop immediately (render loading bar)
+  startSpectrumAnalyzer();
 })
 
-const vfdMode = ref('off'); // 'off', 'logo', 'spectrum', 'knob'
+const vfdMode = ref('spectrum'); // Start with canvas for loading bar
 const vfdCanvas = ref(null);
 const vfdKnobInfo = ref({ label: '', value: '' });
+// Boot items
+const vfdBootState = ref('loading'); // 'loading', 'ready', 'complete'
+const bootProgress = ref(0);
+
 let previousVfdMode = 'spectrum';
 let animationFrameId = null;
 
-const startVfdSequence = () => {
-    // 1. Wait a bit then show Logo
-    setTimeout(() => {
-        vfdMode.value = 'logo';
-        
-        // 2. After 2.5s (Slide in + Wait + Slide out), switch to Spectrum
-        setTimeout(() => {
-            vfdMode.value = 'spectrum';
-            startSpectrumAnalyzer();
-        }, 3500); // 1s in + 1.5s wait + 1s out
-    }, 500);
-};
+// startVfdSequence - REMOVED (Moved to handleBootStart)
 
 const startSpectrumAnalyzer = () => {
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
 
     const draw = () => {
+        // Handle Boot States Override
+        if (vfdBootState.value !== 'complete') {
+             if (!vfdCanvas.value) {
+                 animationFrameId = requestAnimationFrame(draw);
+                 return;
+             }
+             const canvas = vfdCanvas.value;
+             const ctx = canvas.getContext('2d');
+             
+             // Ensure size
+             if (canvas.width !== 185) { canvas.width = 185; canvas.height = 36; }
+             
+             ctx.clearRect(0, 0, canvas.width, canvas.height);
+             ctx.fillStyle = '#40e0d0';
+
+             if (vfdBootState.value === 'loading') {
+                 // Draw Progress Bar - 95% width
+                 const width = canvas.width * 0.95;
+                 const x = (canvas.width - width) / 2;
+                 const height = 32; // Taller bar
+                 const y = (canvas.height - height) / 2;
+                 
+                 // No Outline, just solid fill
+                 
+                 // Fill - Map accurately 0-100%
+                 const fillWidth = width * (Math.min(bootProgress.value, 100) / 100);
+                 
+                 if (fillWidth > 0) ctx.fillRect(x, y, fillWidth, height);
+                 
+             } else if (vfdBootState.value === 'ready') {
+                 // 1. Draw Full Solid Bar (The "100%" state)
+                 const width = canvas.width * 0.95;
+                 const x = (canvas.width - width) / 2;
+                 const height = 32; // Taller bar
+                 const y = (canvas.height - height) / 2;
+                 
+                 ctx.fillStyle = '#40e0d0';
+                 ctx.fillRect(x, y, width, height);
+
+                 // 2. Draw Inverted Text (Cutout)
+                 const now = Date.now();
+                 // Blink frequency: every 500ms
+                 if (Math.floor(now / 500) % 2 === 0) {
+                     ctx.globalCompositeOperation = 'destination-out'; // This erases pixels!
+                     ctx.font = "bold 28px 'Microgramma'";
+                     ctx.textAlign = 'center';
+                     ctx.textBaseline = 'middle';
+                     // No shadow for cutout, just pure erase
+                     ctx.fillText(" ENTER ↵", canvas.width / 2, canvas.height / 2);
+                     ctx.globalCompositeOperation = 'source-over'; // Restore default
+                 }
+             }
+             
+             animationFrameId = requestAnimationFrame(draw);
+             return;
+        }
+
         if (vfdMode.value !== 'spectrum') return;
         
         // Wait for transition to mount the canvas
@@ -585,10 +642,10 @@ const ledMarkerStyle = computed(() => ({
     <div class="vfd-display">
        <div class="vfd-overlay"></div> <!-- Dot Matrix Grid Mask -->
        
-       <!-- Sony Logo Animation -->
+       <!-- WELCOME Animation -->
        <Transition name="vfd-anim" mode="out-in">
            <div v-if="vfdMode === 'logo'" class="vfd-logo-container">
-               <img :src="sonyLogo" class="vfd-sony-img" alt="SONY" />
+               <span class="vfd-welcome-text">WELCOME</span>
            </div>
            
            <div v-else-if="vfdMode === 'knob'" class="vfd-info-container">
@@ -609,7 +666,12 @@ const ledMarkerStyle = computed(() => ({
         <!-- Fixed Background/Overlays -->
         <NoiseOverlay />
         
-        <BootLoader v-if="!isBooted" @start="handleBootStart" />
+        <BootLoader 
+          v-if="!isBooted" 
+          @start="handleBootStart"
+          @progress="(p) => bootProgress = p"
+          @ready="() => vfdBootState = 'ready'"
+        />
 
         <div class="fixed-background">
             <GridOverlay />
@@ -722,7 +784,7 @@ html, body, .crt-wrapper, * {
   height: 101%;
   flex-shrink: 0; /* Prevent shrinking to fit */
   position: relative;
-  background: radial-gradient(circle at center, #1d1d1d 1%, #000000 90%);
+  background: radial-gradient(circle at center, #942626 1%, #000000 90%);
   overflow: hidden; /* Container is fixed window */
   filter: url(#spherical-warp) brightness(v-bind(brightness*0.9)) contrast(v-bind(contrast)); /* Apply content distortion + Settings */
 }
@@ -784,7 +846,7 @@ html, body, .crt-wrapper, * {
   /* Create a 'mask' of black with transparent holes */
   background: radial-gradient(
     circle,
-    transparent 1%,
+    transparent 2%,
     v-bind(scanlineColor) 95%
   );
   background-size: 2px 2px; /* Dot density */
@@ -1079,17 +1141,29 @@ html, body, .crt-wrapper, * {
     display: flex;
     align-items: center;
     justify-content: center;
-    /* Animation removed, handled by Transition now */
 }
 
-.vfd-sony-img {
-    height: 28px; /* Fit within 44px height */
-    width: auto;
-    /* Tint it teal to match VFD using filters */
-    /* Logic: Invert to white (if black), then sepia + hue-rotate to teal */
-    filter: brightness(0) invert(1) sepia(1) saturate(5) hue-rotate(130deg) brightness(0.8) drop-shadow(0 0 2px rgba(64, 224, 208, 0.6));
+.vfd-welcome-text {
+    font-family: 'Microgramma'; /* Sony-like Slab Serif */
+    color: #40e0d0;
+    font-size: 1.6rem;
+    letter-spacing: 1px; /* Tighter tracking for Sony look */
+    font-weight: 900; /* Extra bold */
+    text-shadow: 0 0 8px #40e0d0, 0 0 15px rgba(64, 224, 208, 0.4);
     opacity: 0.9;
-    image-rendering: high-quality;
+    animation: text-flicker 3s infinite;
+}
+
+@keyframes text-flicker {
+    0% { opacity: 0.9; }
+    3% { opacity: 0.8; }
+    6% { opacity: 0.9; }
+    7% { opacity: 0.4; }
+    8% { opacity: 0.9; }
+    9% { opacity: 0.95; }
+    10% { opacity: 0.1; }
+    11% { opacity: 0.9; }
+    100% { opacity: 0.9; }
 }
 
 @keyframes vfd-scroll-sequence {
@@ -1107,9 +1181,44 @@ html, body, .crt-wrapper, * {
 }
 
 /* VFD Transitions */
-.vfd-anim-enter-active,
+/* VFD Transitions */
+.vfd-anim-enter-active {
+  transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+}
+
 .vfd-anim-leave-active {
-  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: all 0.5s cubic-bezier(0.5, 0, 0.8, 0.2);
+}
+
+/* Special Exit for Logo Container (WELCOME text) */
+.vfd-anim-leave-active .vfd-welcome-text {
+    animation: text-warp-out 0.5s forwards;
+}
+
+@keyframes text-warp-out {
+    0% { 
+        transform: scaleX(1) translateX(0); 
+        opacity: 0.9;
+        filter: blur(0px);
+    }
+    10% {
+        transform: scaleX(1.5) translateX(5px);
+        opacity: 1;
+        color: #fff; /* Flash white */
+        filter: blur(1px);
+    }
+    40% {
+        transform: scaleX(4) translateX(20px); /* Stretch */
+        opacity: 0.5;
+        filter: blur(2px);
+        letter-spacing: 20px; /* Explode letters */
+    }
+    100% { 
+        transform: scaleX(10) translateX(50px); 
+        opacity: 0;
+        filter: blur(10px);
+        letter-spacing: 50px; 
+    }
 }
 
 .vfd-anim-enter-from {
