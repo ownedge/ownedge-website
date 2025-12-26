@@ -7,6 +7,7 @@ import NoiseOverlay from './components/NoiseOverlay.vue'
 import SoundManager from './sfx/SoundManager'
 import BootLoader from './components/BootLoader.vue'
 import VfdDisplay from './components/VfdDisplay.vue'
+import CrtControls from './components/CrtControls.vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 
 
@@ -302,30 +303,32 @@ const saveSettings = () => {
 // Auto-save on change
 watch([volume, brightness, contrast], saveSettings);
 
-// Generic Knob State
-const activeKnob = ref(null); // 'vol', 'brt', 'con'
-const startY = ref(0);
-const startValue = ref(0);
-
-const handleKnobDown = (e, type) => {
-    activeKnob.value = type;
-    startY.value = e.clientY;
-    
-    // Capture distinct start values
-    if (type === 'vol') startValue.value = volume.value;
-    if (type === 'brt') startValue.value = brightness.value;
-    if (type === 'con') startValue.value = contrast.value;
-
+// Generic Knob State handled in CrtControls
+// VFD Updates
+const handleKnobStart = ({ type, value }) => {
     // Switch VFD to Knob Mode
     if (vfdMode.value !== 'knob') {
         previousVfdMode = vfdMode.value;
         vfdMode.value = 'knob';
     }
-    updateKnobText(type, startValue.value);
+    updateKnobText(type, value);
+};
 
-    document.addEventListener('mousemove', handleKnobMove);
-    document.addEventListener('mouseup', handleKnobUp);
-    e.preventDefault(); 
+const handleKnobChange = ({ type, value }) => {
+    // Update local state is handled by v-model events automatically for volume/brt/con
+    // But we need to update VFD text and side effects
+    
+    if (type === 'vol') {
+        SoundManager.setMasterVolume(value); // Side effect
+    }
+    updateKnobText(type, value);
+};
+
+const handleKnobEnd = () => {
+    // Restore VFD
+    if (vfdMode.value === 'knob') {
+        vfdMode.value = previousVfdMode;
+    }
 };
 
 const updateKnobText = (type, val) => {
@@ -350,55 +353,6 @@ const updateKnobText = (type, val) => {
     vfdKnobInfo.value = { label, value: `${pct}%` };
 };
 
-const handleKnobMove = (e) => {
-    if (!activeKnob.value) return;
-    const deltaY = startY.value - e.clientY; 
-    const sensitivity = 0.005; 
-    let newVal = startValue.value + deltaY * sensitivity;
-
-    if (activeKnob.value === 'vol') {
-        newVal = Math.max(0, Math.min(1, newVal));
-        volume.value = newVal;
-        SoundManager.setMasterVolume(newVal);
-    } 
-    else if (activeKnob.value === 'brt') {
-        newVal = Math.max(0.5, Math.min(1.5, newVal)); // 50% to 150%
-        brightness.value = newVal;
-    }
-    else if (activeKnob.value === 'con') {
-        newVal = Math.max(0.5, Math.min(1.5, newVal)); // 50% to 150%
-        contrast.value = newVal;
-    }
-    
-    updateKnobText(activeKnob.value, newVal);
-};
-
-const handleKnobUp = () => {
-    activeKnob.value = null;
-    
-    // Restore VFD
-    if (vfdMode.value === 'knob') {
-        vfdMode.value = previousVfdMode;
-        // Resume spectrum if needed
-        // Automatic via prop watch in VfdDisplay
-    }
-
-    document.removeEventListener('mousemove', handleKnobMove);
-    document.removeEventListener('mouseup', handleKnobUp);
-};
-
-// Computed Styles
-const getKnobRotation = (val, min, max) => {
-    // Normalize to 0-1
-    const norm = (val - min) / (max - min);
-    // Map to -135deg to +135deg
-    return `rotate(${(norm * 270) - 135}deg)`;
-};
-
-const volKnobStyle = computed(() => ({ transform: getKnobRotation(volume.value, 0, 1) }));
-const brtKnobStyle = computed(() => ({ transform: getKnobRotation(brightness.value, 0.5, 1.5) }));
-const conKnobStyle = computed(() => ({ transform: getKnobRotation(contrast.value, 0.5, 1.5) }));
-
 // --- Hue Logic ---
 // 0.5 (Center) should map to Teal (approx 188deg)
 // Let's assume range 0-1 maps to 0-360 shift relative to base
@@ -422,75 +376,19 @@ const ledMarkerStyle = computed(() => ({
   <div class="crt-wrapper">
     
     <!-- Fixed Status LEDs -->
-    <div class="led-panel">
-        <div class="led-group">
-            <div class="led active-caps" :class="{ active: isCapsLock }"></div>
-            <span class="led-label">CAPS</span>
-        </div>
-        <div class="led-group">
-            <div class="led hdd-led" :class="{ active: isHddActive }"></div>
-            <span class="led-label">DISK</span>
-        </div>
-        <div class="led-group">
-            <div class="led turbo-led" :class="{ active: isTurbo }"></div>
-            <span class="led-label">TURBO</span>
-        </div>
-    </div>
-
-    <!-- Power LED (Right Side) -->
-    <div class="power-panel">
-        <!-- Volume Knob -->
-        <div class="volume-control" @mousedown="(e) => handleKnobDown(e, 'vol')">
-             <div class="knob-container">
-                 <div class="knob-ring"></div>
-                 <div class="knob-arrows">
-                     <span class="arrow-up">▲</span>
-                     <span class="arrow-down">▼</span>
-                 </div>
-                 <div class="knob" :style="volKnobStyle">
-                     <div class="knob-marker"></div>
-                 </div>
-             </div>
-             <span class="led-label">VOLUME</span>
-        </div>
-
-        <!-- Brightness Knob -->
-        <div class="volume-control" @mousedown="(e) => handleKnobDown(e, 'brt')">
-             <div class="knob-container">
-                 <div class="knob-ring"></div>
-                 <div class="knob-arrows">
-                     <span class="arrow-up">▲</span>
-                     <span class="arrow-down">▼</span>
-                 </div>
-                 <div class="knob" :style="brtKnobStyle">
-                     <div class="knob-marker"></div>
-                 </div>
-             </div>
-             <span class="led-label">BRIGHT</span>
-        </div>
-
-        <!-- Contrast Knob -->
-        <div class="volume-control" @mousedown="(e) => handleKnobDown(e, 'con')">
-             <div class="knob-container">
-                 <div class="knob-ring"></div>
-                 <div class="knob-arrows">
-                     <span class="arrow-up">▲</span>
-                     <span class="arrow-down">▼</span>
-                 </div>
-                 <div class="knob" :style="conKnobStyle">
-                     <div class="knob-marker"></div>
-                 </div>
-             </div>
-             <span class="led-label">CONTRST</span>
-        </div>
-
-
-
-        <div class="led-group">
-            <div class="led power-led active"></div>
-            <span class="led-label">POWER</span>
-        </div>
-    </div>
+    <!-- Extracted Controls (LEDs + Knobs) -->
+    <CrtControls
+        v-model:volume="volume"
+        v-model:brightness="brightness"
+        v-model:contrast="contrast"
+        :is-caps-lock="isCapsLock"
+        :is-hdd-active="isHddActive"
+        :is-turbo="isTurbo"
+        :power-led="true"
+        @knob-start="handleKnobStart"
+        @knob-change="handleKnobChange"
+        @knob-end="handleKnobEnd"
+    />
 
     <!-- VFD Display (Replaces Logo) -->
     <!-- VFD Display (Extracted to component) -->
@@ -711,227 +609,6 @@ html, body, .crt-wrapper, * {
   box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
   border-radius: 5px;
 }
-
-/* LED Status Panel */
-.led-panel {
-    position: fixed;
-    bottom: 1.5rem; /* Sit in the bottom bezel padding */
-    left: 4rem;
-    display: flex;
-    gap: 1.5rem;
-    pointer-events: none;
-    z-index: 10000;
-}
-
-.led-group {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.8rem;
-    width: 60px; /* Enforce overlapping width to keep centers equidistant */
-}
-
-.led {
-    width: 18px;
-    height: 7px;
-    background-color: #0b1d0b;
-    border: 1px solid #132a13;
-    box-shadow: inset 0 0 2px rgba(0,0,0,0.8);
-    transition: all 0.1s ease;
-    
-    /* Dot Matrix Effect */
-    background-image: 
-        radial-gradient(circle at center, rgba(0,0,0,0) 0.5px, rgba(0,0,0,0.24) 1.5px);
-    background-size: 2px 2px; /* 3px dots grid */
-    image-rendering: pixelated;
-}
-
-@keyframes led-pulse {
-    0%, 100% { filter: brightness(0.9); }
-    50% { filter: brightness(1.1) drop-shadow(0 0 6px rgba(255,255,255,0.2)); }
-}
-
-/* Common Active State for Animation */
-.led.active, .power-led {
-    animation: led-pulse 8s ease-in-out infinite;
-}
-
-/* CAPS (Standard Green) */
-.active-caps.active {
-    background-color: #33ff33;
-    box-shadow: 0 0 5px #33ff33, 0 0 10px #33ff33, 0 0 40px rgba(51, 255, 51, 0.4), inset 0 0 1px rgba(255,255,255,0.5);
-    border-color: #55ff55;
-    z-index: 10002;
-}
-
-/* HDD (Amber/Orange) */
-.hdd-led {
-    background-color: #3b2400; /* Dark Amber (Off) */
-    border-color: #422700;
-}
-
-.hdd-led.active {
-    background-color: #ffaa00;
-    box-shadow: 0 0 5px #ffaa00, 0 0 10px #ffaa00, 0 0 40px rgba(255, 170, 0, 0.4), inset 0 0 1px rgba(255,255,255,0.5);
-    border-color: #ffcc00;
-    z-index: 10002;
-}
-
-.led-group:has(.hdd-led.active) .led-label {
-    text-shadow: -1px -1px 0px rgba(0, 0, 0, 0.9), 0 0 15px rgba(255, 170, 0, 0.5);
-    color: #776644;
-}
-
-/* TURBO (Yellow) */
-.turbo-led {
-    background-color: #3b3b00; /* Dark Yellow (Off) */
-    border-color: #555500;
-}
-
-.turbo-led.active {
-    background-color: #ffff00;
-    box-shadow: 0 0 5px #ffff00, 0 0 10px #ffff00, 0 0 40px rgba(255, 255, 0, 0.4), inset 0 0 1px rgba(255,255,255,0.5);
-    border-color: #ffff88;
-    z-index: 10002;
-}
-
-.led-group:has(.turbo-led.active) .led-label {
-    text-shadow: -1px -1px 0px rgba(0, 0, 0, 0.9), 0 0 15px rgba(255, 255, 0, 0.5);
-    color: #777744;
-}
-
-/* Power LED Specifics */
-
-.led-label {
-    font-family: 'Microgramma', 'Courier New', monospace;
-    font-size: 0.6rem;
-    color: #444; 
-    letter-spacing: 1px;
-    font-weight: bold;
-    text-shadow: -1px -1px 0px rgba(0, 0, 0, 0.9);
-    transition: all 0.2s ease;
-}
-
-/* Simulate light spilling onto the engraved text */
-.led-group:has(.led.active) .led-label {
-    text-shadow: 
-        -1px -1px 0px rgba(0, 0, 0, 0.9),
-        0 0 15px rgba(51, 255, 51, 0.5); /* Green wash */
-    color: #667766; /* Tinted by green light */
-}
-
-/* Power LED Specifics */
-.power-panel {
-    position: fixed;
-    bottom: 1.5rem;
-    right: 4rem;
-    display: flex;
-    align-items: flex-end; /* Fix alignment issues with mixed height items */
-    gap: 1.5rem; /* Standardized gap */
-    pointer-events: none;
-    z-index: 10000;
-}
-
-.power-led.active {
-    background-color: #33ff33; 
-    box-shadow: 
-        0 0 5px #33ff33,
-        0 0 10px #33ff33,
-        0 0 40px rgba(51, 255, 51, 0.4), /* Green Spill */
-        inset 0 0 1px rgba(255,255,255,0.5);
-    border-color: #55ff55;
-}
-
-.power-panel .led-group:has(.power-led.active) .led-label {
-    text-shadow: 
-        -1px -1px 0px rgba(0, 0, 0, 0.9),
-        0 0 15px rgba(51, 255, 51, 0.5); /* Green wash */
-    color: #667766; /* Tinted by green light */
-}
-
-/* Volume Knob */
-.volume-control {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.3rem;
-    width: 60px; /* Fixed Layout Width */
-    /* Remove padding/margin hacks - 60px is sufficient tap target */
-    padding: 0; 
-    margin: 0;
-    position: relative;
-    z-index: 10005; /* Ensure it's above other things */
-    pointer-events: auto; /* Capture hover in padded area */
-}
-
-.knob-container {
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-}
-
-.knob-arrows {
-    position: absolute;
-    left: -15px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    opacity: 0;
-    transition: opacity 0.6s;
-    pointer-events: none;
-}
-
-.arrow-up, .arrow-down {
-    font-size: 8px;
-    color: #424242;
-}
-
-.volume-control:hover .knob-arrows {
-    opacity: 1;
-}
-
-.volume-control:hover .knob {
-    cursor: grab;
-}
-
-.volume-control:active .knob {
-    cursor: grabbing;
-}
-
-.knob {
-    width: 24px;
-    height: 24px;
-    background: radial-gradient(circle at 30% 30%, #333, #111);
-    border-radius: 50%;
-    border: 1px solid #000;
-    box-shadow: 
-        0 2px 5px rgba(0,0,0,0.8),
-        inset 0 1px 1px rgba(255,255,255,0.1);
-    position: relative;
-    cursor: ns-resize; /* Indicate drag */
-    pointer-events: auto; /* Enable interaction */
-}
-
-.knob-marker {
-    position: absolute;
-    top: 3px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 5px;
-    height: 5px;
-    background-color: #e32a01;
-    box-shadow: 
-        0 0 2px #ff0000, 
-        0 0 5px rgba(255, 0, 0, 0.6);
-    border-radius: 50%;
-    animation: led-pulse 8s ease-in-out infinite;
-}
-
 
 /* VFD Display Styling (Replaces Monitor Brand) */
 .vfd-display {
