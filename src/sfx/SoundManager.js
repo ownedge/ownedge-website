@@ -1,7 +1,3 @@
-import ChillSong from './ChillSong';
-import EnergeticSong from './EnergeticSong';
-import FlowSong from './FlowSong';
-
 import { SYSTEM_CONFIG } from '../config';
 
 class SoundManager {
@@ -23,9 +19,8 @@ class SoundManager {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         this.ctx = new AudioContext();
 
-        // Create Analyser
         this.analyser = this.ctx.createAnalyser();
-        this.analyser.fftSize = 64; // Low res for retro feel
+        this.analyser.fftSize = 512; // Higher res for better VFD visualization (256 bins)
         this.analyser.smoothingTimeConstant = 0.85;
 
         // Create Master Gain for Volume Control
@@ -434,127 +429,40 @@ class SoundManager {
         noise.start(t);
     }
 
-    // --- 16-bit Soft Retro "Chill" Music Generator ---
-    // Style: Elevator Music / RPG Town / Chillwave
-    // Tempo: 90 BPM, Smooth envelopes, extended chords
+    // --- Tracker Music System ---
 
-    // --- Music System ---
-    
-    setupEffects() {
-        if (!this.ctx || this.delayNode) return;
-        
-        // Music Bus for global music volume/fade control
-        this.musicGain = this.ctx.createGain();
-        this.musicGain.gain.value = 1.0;
-        this.musicGain.connect(this.masterGain);
-
-        // Stereo Delay Line (Longer, softer echoes)
-        this.delayNode = this.ctx.createDelay();
-        this.delayNode.delayTime.value = 0.5; // dotted 8th feel approx
-        
-        this.delayFeedback = this.ctx.createGain();
-        this.delayFeedback.gain.value = 0.3; 
-
-        const delayFilter = this.ctx.createBiquadFilter();
-        delayFilter.type = 'lowpass';
-        delayFilter.frequency.value = 1200; // Very warm echoes
-
-        this.fxBus = this.ctx.createGain();
-        this.fxBus.gain.value = 1.0;
-        
-        // FX Bus now routes to Music Bus so it fades with music
-        this.fxBus.connect(this.musicGain); 
-        
-        this.fxBus.connect(this.delayNode);
-        this.delayNode.connect(delayFilter);
-        delayFilter.connect(this.delayFeedback);
-        this.delayFeedback.connect(this.delayNode);
-        
-        this.delayNode.connect(this.musicGain); // Delay output also to Music Bus
-    }
-
-    startMusicRotation() {
+    playTrackerMusic(url) {
         if (!this.ctx || this.isMuted) return;
-        this.setupEffects();
         
-        // Initialize playlist
-        this.playlist = [new ChillSong(), new FlowSong(), new EnergeticSong()];
-        this.currentSongIndex = 0;
-        this.currentSongInstance = null;
-        this.currentSongGain = null;
-
-        // FADE IN INITIAL SONG
-        const fadeInDur = this.config.MUSIC_FADE_IN_DURATION;
-        if (this.musicGain) {
-            const t = this.ctx.currentTime;
-            this.musicGain.gain.setValueAtTime(0, t);
-            this.musicGain.gain.linearRampToValueAtTime(this.config.MUSIC_VOL, t + fadeInDur);
+        // Ensure ChiptuneJsPlayer is available
+        if (typeof window.ChiptuneJsPlayer === 'undefined') {
+            console.error("ChiptuneJsPlayer not found! Scripts might not be loaded.");
+            return;
         }
 
-        // Start first song
-        this.playSong(this.playlist[0]);
-
-        // Schedule rotation every 60 seconds
-        setInterval(() => {
-            this.rotateSong();
-        }, 30000); 
-    }
-
-    playSong(songInstance) {
-        if (!this.ctx) return;
-        
-        // Create a specific gain node for this song to allow crossfading
-        const songGain = this.ctx.createGain();
-        songGain.connect(this.musicGain); // Connect to main music bus
-        
-        // Start full volume (global music bus handles the master fade-in)
-        songGain.gain.value = 1.0; 
-
-        songInstance.start(this.ctx, songGain);
-        
-        this.currentSongInstance = songInstance;
-        this.currentSongGain = songGain;
-    }
-
-    rotateSong() {
-        if (!this.ctx) return;
-        
-        const nextIndex = (this.currentSongIndex + 1) % this.playlist.length;
-        const nextSong = this.playlist[nextIndex];
-        const prevSongInstance = this.currentSongInstance;
-        const prevSongGain = this.currentSongGain;
-
-        // 1. Prepare Next Song
-        const nextSongGain = this.ctx.createGain();
-        nextSongGain.connect(this.musicGain);
-        nextSongGain.gain.value = 0; // Start silent
-
-        nextSong.start(this.ctx, nextSongGain);
-
-        // 2. Crossfade (10 seconds)
-        const t = this.ctx.currentTime;
-        const fadeDur = 10;
-
-        // Fade out old
-        if (prevSongGain) {
-            prevSongGain.gain.setValueAtTime(1, t);
-            prevSongGain.gain.linearRampToValueAtTime(0, t + fadeDur);
+        if (this.trackerPlayer) {
+            this.trackerPlayer.stop();
+            this.trackerPlayer = null;
         }
 
-        // Fade in new
-        nextSongGain.gain.setValueAtTime(0, t);
-        nextSongGain.gain.linearRampToValueAtTime(1, t + fadeDur);
+        // Initialize Player with our AudioContext
+        // ChiptuneJsConfig(repeatCount, stereoSeparation, interpolationFilter, context, destination)
+        const config = new window.ChiptuneJsConfig(0, undefined, undefined, this.ctx, this.masterGain); 
+        this.trackerPlayer = new window.ChiptuneJsPlayer(config);
 
-        // 3. Update State
-        this.currentSongInstance = nextSong;
-        this.currentSongGain = nextSongGain;
-        this.currentSongIndex = nextIndex;
+        // Load and Play
+        this.trackerPlayer.load(url, (buffer) => {
+            if (!this.trackerPlayer) return; // Stopped while loading
+            
+            this.trackerPlayer.play(buffer); 
+        });
+    }
 
-        // 4. Cleanup Old Song
-        setTimeout(() => {
-            if (prevSongInstance) prevSongInstance.stop();
-            // Old gain node will be garbage collected once disconnected/dereferenced
-        }, fadeDur * 1000 + 100);
+    stopTrackerMusic() {
+        if (this.trackerPlayer) {
+            this.trackerPlayer.stop();
+            this.trackerPlayer = null;
+        }
     }
 }
 

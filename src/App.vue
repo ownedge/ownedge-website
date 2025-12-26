@@ -144,10 +144,11 @@ const handleBootStart = async () => {
   // 2. Play Boot Sound
   SoundManager.playBootSequence();
 
-  // 3. Start Chill Loop
+  // 3. Start Tracker Music
   setTimeout(() => {
-    SoundManager.startMusicRotation();
-  }, 4500); // Wait for boot sound to finish
+    SoundManager.playTrackerMusic('/music/impulse.s3m');
+  }, 3500); // Sync with VFD visual transition
+
   
   // 4. Reveal Content
   isBooted.value = true;
@@ -226,7 +227,8 @@ const startSpectrumAnalyzer = () => {
             // We have 32 bins (fftSize 64 / 2). 
             // We might have more cols than bins, or vice versa.
             // Simple mapping:
-            const binIndex = Math.floor((i / cols) * data.length * 0.8); // Drop high freqs
+            // Focus on 0 to 11kHz (approx first 50% of bins) for better music visualization
+            const binIndex = Math.floor((i / cols) * data.length * 0.5); 
             const value = data[binIndex] || 0; // 0-255
             
             // Calculate active dots for this column

@@ -6,9 +6,7 @@ const titleFull = "OWNEDGE";
 const titleText = ref("");
 
 const subtitles = [
-  "ORCHESTRATING VALUE",
-  "SOFTWARE ENGINEERING",
-  "OPERATIONAL EXCELLENCE"
+  "DEFYING THE ESTABLISHMENT...",
 ];
 
 const displayedText = ref("");
