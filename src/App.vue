@@ -147,7 +147,7 @@ const handleBootStart = async () => {
   // 3. Start Tracker Music
   setTimeout(() => {
     SoundManager.playTrackerMusic('/music/impulse.s3m');
-  }, 3500); // Sync with VFD visual transition
+  }, 3800); // Sync with VFD visual transition
 
   
   // 4. Reveal Content
@@ -176,8 +176,10 @@ onMounted(() => {
   startVfdSequence();
 })
 
-const vfdMode = ref('off'); // 'off', 'logo', 'spectrum'
+const vfdMode = ref('off'); // 'off', 'logo', 'spectrum', 'knob'
 const vfdCanvas = ref(null);
+const vfdKnobInfo = ref({ label: '', value: '' });
+let previousVfdMode = 'spectrum';
 let animationFrameId = null;
 
 const startVfdSequence = () => {
@@ -194,11 +196,26 @@ const startVfdSequence = () => {
 };
 
 const startSpectrumAnalyzer = () => {
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
     const draw = () => {
-        if (vfdMode.value !== 'spectrum' || !vfdCanvas.value) return;
+        if (vfdMode.value !== 'spectrum') return;
         
+        // Wait for transition to mount the canvas
+        if (!vfdCanvas.value) {
+             animationFrameId = requestAnimationFrame(draw);
+             return;
+        }
+
         const canvas = vfdCanvas.value;
         const ctx = canvas.getContext('2d');
+        
+        // Ensure dimensions are set once mounted
+        if (canvas.width !== 185) {
+            canvas.width = 185;
+            canvas.height = 36;
+        }
+
         const data = SoundManager.getAudioData();
         
         if (!data) {
@@ -252,14 +269,7 @@ const startSpectrumAnalyzer = () => {
         animationFrameId = requestAnimationFrame(draw);
     };
     
-    // Ensure canvas is ready
-    setTimeout(() => {
-        if(vfdCanvas.value) {
-            vfdCanvas.value.width = 185;
-            vfdCanvas.value.height = 36;
-            draw();
-        }
-    }, 100);
+    draw();
 };
 
 onUnmounted(() => {
@@ -364,6 +374,9 @@ const volume = ref(savedSettings?.volume ?? SYSTEM_CONFIG.AUDIO.MASTER_VOL);
 const brightness = ref(savedSettings?.brightness ?? SYSTEM_CONFIG.VISUALS.BRIGHTNESS_DEFAULT);
 const contrast = ref(savedSettings?.contrast ?? SYSTEM_CONFIG.VISUALS.CONTRAST_DEFAULT);
 
+// Sync initial volume
+SoundManager.setMasterVolume(volume.value);
+
 const saveSettings = () => {
     const settings = {
         volume: volume.value,
@@ -390,9 +403,38 @@ const handleKnobDown = (e, type) => {
     if (type === 'brt') startValue.value = brightness.value;
     if (type === 'con') startValue.value = contrast.value;
 
+    // Switch VFD to Knob Mode
+    if (vfdMode.value !== 'knob') {
+        previousVfdMode = vfdMode.value;
+        vfdMode.value = 'knob';
+    }
+    updateKnobText(type, startValue.value);
+
     document.addEventListener('mousemove', handleKnobMove);
     document.addEventListener('mouseup', handleKnobUp);
     e.preventDefault(); 
+};
+
+const updateKnobText = (type, val) => {
+    let label = '';
+    let pct = 0;
+    
+    if (type === 'vol') {
+        label = 'VOLUME';
+        pct = Math.round(val * 100);
+    } else if (type === 'brt') {
+        label = 'BRIGHT';
+        // Map 0.5-1.5 range to 0-100%
+        pct = Math.round((val - 0.5) * 100);
+    } else if (type === 'con') {
+        label = 'CONTRST';
+        // Map 0.5-1.5 range to 0-100%
+        pct = Math.round((val - 0.5) * 100);
+    }
+    // Clamp to 0-100 just in case
+    pct = Math.max(0, Math.min(100, pct));
+    
+    vfdKnobInfo.value = { label, value: `${pct}%` };
 };
 
 const handleKnobMove = (e) => {
@@ -414,10 +456,22 @@ const handleKnobMove = (e) => {
         newVal = Math.max(0.5, Math.min(1.5, newVal)); // 50% to 150%
         contrast.value = newVal;
     }
+    
+    updateKnobText(activeKnob.value, newVal);
 };
 
 const handleKnobUp = () => {
     activeKnob.value = null;
+    
+    // Restore VFD
+    if (vfdMode.value === 'knob') {
+        vfdMode.value = previousVfdMode;
+        // Resume spectrum if needed
+        if (previousVfdMode === 'spectrum') {
+             startSpectrumAnalyzer();
+        }
+    }
+
     document.removeEventListener('mousemove', handleKnobMove);
     document.removeEventListener('mouseup', handleKnobUp);
 };
@@ -532,12 +586,19 @@ const ledMarkerStyle = computed(() => ({
        <div class="vfd-overlay"></div> <!-- Dot Matrix Grid Mask -->
        
        <!-- Sony Logo Animation -->
-       <div v-if="vfdMode === 'logo'" class="vfd-logo-container">
-           <img :src="sonyLogo" class="vfd-sony-img" alt="SONY" />
-       </div>
-
-       <!-- Spectrum Analyzer -->
-       <canvas v-show="vfdMode === 'spectrum'" ref="vfdCanvas" class="vfd-canvas"></canvas>
+       <Transition name="vfd-anim" mode="out-in">
+           <div v-if="vfdMode === 'logo'" class="vfd-logo-container">
+               <img :src="sonyLogo" class="vfd-sony-img" alt="SONY" />
+           </div>
+           
+           <div v-else-if="vfdMode === 'knob'" class="vfd-info-container">
+               <span class="vfd-label">{{ vfdKnobInfo.label }}</span>
+               <span class="vfd-value">{{ vfdKnobInfo.value }}</span>
+           </div>
+    
+           <!-- Spectrum Analyzer -->
+           <canvas v-else-if="vfdMode === 'spectrum'" ref="vfdCanvas" class="vfd-canvas"></canvas>
+       </Transition>
     </div>
 
     <!-- Speaker Grilles Removed -->
@@ -1018,7 +1079,7 @@ html, body, .crt-wrapper, * {
     display: flex;
     align-items: center;
     justify-content: center;
-    animation: vfd-scroll-sequence 3s ease-in-out forwards;
+    /* Animation removed, handled by Transition now */
 }
 
 .vfd-sony-img {
@@ -1041,16 +1102,57 @@ html, body, .crt-wrapper, * {
 .vfd-canvas {
     width: 100%;
     height: 100%;
-    /* Canvas draws pixelated dots naturally */
     image-rendering: pixelated; 
     opacity: 0.9;
 }
 
-.vfd-content {
-    /* Legacy - keeping just in case but unused */
-    font-family: 'Courier New', monospace;
+/* VFD Transitions */
+.vfd-anim-enter-active,
+.vfd-anim-leave-active {
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
+.vfd-anim-enter-from {
+  opacity: 0;
+  transform: translateY(-20px);
+}
 
+.vfd-anim-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.vfd-info-container {
+    width: 100%;
+    height: 100%;
+    position: relative; /* For absolute positioning of label */
+    display: flex;
+    align-items: center; 
+    justify-content: flex-end; /* Align value to right */
+    padding-right: 10px; /* Space from edge */
+}
+
+.vfd-label {
+    position: absolute;
+    top: 2px;
+    left: 8px;
+    font-family: 'Microgramma', monospace; 
+    color: #40e0d0;
+    font-size: 0.6rem; /* Tiny label */
+    letter-spacing: 1px;
+    font-weight: bold;
+    text-shadow: 0 0 5px #40e0d0;
+    opacity: 0.8;
+}
+
+.vfd-value {
+    font-family: 'Microgramma', monospace; 
+    color: #40e0d0;
+    font-size: 1.8rem; /* Large Value */
+    letter-spacing: 2px;
+    font-weight: bold;
+    text-shadow: 0 0 8px #40e0d0;
+    line-height: 1;
+    margin-top: 6px; /* Push down slightly to balance */
+}
 </style>
-```

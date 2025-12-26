@@ -10,6 +10,7 @@ class SoundManager {
         this.initialized = false;
         this.config = SYSTEM_CONFIG.AUDIO; // Helper alias
         this.userVolume = SYSTEM_CONFIG.AUDIO.MASTER_VOL;
+        this.musicGain = null;
     }
 
     init() {
@@ -27,6 +28,11 @@ class SoundManager {
         this.masterGain = this.ctx.createGain();
         this.masterGain.gain.value = this.userVolume; // Apply stored volume
         
+        // Create Music Gain (Sub-mix)
+        this.musicGain = this.ctx.createGain();
+        this.musicGain.gain.value = this.config.MUSIC_VOL;
+        this.musicGain.connect(this.masterGain);
+
         // Connect Graph: Master -> Analyser -> Destination
         this.masterGain.connect(this.analyser);
         this.analyser.connect(this.ctx.destination);
@@ -447,7 +453,8 @@ class SoundManager {
 
         // Initialize Player with our AudioContext
         // ChiptuneJsConfig(repeatCount, stereoSeparation, interpolationFilter, context, destination)
-        const config = new window.ChiptuneJsConfig(0, undefined, undefined, this.ctx, this.masterGain); 
+        // Tune to musicGain to respect MUSIC_VOL setting
+        const config = new window.ChiptuneJsConfig(0, undefined, undefined, this.ctx, this.musicGain); 
         this.trackerPlayer = new window.ChiptuneJsPlayer(config);
 
         // Load and Play
