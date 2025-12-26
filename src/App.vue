@@ -7,6 +7,7 @@ import NoiseOverlay from './components/NoiseOverlay.vue'
 import SoundManager from './sfx/SoundManager'
 import BootLoader from './components/BootLoader.vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import sonyLogo from './assets/sony-logo.png'
 
 
 let cursorInterval = null;
@@ -252,7 +253,7 @@ const startSpectrumAnalyzer = () => {
     // Ensure canvas is ready
     setTimeout(() => {
         if(vfdCanvas.value) {
-            vfdCanvas.value.width = 140;
+            vfdCanvas.value.width = 185;
             vfdCanvas.value.height = 36;
             draw();
         }
@@ -530,7 +531,7 @@ const ledMarkerStyle = computed(() => ({
        
        <!-- Sony Logo Animation -->
        <div v-if="vfdMode === 'logo'" class="vfd-logo-container">
-           <span class="vfd-sony">SONY</span>
+           <img :src="sonyLogo" class="vfd-sony-img" alt="SONY" />
        </div>
 
        <!-- Spectrum Analyzer -->
@@ -960,20 +961,24 @@ html, body, .crt-wrapper, * {
     left: 50%;
     transform: translateX(-50%);
     background-color: #050908;
-    border: 1px solid #333;
-    border-bottom: 1px solid #444;
+    border: 1px solid #1a1a1a; /* Darker border */
+    border-bottom: 1px solid #222;
     padding: 4px; 
-    border-radius: 2px;
+    border-radius: 4px; /* Slightly more rounded */
     box-shadow: 
-        inset 0 0 15px rgba(0,0,0,1), 
-        0 1px 0 rgba(255, 255, 255, 0.1); 
+        inset 0 2px 10px rgba(0,0,0,1), /* Stronger top inner shadow */
+        inset 0 0 5px rgba(0,0,0,0.8),
+        0 1px 0 rgba(255, 255, 255, 0.05); /* Subtle lip */
     z-index: 10001;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 154px; /* Bigger */
+    width: 185px; /* Wider (120%) */
     height: 44px;
     overflow: hidden; 
+    
+    /* Simulate slight curve/recess */
+    background-image: linear-gradient(to bottom, #000 0%, #080a08 20%, #080a08 80%, #000 100%);
 }
 
 /* Glass & Dot Grid Effect */
@@ -989,10 +994,10 @@ html, body, .crt-wrapper, * {
     transparent 1%,
     v-bind(scanlineColor) 95%
   );
-  background-size: 1.4px 1.4px; /* Dot density */
+  background-size: 2px 2px; /* Dot density */
   pointer-events: none;
   z-index: 50;
-  opacity: 0.6;
+  opacity: 0.9;
 }
 
 .vfd-logo-container {
@@ -1004,14 +1009,14 @@ html, body, .crt-wrapper, * {
     animation: vfd-scroll-sequence 3s ease-in-out forwards;
 }
 
-.vfd-sony {
-    font-family: 'Helvetica Neue', Arial, sans-serif; /* Clean Corp font */
-    font-weight: 900;
-    letter-spacing: 2px;
-    color: #40e0d0;
-    font-size: 24px; /* Bigger */
-    text-shadow: 0 0 5px rgba(64, 224, 208, 0.8);
-    opacity: 0.8;
+.vfd-sony-img {
+    height: 28px; /* Fit within 44px height */
+    width: auto;
+    /* Tint it teal to match VFD using filters */
+    /* Logic: Invert to white (if black), then sepia + hue-rotate to teal */
+    filter: brightness(0) invert(1) sepia(1) saturate(5) hue-rotate(130deg) brightness(0.8) drop-shadow(0 0 2px rgba(64, 224, 208, 0.6));
+    opacity: 0.9;
+    image-rendering: high-quality;
 }
 
 @keyframes vfd-scroll-sequence {
