@@ -850,6 +850,7 @@ html, body, .crt-wrapper, * {
     right: 4rem;
     display: flex;
     align-items: flex-end; /* Fix alignment issues with mixed height items */
+    gap: 1.5rem; /* Standardized gap */
     pointer-events: none;
     z-index: 10000;
 }
@@ -877,12 +878,10 @@ html, body, .crt-wrapper, * {
     flex-direction: column;
     align-items: center;
     gap: 0.3rem;
-    margin-right: 1.5rem; /* Space from Power LED */
-    padding: 24px; /* Significantly increase hit area */
-    margin-top: -24px; /* Offset padding to keep layout stable */
-    margin-bottom: -24px;
-    margin-left: -10px;
-    margin-right: -10px; /* Adjust spacing */
+    width: 60px; /* Fixed Layout Width */
+    /* Remove padding/margin hacks - 60px is sufficient tap target */
+    padding: 0; 
+    margin: 0;
     position: relative;
     z-index: 10005; /* Ensure it's above other things */
     pointer-events: auto; /* Capture hover in padded area */
