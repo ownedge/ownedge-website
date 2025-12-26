@@ -718,13 +718,13 @@ html, body, .crt-wrapper, * {
 }
 
 .app-container {
-  width: 100%;
-  height: 100%;
+  width: 101%;
+  height: 101%;
+  flex-shrink: 0; /* Prevent shrinking to fit */
   position: relative;
-  background: radial-gradient(circle at center, #1d1d1d 0%, #000000 100%);
+  background: radial-gradient(circle at center, #1d1d1d 1%, #000000 90%);
   overflow: hidden; /* Container is fixed window */
-  overflow: hidden; /* Container is fixed window */
-  filter: url(#spherical-warp) brightness(v-bind(brightness*1.5)) contrast(v-bind(contrast)); /* Apply content distortion + Settings */
+  filter: url(#spherical-warp) brightness(v-bind(brightness*0.9)) contrast(v-bind(contrast)); /* Apply content distortion + Settings */
 }
 
 /* Fixed Background Layer */
