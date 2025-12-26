@@ -170,7 +170,7 @@ onUnmounted(() => {
     <div class="tui-frame">
       <!-- Top Bar -->
       <div class="tui-header">
-        <span class="title">[ OWNEDGE PORTFOLIO MANAGER v1.0 ]</span>
+        <span class="title">R-CONTENT C0MMAND3R (0.3b)</span>
         <span class="clock">MEM: 640K OK</span>
       </div>
 

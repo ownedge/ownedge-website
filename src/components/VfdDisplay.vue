@@ -362,17 +362,17 @@ watch(() => props.mode, (newMode) => {
 .vfd-info-container {
     width: 100%;
     height: 100%;
-    position: relative; /* For absolute positioning of label */
+    position: relative; 
     display: flex;
     align-items: center; 
-    justify-content: flex-end; /* Align value to right */
-    padding-right: 10px; /* Space from edge */
+    justify-content: space-between; /* Spread items */
+    padding: 0 12px; /* Balanced padding */
 }
 
 .vfd-label {
-    position: absolute;
-    top: 2px;
-    left: 8px;
+    /* position: absolute; Removed for flex centering */
+    /* top: 2px; */
+    /* left: 8px; */
     font-family: 'Microgramma', monospace; 
     color: #40e0d0;
     font-size: 0.6rem; /* Tiny label */
@@ -389,7 +389,8 @@ watch(() => props.mode, (newMode) => {
     letter-spacing: 2px;
     font-weight: bold;
     text-shadow: 0 0 8px #40e0d0;
+    text-shadow: 0 0 8px #40e0d0;
     line-height: 1;
-    margin-top: 6px; /* Push down slightly to balance */
+    margin-top: 4px; /* Slight optical adjustment */
 }
 </style>
