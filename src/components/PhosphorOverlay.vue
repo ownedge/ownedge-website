@@ -78,7 +78,7 @@ let animationFrameId = null;
       ctx.globalCompositeOperation = 'lighter';
       
       const canvasRect = canvas.getBoundingClientRect();
-      const targets = document.querySelectorAll('.logo-img, .typing-wrapper, .status, .id, .percentage, .log-text, .btn-go, .hint-text, .tui-header .title, .tui-header .clock, .pane-title, .col-name, .col-type, .col-date, .pane-footer, .f-key span, .f-label, .view-content pre, .cursor');
+      const targets = document.querySelectorAll('.boot-video, .logo-img, .typing-wrapper, .status, .id, .percentage, .log-text, .btn-go, .hint-text, .tui-header .title, .tui-header .clock, .pane-title, .col-name, .col-type, .col-date, .pane-footer, .f-key span, .f-label, .view-content pre, .cursor');
  
      targets.forEach(el => {
        const rect = el.getBoundingClientRect();
@@ -97,7 +97,7 @@ let animationFrameId = null;
        }
        if (fadeInOp < 0.01) return;
  
-       const baseAlpha = el.tagName === 'IMG' ? 0.01 : 0.4;
+       const baseAlpha = (el.tagName === 'IMG' || el.tagName === 'VIDEO') ? 0.05 : 0.4;
        ctx.globalAlpha = baseAlpha * fadeInOp;
        
        const x = rect.left - canvasRect.left;
@@ -123,7 +123,7 @@ let animationFrameId = null;
        
        ctx.shadowBlur = 0;
        
-       if (el.tagName === 'IMG') {
+       if (el.tagName === 'IMG' || el.tagName === 'VIDEO') {
           try {
               if (style.filter && style.filter !== 'none') ctx.filter = style.filter;
               ctx.drawImage(el, x, y, w, h);

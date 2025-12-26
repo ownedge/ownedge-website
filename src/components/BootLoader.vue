@@ -56,6 +56,8 @@ onMounted(() => {
     { p: 10 },
     { p: 30 },
     { p: 50 },
+    { p: 70 },
+    { p: 96 },
     { p: 100 }
   ];
 
@@ -78,13 +80,13 @@ onMounted(() => {
       } else {
         clearInterval(interval);
         currentStep++;
-        setTimeout(nextStep, Math.random() * 200 + 50); 
+        setTimeout(nextStep, Math.random() * 1100 + 50); 
       }
     }, 20); 
   }
 
   // Delay loading start to let keys appear first
-  setTimeout(nextStep, 1500);
+  setTimeout(nextStep, 1100);
 });
 
 onUnmounted(() => {
@@ -116,7 +118,6 @@ const handleStart = () => {
   width: 100%;
   height: 100%;
   z-index: 30;
-  background-color: #000;
   overflow: hidden;
 }
 
