@@ -514,7 +514,7 @@ const ledMarkerStyle = computed(() => ({
                      <div class="knob-marker"></div>
                  </div>
              </div>
-             <span class="led-label">CONTRAST</span>
+             <span class="led-label">CONTRST</span>
         </div>
 
 
@@ -538,8 +538,11 @@ const ledMarkerStyle = computed(() => ({
        <canvas v-show="vfdMode === 'spectrum'" ref="vfdCanvas" class="vfd-canvas"></canvas>
     </div>
 
+    <!-- Speaker Grilles (Decorative) -->
+    <div class="speaker-grille left"></div>
+    <div class="speaker-grille right"></div>
+
     <div class="crt-screen">
-      <!-- Apply 'crt-content' class for filter -->
       <!-- Apply 'crt-content' class for filter -->
       <div class="app-container">
         <!-- Fixed Background/Overlays -->
@@ -878,9 +881,8 @@ html, body, .crt-wrapper, * {
     padding: 24px; /* Significantly increase hit area */
     margin-top: -24px; /* Offset padding to keep layout stable */
     margin-bottom: -24px;
-    margin-left: -12px;
-    margin-left: -12px;
-    margin-right: calc(1.5rem - 12px); /* Adjust spacing */
+    margin-left: -10px;
+    margin-right: -10px; /* Adjust spacing */
     position: relative;
     z-index: 10005; /* Ensure it's above other things */
     pointer-events: auto; /* Capture hover in padded area */
@@ -1037,6 +1039,39 @@ html, body, .crt-wrapper, * {
 .vfd-content {
     /* Legacy - keeping just in case but unused */
     font-family: 'Courier New', monospace;
+}
+
+/* Speaker Grilles */
+.speaker-grille {
+    position: absolute;
+    bottom: 28px; 
+    width: 65px; 
+    height: 38px;
+    z-index: 10000;
+    
+    /* "Individual Holes" Effect */
+    background-color: transparent; /* No frame background */
+    
+    /* Draw dots (holes) */
+    background-image: radial-gradient(circle closest-side, #000 30%, transparent 60%);
+    background-size: 2.95px 2.95px; /* Dense hole pattern */
+    
+    /* Simulate hole depth: Highlight on bottom lip (drop-shadow on the dot pattern) */
+    /* Note: filter applies to the opaque parts (the dots) */
+    filter: drop-shadow(0 1px 0 rgba(255,255,255,0.15));
+    
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    opacity: 0.9;
+}
+
+.speaker-grille.left {
+    left: calc(50% - 100px - 70px); /* Center - VFD half width - gap - width */
+}
+
+.speaker-grille.right {
+    right: calc(50% - 100px - 70px);
 }
 
 </style>

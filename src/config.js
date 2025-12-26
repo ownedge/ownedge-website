@@ -4,7 +4,7 @@ export const SYSTEM_CONFIG = {
         MASTER_VOL: 0.5,
         // Relative volumes per section
         BOOT_VOL: 0.7,
-        ATMOSPHERE_VOL: 0.03,
+        ATMOSPHERE_VOL: 0.025,
         MUSIC_VOL: 0.18,
         EASTER_EGG_VOL: 0.15,
         

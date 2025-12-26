@@ -361,20 +361,20 @@ class SoundManager {
 
         // Osc 1: Mid-low drone (Higher pitch than sub-bass)
         const osc1 = this.ctx.createOscillator();
-        osc1.type = 'square';
+        osc1.type = 'sawtooth';
         osc1.frequency.setValueAtTime(110, this.ctx.currentTime);
         
         // Filter 1: Lowpass 
         const filter1 = this.ctx.createBiquadFilter();
-        filter1.type = 'highpass';
-        filter1.frequency.value = 300;
+        filter1.type = 'lowpass';
+        filter1.frequency.value = 2000;
         osc1.connect(filter1);
         filter1.connect(this.atmosphereGain);
 
         // Osc 2: High harmonic
         const osc2 = this.ctx.createOscillator();
         osc2.type = 'sawtooth';
-        osc2.frequency.setValueAtTime(220, this.ctx.currentTime); 
+        osc2.frequency.setValueAtTime(700, this.ctx.currentTime); 
         osc2.connect(this.atmosphereGain);
 
         // Start
@@ -384,7 +384,7 @@ class SoundManager {
         this.atmosphereOscillators = [osc1, osc2];
 
         // Fade in smoothly - Lower volume
-        this.atmosphereGain.gain.setTargetAtTime(0.05 * this.config.ATMOSPHERE_VOL, this.ctx.currentTime, 2);
+        this.atmosphereGain.gain.setTargetAtTime(0.04 * this.config.ATMOSPHERE_VOL, this.ctx.currentTime, 2);
     }
     
     stopAtmosphere() {
