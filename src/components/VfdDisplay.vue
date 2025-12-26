@@ -138,8 +138,8 @@ const startSpectrumAnalyzer = () => {
         
         // Dot Matrix Config
         // 185px width, 36px height at 100% zoom (approx)
-        const dotSize = 2;
-        const gap = 2; 
+        const dotSize = 0.5;
+        const gap = 0; 
         const step = dotSize + gap;
         const cols = Math.floor(canvas.width / step);
         const rows = Math.floor(canvas.height / step);
@@ -375,7 +375,7 @@ watch(() => props.mode, (newMode) => {
     /* left: 8px; */
     font-family: 'Microgramma', monospace; 
     color: #40e0d0;
-    font-size: 0.6rem; /* Tiny label */
+    font-size: 0.9rem; /* Tiny label */
     letter-spacing: 1px;
     font-weight: bold;
     text-shadow: 0 0 5px #40e0d0;

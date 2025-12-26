@@ -336,14 +336,14 @@ const updateKnobText = (type, val) => {
     let pct = 0;
     
     if (type === 'vol') {
-        label = 'VOLUME';
+        label = 'VOL';
         pct = Math.round(val * 100);
     } else if (type === 'brt') {
-        label = 'BRIGHT';
+        label = 'BRI';
         // Map 0.5-1.5 range to 0-100%
         pct = Math.round((val - 0.5) * 100);
     } else if (type === 'con') {
-        label = 'CONTRST';
+        label = 'CON';
         // Map 0.5-1.5 range to 0-100%
         pct = Math.round((val - 0.5) * 100);
     }
