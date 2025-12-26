@@ -779,6 +779,16 @@ html, body, .crt-wrapper, * {
     image-rendering: pixelated;
 }
 
+@keyframes led-pulse {
+    0%, 100% { filter: brightness(0.9); }
+    50% { filter: brightness(1.1) drop-shadow(0 0 6px rgba(255,255,255,0.2)); }
+}
+
+/* Common Active State for Animation */
+.led.active, .power-led {
+    animation: led-pulse 8s ease-in-out infinite;
+}
+
 /* CAPS (Standard Green) */
 .active-caps.active {
     background-color: #33ff33;
@@ -945,13 +955,14 @@ html, body, .crt-wrapper, * {
     top: 3px;
     left: 50%;
     transform: translateX(-50%);
-    width: 4px;
-    height: 4px;
-    background-color: #ff0000; /* Amber */
+    width: 5px;
+    height: 5px;
+    background-color: #e32a01;
     box-shadow: 
         0 0 2px #ff0000, 
         0 0 5px rgba(255, 0, 0, 0.6);
-    border-radius: 0%;
+    border-radius: 50%;
+    animation: led-pulse 8s ease-in-out infinite;
 }
 
 

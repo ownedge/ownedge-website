@@ -56,36 +56,21 @@ const decodeEffect = () => {
 }
 
 const typeWriter = () => {
-  if (!isSubtitleActive.value || !isVisible.value) return; // Guard clause
+  if (!isSubtitleActive.value || !isVisible.value) return; 
 
-  const currentSubtitle = subtitles[currentSubtitleIndex];
+  const currentSubtitle = subtitles[0]; // Always use the first one
 
-  if (isDeleting) {
-    displayedText.value = currentSubtitle.substring(0, charIndex - 1);
-    charIndex--;
-  } else {
-    displayedText.value = currentSubtitle.substring(0, charIndex + 1);
+  if (charIndex < currentSubtitle.length) {
+    displayedText.value += currentSubtitle.charAt(charIndex);
     charIndex++;
     SoundManager.playTypingSound();
+    
+    // Continue typing
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(typeWriter, 100);
+  } else {
+    // Finished typing. Do nothing (cursor blinks via CSS).
   }
-
-  let typeSpeed = 100; // Type speed
-
-  if (isDeleting) {
-    typeSpeed /= 5; // Delete faster
-  }
-
-  if (!isDeleting && charIndex === currentSubtitle.length) {
-    typeSpeed = 2000; // Pause at end
-    isDeleting = true;
-  } else if (isDeleting && charIndex === 0) {
-    isDeleting = false;
-    currentSubtitleIndex = (currentSubtitleIndex + 1) % subtitles.length;
-    typeSpeed = 500; // Pause before typing new
-  }
-
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(typeWriter, typeSpeed);
 };
 
 onMounted(() => {
@@ -93,9 +78,12 @@ onMounted(() => {
   observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
           isVisible.value = entry.isIntersecting;
+          
           if (isVisible.value && isSubtitleActive.value) {
-              // Create a small delay to avoid double invocation if timer is pending
+              // Reset and Restart Animation when re-entering view
               clearTimeout(typingTimeout); 
+              charIndex = 0;
+              displayedText.value = "";
               typeWriter();
           }
       });
