@@ -148,59 +148,64 @@ const handleStart = () => {
       </div>
       
        <div class="keyboard-hint" :class="{ 'visible': showHint }">
-           <!-- Width/Height ratio adjusted for 3 columns x 2 rows of these big keys -->
-           <svg class="keyboard-svg" width="180" height="120" viewBox="0 0 280 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-               <defs>
-                   <!-- The 'Key' shape the user liked (originally the keyboard body) -->
-                   <g id="big-iso-key">
-                       <!-- Preserving original path data but wrapped in group -->
-                       <path d="M10 20 L50 40 L90 20 L50 0 Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                       <path d="M10 20 L10 35 L50 55 L90 35 L90 20" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                       <path d="M50 55 L50 40" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                   </g>
-               </defs>
+           <div class="hint-visuals">
 
-               <!-- UP KEY (Centered on top row) -->
-               <g transform="translate(140, 30)">
-                   <g class="key-inner" :class="{ active: activeKeys.ArrowUp }">
-                       <use href="#big-iso-key" />
-                       <!-- UP Arrow (Pointing North-East) -->
-                       <path d="M40 25 L60 15" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                       <path d="M50 14 L60 15 L56 24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                   </g>
-               </g>
+               <!-- Width/Height ratio adjusted for 3 columns x 2 rows of these big keys -->
+               <div class="keyboard-group">
+                   <svg class="keyboard-svg" width="180" height="120" viewBox="0 0 280 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+                       <defs>
+                           <!-- The 'Key' shape the user liked (originally the keyboard body) -->
+                           <g id="big-iso-key">
+                               <!-- Preserving original path data but wrapped in group -->
+                               <path d="M10 20 L50 40 L90 20 L50 0 Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                               <path d="M10 20 L10 35 L50 55 L90 35 L90 20" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                               <path d="M50 55 L50 40" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                           </g>
+                       </defs>
 
-               <!-- LEFT KEY (Bottom row left) -->
-               <g transform="translate(40, 40)">
-                   <g class="key-inner" :class="{ active: activeKeys.ArrowLeft }">
-                       <use href="#big-iso-key" />
-                       <!-- LEFT Arrow (Pointing North-West) -->
-                       <path d="M60 25 L40 15" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                       <path d="M50 14 L40 15 L44 24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                   </g>
-               </g>
+                       <!-- UP KEY (Centered on top row) -->
+                       <g transform="translate(140, 30)">
+                           <g class="key-inner" :class="{ active: activeKeys.ArrowUp }">
+                               <use href="#big-iso-key" />
+                               <!-- UP Arrow (Pointing North-East) -->
+                               <path d="M40 25 L60 15" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                               <path d="M50 14 L60 15 L56 24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                           </g>
+                       </g>
 
-               <!-- DOWN KEY (Bottom row center) -->
-               <g transform="translate(90, 65)">
-                   <g class="key-inner" :class="{ active: activeKeys.ArrowDown }">
-                       <use href="#big-iso-key" />
-                       <!-- DOWN Arrow (Pointing South-West) -->
-                       <path d="M60 15 L40 25" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                       <path d="M50 26 L40 25 L44 16" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                   </g>
-               </g>
+                       <!-- LEFT KEY (Bottom row left) -->
+                       <g transform="translate(40, 40)">
+                           <g class="key-inner" :class="{ active: activeKeys.ArrowLeft }">
+                               <use href="#big-iso-key" />
+                               <!-- LEFT Arrow (Pointing North-West) -->
+                               <path d="M60 25 L40 15" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                               <path d="M50 14 L40 15 L44 24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                           </g>
+                       </g>
 
-               <!-- RIGHT KEY (Bottom row right) -->
-               <g transform="translate(140, 90)">
-                   <g class="key-inner" :class="{ active: activeKeys.ArrowRight }">
-                       <use href="#big-iso-key" />
-                       <!-- RIGHT Arrow (Pointing South-East) -->
-                       <path d="M40 15 L60 25" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                       <path d="M50 26 L60 25 L56 16" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                   </g>
-               </g>
-           </svg>
-           <div class="hint-text"> ▶ KEYBOARD FRIENDLY</div>
+                       <!-- DOWN KEY (Bottom row center) -->
+                       <g transform="translate(90, 65)">
+                           <g class="key-inner" :class="{ active: activeKeys.ArrowDown }">
+                               <use href="#big-iso-key" />
+                               <!-- DOWN Arrow (Pointing South-West) -->
+                               <path d="M60 15 L40 25" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                               <path d="M50 26 L40 25 L44 16" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                           </g>
+                       </g>
+
+                       <!-- RIGHT KEY (Bottom row right) -->
+                       <g transform="translate(140, 90)">
+                           <g class="key-inner" :class="{ active: activeKeys.ArrowRight }">
+                               <use href="#big-iso-key" />
+                               <!-- RIGHT Arrow (Pointing South-East) -->
+                               <path d="M40 15 L60 25" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                               <path d="M50 26 L60 25 L56 16" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                           </g>
+                       </g>
+                   </svg>
+                   <div class="hint-text">▶ KEYBOARD FRIENDLY</div>
+               </div>
+           </div>
        </div>
 
        <!-- ENERGY STAR EASTER EGG OVERLAY -->
@@ -337,9 +342,26 @@ const handleStart = () => {
     pointer-events: none;
     transition: opacity 1.5s ease-out; /* Immediate fade in */
     display: flex;
+    justify-content: center;
+}
+
+.hint-visuals {
+    display: flex;
+    align-items: flex-end;
+    gap: 40px;
+}
+
+.speaker-group, .keyboard-group {
+    display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px; /* Reduced gap */
+    gap: 4px;
+}
+
+.speaker-svg {
+    stroke: var(--color-accent, #fff);
+    filter: drop-shadow(0 0 3px var(--color-accent, #fff));
+    margin-bottom: 5px;
 }
 
 .keyboard-hint.visible {

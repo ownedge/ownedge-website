@@ -6,15 +6,14 @@ import PhosphorOverlay from './components/PhosphorOverlay.vue'
 import NoiseOverlay from './components/NoiseOverlay.vue'
 import SoundManager from './sfx/SoundManager'
 import BootLoader from './components/BootLoader.vue'
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import sonyLogo from './assets/sony-logo.png' // Import logo
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import cohnLogo from './assets/cohn-logo.png' // Import logo
 
 let cursorInterval = null;
 
 const windowWidth = ref(window.innerWidth)
 const windowHeight = ref(window.innerHeight)
 
-// Initialize to center to avoid initial jump/offset
 // Initialize to center to avoid initial jump/offset
 const mouseX = ref(window.innerWidth / 2)
 const mouseY = ref(window.innerHeight / 2)
@@ -245,13 +244,38 @@ const heroStyle = computed(() => {
 // --- Power Controls Logic ---
 import { SYSTEM_CONFIG } from './config';
 
-const volume = ref(SYSTEM_CONFIG.AUDIO.MASTER_VOL);
-const brightness = ref(SYSTEM_CONFIG.VISUALS.BRIGHTNESS_DEFAULT);
-const contrast = ref(SYSTEM_CONFIG.VISUALS.CONTRAST_DEFAULT);
-const hue = ref(SYSTEM_CONFIG.VISUALS.HUE_DEFAULT);
+const SETTINGS_KEY = 'crt_settings';
+
+const loadSettings = () => {
+    try {
+        const saved = localStorage.getItem(SETTINGS_KEY);
+        return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+        console.warn('Failed to load settings', e);
+        return null;
+    }
+};
+
+const savedSettings = loadSettings();
+
+const volume = ref(savedSettings?.volume ?? SYSTEM_CONFIG.AUDIO.MASTER_VOL);
+const brightness = ref(savedSettings?.brightness ?? SYSTEM_CONFIG.VISUALS.BRIGHTNESS_DEFAULT);
+const contrast = ref(savedSettings?.contrast ?? SYSTEM_CONFIG.VISUALS.CONTRAST_DEFAULT);
+
+const saveSettings = () => {
+    const settings = {
+        volume: volume.value,
+        brightness: brightness.value,
+        contrast: contrast.value
+    };
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+};
+
+// Auto-save on change
+watch([volume, brightness, contrast], saveSettings);
 
 // Generic Knob State
-const activeKnob = ref(null); // 'vol', 'brt', 'con', 'hue'
+const activeKnob = ref(null); // 'vol', 'brt', 'con'
 const startY = ref(0);
 const startValue = ref(0);
 
@@ -263,7 +287,6 @@ const handleKnobDown = (e, type) => {
     if (type === 'vol') startValue.value = volume.value;
     if (type === 'brt') startValue.value = brightness.value;
     if (type === 'con') startValue.value = contrast.value;
-    if (type === 'hue') startValue.value = hue.value;
 
     document.addEventListener('mousemove', handleKnobMove);
     document.addEventListener('mouseup', handleKnobUp);
@@ -289,11 +312,6 @@ const handleKnobMove = (e) => {
         newVal = Math.max(0.5, Math.min(1.5, newVal)); // 50% to 150%
         contrast.value = newVal;
     }
-    else if (activeKnob.value === 'hue') {
-        // 0.0 to 1.0 cycle
-        newVal = Math.max(0, Math.min(1, newVal));
-        hue.value = newVal;
-    }
 };
 
 const handleKnobUp = () => {
@@ -313,22 +331,14 @@ const getKnobRotation = (val, min, max) => {
 const volKnobStyle = computed(() => ({ transform: getKnobRotation(volume.value, 0, 1) }));
 const brtKnobStyle = computed(() => ({ transform: getKnobRotation(brightness.value, 0.5, 1.5) }));
 const conKnobStyle = computed(() => ({ transform: getKnobRotation(contrast.value, 0.5, 1.5) }));
-const hueKnobStyle = computed(() => ({ transform: getKnobRotation(hue.value, 0, 1) }));
 
 // --- Hue Logic ---
 // 0.5 (Center) should map to Teal (approx 188deg)
 // Let's assume range 0-1 maps to 0-360 shift relative to base
 const currentHueDeg = computed(() => {
-   // Base teal is ~188. 
-   // We want knob 0-1 to span spectrum.
-   // Map 0 -> 1 to maybe (188 - 180) -> (188 + 180) to cover full circle centered on Teal?
-   // Or standard 0-360 mapping.
-   // Requirement: Center (0.5) is default Teal.
-   // 0.5 -> 188. 
-   // 0.0 -> 8deg (Red/Orange)
-   // 1.0 -> 368deg (Red/Orange)
-   // So: (val - 0.5) * 360 + 188
-   return (hue.value - 0.5) * 360 + 188;
+   // Use default hue value since knob is removed
+   const defaultHue = SYSTEM_CONFIG.VISUALS.HUE_DEFAULT;
+   return (defaultHue - 0.5) * 360 + 188;
 });
 
 const scanlineColor = computed(() => `hsl(${currentHueDeg.value}, 42%, 7%)`);
@@ -374,7 +384,7 @@ const ledMarkerStyle = computed(() => ({
                      <div class="knob-marker"></div>
                  </div>
              </div>
-             <span class="led-label">VOL</span>
+             <span class="led-label">VOLUME</span>
         </div>
 
         <!-- Brightness Knob -->
@@ -389,7 +399,7 @@ const ledMarkerStyle = computed(() => ({
                      <div class="knob-marker"></div>
                  </div>
              </div>
-             <span class="led-label">BRT</span>
+             <span class="led-label">BRIGHT</span>
         </div>
 
         <!-- Contrast Knob -->
@@ -404,23 +414,10 @@ const ledMarkerStyle = computed(() => ({
                      <div class="knob-marker"></div>
                  </div>
              </div>
-             <span class="led-label">CON</span>
+             <span class="led-label">CONTRAST</span>
         </div>
 
-        <!-- Hue Knob -->
-        <div class="volume-control" @mousedown="(e) => handleKnobDown(e, 'hue')">
-             <div class="knob-container">
-                 <div class="knob-ring"></div>
-                 <div class="knob-arrows">
-                     <span class="arrow-up">▲</span>
-                     <span class="arrow-down">▼</span>
-                 </div>
-                 <div class="knob" :style="hueKnobStyle">
-                     <div class="knob-marker" :style="ledMarkerStyle"></div>
-                 </div>
-             </div>
-             <span class="led-label">HUE</span>
-        </div>
+
 
         <div class="led-group">
             <div class="led power-led active"></div>
@@ -429,7 +426,7 @@ const ledMarkerStyle = computed(() => ({
     </div>
 
     <!-- Monitor Brand Logo (Image) -->
-    <img :src="sonyLogo" class="monitor-brand" alt="SONY" />
+    <img :src="cohnLogo" class="monitor-brand" alt="COHN" />
 
     <div class="crt-screen">
       <!-- Apply 'crt-content' class for filter -->
@@ -650,13 +647,13 @@ html, body, .crt-wrapper, * {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.3rem;
+    gap: 0.8rem;
     width: 60px; /* Enforce overlapping width to keep centers equidistant */
 }
 
 .led {
-    width: 20px;
-    height: 8px;
+    width: 18px;
+    height: 7px;
     background-color: #0b1d0b;
     border: 1px solid #132a13;
     box-shadow: inset 0 0 2px rgba(0,0,0,0.8);
@@ -852,10 +849,10 @@ html, body, .crt-wrapper, * {
     bottom: 30px; /* Adjust for image height */
     left: 50%;
     transform: translateX(-50%);
-    width: 95px; /* Realistic size for a bezel logo */
-    height: 20px;
+    width: 110px; /* Realistic size for a bezel logo */
+    height: 30px;
     opacity: 0.09; /* Printed label look */
-    filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.2)); /* Slight bevel highlight */
+    filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.1)) invert(1); /* Slight bevel highlight */
     -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0.9), rgba(0,0,0,1), rgba(0,0,0,0.9));
     mask-image: linear-gradient(to right, rgba(0,0,0,0.9), rgba(0,0,0,1), rgba(0,0,0,0.9));
     pointer-events: none;
