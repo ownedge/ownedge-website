@@ -23,12 +23,28 @@ class SoundManager {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         this.ctx = new AudioContext();
 
+        // Create Analyser
+        this.analyser = this.ctx.createAnalyser();
+        this.analyser.fftSize = 64; // Low res for retro feel
+        this.analyser.smoothingTimeConstant = 0.85;
+
         // Create Master Gain for Volume Control
         this.masterGain = this.ctx.createGain();
         this.masterGain.gain.value = this.userVolume; // Apply stored volume
-        this.masterGain.connect(this.ctx.destination);
+        
+        // Connect Graph: Master -> Analyser -> Destination
+        this.masterGain.connect(this.analyser);
+        this.analyser.connect(this.ctx.destination);
 
         this.initialized = true;
+    }
+
+    getAudioData() {
+        if (!this.analyser) return null;
+        const bufferLength = this.analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        this.analyser.getByteFrequencyData(dataArray);
+        return dataArray;
     }
 
     resume() {

@@ -7,9 +7,17 @@ import NoiseOverlay from './components/NoiseOverlay.vue'
 import SoundManager from './sfx/SoundManager'
 import BootLoader from './components/BootLoader.vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import cohnLogo from './assets/cohn-logo.png' // Import logo
+
 
 let cursorInterval = null;
+let clockInterval = null;
+const currentTime = ref('');
+
+const updateTime = () => {
+    const now = new Date();
+    currentTime.value = now.toLocaleTimeString('en-US', { hour12: false });
+};
+
 
 const windowWidth = ref(window.innerWidth)
 const windowHeight = ref(window.innerHeight)
@@ -161,9 +169,99 @@ onMounted(() => {
 
   // Start glitch loop immediately
   triggerGlitch();
+  
+  // Start VFD Sequence
+  startVfdSequence();
 })
 
+const vfdMode = ref('off'); // 'off', 'logo', 'spectrum'
+const vfdCanvas = ref(null);
+let animationFrameId = null;
+
+const startVfdSequence = () => {
+    // 1. Wait a bit then show Logo
+    setTimeout(() => {
+        vfdMode.value = 'logo';
+        
+        // 2. After 2.5s (Slide in + Wait + Slide out), switch to Spectrum
+        setTimeout(() => {
+            vfdMode.value = 'spectrum';
+            startSpectrumAnalyzer();
+        }, 3500); // 1s in + 1.5s wait + 1s out
+    }, 500);
+};
+
+const startSpectrumAnalyzer = () => {
+    const draw = () => {
+        if (vfdMode.value !== 'spectrum' || !vfdCanvas.value) return;
+        
+        const canvas = vfdCanvas.value;
+        const ctx = canvas.getContext('2d');
+        const data = SoundManager.getAudioData();
+        
+        if (!data) {
+             animationFrameId = requestAnimationFrame(draw);
+             return;
+        }
+
+        // Clear
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Config for Dot Matrix
+        // 140px width, 36px height. 
+        // Let's use 4px dots with 1px gap = 5px stride.
+        // Cols: ~28, Rows: ~7
+        const dotSize = 2;
+        const gap = 2; // Spread out more
+        const step = dotSize + gap;
+        const cols = Math.floor(canvas.width / step);
+        const rows = Math.floor(canvas.height / step);
+        
+        ctx.fillStyle = '#40e0d0'; // Teal VFD color
+
+        // Draw Visualization
+        for (let i = 0; i < cols; i++) {
+            // Map freq bin to column
+            // We have 32 bins (fftSize 64 / 2). 
+            // We might have more cols than bins, or vice versa.
+            // Simple mapping:
+            const binIndex = Math.floor((i / cols) * data.length * 0.8); // Drop high freqs
+            const value = data[binIndex] || 0; // 0-255
+            
+            // Calculate active dots for this column
+            const heightPercent = value / 255;
+            const activeDots = Math.floor(heightPercent * rows);
+            
+            for (let j = 0; j < rows; j++) {
+                // Draw from bottom up
+                if (j < activeDots) {
+                    // Invert Y to draw from bottom
+                    const y = canvas.height - (j * step) - dotSize;
+                    const x = i * step;
+                    
+                    // Opacity falloff for "glow"
+                    ctx.globalAlpha = 0.8 + (value / 1200); 
+                    ctx.fillRect(x, y, dotSize, dotSize);
+                }
+            }
+        }
+        
+        animationFrameId = requestAnimationFrame(draw);
+    };
+    
+    // Ensure canvas is ready
+    setTimeout(() => {
+        if(vfdCanvas.value) {
+            vfdCanvas.value.width = 140;
+            vfdCanvas.value.height = 36;
+            draw();
+        }
+    }, 100);
+};
+
 onUnmounted(() => {
+  if (animationFrameId) cancelAnimationFrame(animationFrameId);
+  
   window.removeEventListener('mousemove', handleMouseMove)
   window.removeEventListener('resize', handleResize)
   window.removeEventListener('focus', hideCursor)
@@ -174,6 +272,7 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleGlobalKeydown);
   
   clearInterval(cursorInterval)
+  if (clockInterval) clearInterval(clockInterval);
 })
 
 const handleGlobalKeydown = (e) => {
@@ -425,8 +524,18 @@ const ledMarkerStyle = computed(() => ({
         </div>
     </div>
 
-    <!-- Monitor Brand Logo (Image) -->
-    <img :src="cohnLogo" class="monitor-brand" alt="COHN" />
+    <!-- VFD Display (Replaces Logo) -->
+    <div class="vfd-display">
+       <div class="vfd-overlay"></div> <!-- Dot Matrix Grid Mask -->
+       
+       <!-- Sony Logo Animation -->
+       <div v-if="vfdMode === 'logo'" class="vfd-logo-container">
+           <span class="vfd-sony">SONY</span>
+       </div>
+
+       <!-- Spectrum Analyzer -->
+       <canvas v-show="vfdMode === 'spectrum'" ref="vfdCanvas" class="vfd-canvas"></canvas>
+    </div>
 
     <div class="crt-screen">
       <!-- Apply 'crt-content' class for filter -->
@@ -843,20 +952,87 @@ html, body, .crt-wrapper, * {
     border-radius: 0%;
 }
 
-/* Monitor Brand Styling */
-.monitor-brand {
+
+/* VFD Display Styling (Replaces Monitor Brand) */
+.vfd-display {
     position: absolute;
-    bottom: 30px; /* Adjust for image height */
+    bottom: 25px; 
     left: 50%;
     transform: translateX(-50%);
-    width: 110px; /* Realistic size for a bezel logo */
-    height: 30px;
-    opacity: 0.09; /* Printed label look */
-    filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.1)) invert(1); /* Slight bevel highlight */
-    -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0.9), rgba(0,0,0,1), rgba(0,0,0,0.9));
-    mask-image: linear-gradient(to right, rgba(0,0,0,0.9), rgba(0,0,0,1), rgba(0,0,0,0.9));
-    pointer-events: none;
+    background-color: #050908;
+    border: 1px solid #333;
+    border-bottom: 1px solid #444;
+    padding: 4px; 
+    border-radius: 2px;
+    box-shadow: 
+        inset 0 0 15px rgba(0,0,0,1), 
+        0 1px 0 rgba(255, 255, 255, 0.1); 
     z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 154px; /* Bigger */
+    height: 44px;
+    overflow: hidden; 
+}
+
+/* Glass & Dot Grid Effect */
+.vfd-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* Create a 'mask' of black with transparent holes */
+  background: radial-gradient(
+    circle,
+    transparent 1%,
+    v-bind(scanlineColor) 95%
+  );
+  background-size: 1.4px 1.4px; /* Dot density */
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.6;
+}
+
+.vfd-logo-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: vfd-scroll-sequence 3s ease-in-out forwards;
+}
+
+.vfd-sony {
+    font-family: 'Helvetica Neue', Arial, sans-serif; /* Clean Corp font */
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #40e0d0;
+    font-size: 24px; /* Bigger */
+    text-shadow: 0 0 5px rgba(64, 224, 208, 0.8);
+    opacity: 0.8;
+}
+
+@keyframes vfd-scroll-sequence {
+    0% { transform: translateY(-30px); opacity: 0; }
+    20% { transform: translateY(0); opacity: 1; } /* Slide In */
+    70% { transform: translateY(0); opacity: 1; } /* Stay */
+    100% { transform: translateY(30px); opacity: 0; } /* Slide Out */
+}
+
+.vfd-canvas {
+    width: 100%;
+    height: 100%;
+    /* Canvas draws pixelated dots naturally */
+    image-rendering: pixelated; 
+    opacity: 0.9;
+}
+
+.vfd-content {
+    /* Legacy - keeping just in case but unused */
+    font-family: 'Courier New', monospace;
 }
 
 </style>
+```
