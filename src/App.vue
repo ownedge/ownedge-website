@@ -617,9 +617,10 @@ html, body, .crt-wrapper, * {
 
 .rolling-sticker {
     position: absolute;
-    bottom: 0; 
-    left: 555px;
-    width: 120px; 
+    top: 10px; 
+    right: -36px;
+    width: 85px;
+    transform: rotate(-19deg);
     height: auto;
     z-index: 15;
     filter: brightness(0.77) contrast(0.9) sepia(0.2);

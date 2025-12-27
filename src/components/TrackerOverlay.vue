@@ -29,7 +29,7 @@ const draw = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     // Style
-    ctx.font = '14px "Courier New", monospace';
+    ctx.font = '16px "Courier New", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
 
@@ -100,15 +100,15 @@ const draw = () => {
         // Style
         if (offset === 0) {
             // Current Row
-            ctx.fillStyle = 'rgba(33, 241, 235, 0.8)';
+            ctx.fillStyle = 'rgba(33, 241, 235, 0.6)';
             if (props.reflectionOnly) ctx.fillStyle = 'rgba(33, 241, 235, 0.5)'; // Stronger reflection
-            ctx.font = 'bold 15px "Courier New", monospace';
+            ctx.font = 'bold 16px "Courier New", monospace';
         } else {
             // Future Rows
             // Fade out slightly
-            const opacity = 0.5 - (offset * 0.15);
+            const opacity = 0.45 - (offset * 0.15);
             ctx.fillStyle = `rgba(33, 241, 235, ${opacity})`;
-            ctx.font = '15px "Courier New", monospace';
+            ctx.font = '16px "Courier New", monospace';
         }
         
         // Render
