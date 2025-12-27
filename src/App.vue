@@ -207,6 +207,16 @@ const vfdKnobInfo = ref({ label: '', value: '' });
 const vfdBootState = ref('loading'); // 'loading', 'ready', 'complete'
 const bootProgress = ref(0);
 
+// VFD Label Glow - based on VFD activity
+const vfdLabelGlow = computed(() => {
+  if (vfdMode.value === 'spectrum' || vfdBootState.value === 'loading') {
+    return '0.7'; // High glow during spectrum/loading
+  } else if (vfdMode.value === 'logo' || vfdMode.value === 'knob') {
+    return '0.5'; // Medium glow
+  }
+  return '0.0'; // No glow when off
+});
+
 let previousVfdMode = 'spectrum';
 
 onUnmounted(() => {
@@ -606,13 +616,14 @@ html, body, .crt-wrapper, * {
 /* Vintage Sticker Styles */
 .bezel-sticker {
     position: absolute;
-    top: 0px; /* Top bezel */
-    left: -10px; /* Left bezel */
+    top: 2px; /* Top bezel */
+    left: -3px; /* Left bezel */
     width: 60px; /* Adjust size for Sony sticker */
     height: auto;
     z-index: 15;
-    filter: contrast(0.8);
+    filter: contrast(0.8) brightness(1.7);
     transform: rotate(-2deg);
+    opacity: 0.36;
 }
 
 .bezel-sticker img {
@@ -624,20 +635,14 @@ html, body, .crt-wrapper, * {
 .rolling-sticker {
     position: absolute;
     top: 10px; 
-    right: -36px;
+    right: -37px;
     width: 85px;
-    transform: rotate(-19deg);
+    transform: rotate(-40deg);
     height: auto;
     z-index: 15;
-    filter: brightness(0.77) contrast(0.9) sepia(0.2);
-    opacity: 0.56;
+    filter: brightness(0.47) contrast(0.96) sepia(0.2);
+    opacity: 0.88;
     pointer-events: none;
-    
-    /* Scratch Mask: Renders random scratch areas invisible */
-    -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='scratch'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.04' numOctaves='2' seed='5'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9' result='c'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23scratch)' opacity='0.2' fill='white'/%3E%3C/svg%3E");
-    mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='scratch'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='5.04' numOctaves='2' seed='5'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9' result='c'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23scratch)' opacity='1' fill='white'/%3E%3C/svg%3E");
-    -webkit-mask-size: 2.0% 2.0%;
-    mask-size: 2.0% 2.0%;
 }
 
 .rolling-sticker img {
@@ -768,9 +773,9 @@ html, body, .crt-wrapper, * {
 .vfd-label-box {
     position: fixed;
     bottom: 1.8rem; /* Same as power-panel/led-panel */
-    left: calc(50% - 180px); /* To the left of VFD which is centered */
+    left: calc(50% - 166px); /* To the left of VFD which is centered */
     padding: 4px 8px;
-    border: 1px solid rgba(255, 255, 255, 0.15); /* Match control label borders */
+    border: 0px solid rgba(255, 255, 255, 0.15); /* Match control label borders */
     border-radius: 3px;
     background-color: transparent; /* No background */
     z-index: 10001;
@@ -779,15 +784,20 @@ html, body, .crt-wrapper, * {
 
 .vfd-label-line1 {
     font-family: 'Microgramma', 'Courier New', monospace;
-    font-size: 0.6rem;
+    font-size: 0.61rem;
     color: #444;
     letter-spacing: 1px;
     transition: all 0.25s ease;
-    background-color: #444;
-    background-clip: text;
-    -webkit-background-clip: text;
     text-align: right;
     line-height: 1.2;
+    /* Radial gradient glow from VFD (right side) */
+    background-image: radial-gradient(
+        circle at 100% 50%, 
+        color-mix(in srgb, #40e0d0, rgba(68,68,68,0.5) calc(100% - calc(v-bind(vfdLabelGlow) * 100%))) 0%, 
+        #444 65%
+    );
+    background-clip: text;
+    -webkit-background-clip: text;
 }
 
 .vfd-label-line2 {
@@ -796,11 +806,16 @@ html, body, .crt-wrapper, * {
     color: #444;
     letter-spacing: 1px;
     transition: all 0.25s ease;
-    background-color: #444;
-    background-clip: text;
-    -webkit-background-clip: text;
     text-align: right;
     margin-top: 1px;
+    /* Radial gradient glow from VFD (right side) */
+    background-image: radial-gradient(
+        circle at 100% 50%, 
+        color-mix(in srgb, #40e0d0, rgba(68,68,68,0.5) calc(100% - calc(v-bind(vfdLabelGlow) * 100%))) 0%, 
+        #444 65%
+    );
+    background-clip: text;
+    -webkit-background-clip: text;
 }
 
 /* VFD Styles moved to VfdDisplay.vue */
