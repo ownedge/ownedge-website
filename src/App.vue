@@ -467,12 +467,20 @@ const ledMarkerStyle = computed(() => ({
     </div>
     
     <!-- SVG Filter for Glitch/Distortion and Texture Masks -->
-    <svg width="0" height="0" style="position: absolute; pointer-events: none;">
+    <!-- CRITICAL: Must have dimensions for mask percentages to work -->
+    <svg width="100%" height="100%" style="position: absolute; top:0; left:0; pointer-events: none; z-index: 0;">
       <defs>
         <filter id="spherical-warp" x="-10%" y="-10%" width="200%" height="200%">
-          <feTurbulence :baseFrequency="turbulenceFreq" numOctaves="1" result="noise" />
+          <feTurbulence :baseFrequency="turbulenceFreq" numOctaves="4" result="noise" />
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" />
         </filter>
+        
+
+        <!-- Bezel Mask: Reveals bezel only, hides screen center -->
+        <mask id="bezel-mask" maskUnits="userSpaceOnUse">
+           <rect width="100%" height="100%" fill="white" />
+           <rect x="40" y="40" width="calc(100% - 80px)" height="calc(100% - 120px)" rx="40" fill="black" />
+        </mask>
       </defs>
     </svg>
     
@@ -543,18 +551,16 @@ html, body, .crt-wrapper, * {
   height: 100%;
   pointer-events: none;
   z-index: 1;
-  /* Subtle plastic grain */
-  background-image: 
-    repeating-linear-gradient(90deg, 
-      transparent 0px, 
-      rgba(255,255,255,0.01) 1px, 
-      transparent 2px),
-    repeating-linear-gradient(0deg, 
-      transparent 0px, 
-      rgba(255,255,255,0.01) 1px, 
-      transparent 2px);
-    /* Add SVG noise for fine grain */
-    filter: url(#bezel-grain);
+  /* Generated Leather Texture (Inline SVG for reliability) */
+  background-color: #222; /* Brighter base */
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='leather'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' result='noise'/%3E%3CfeDiffuseLighting in='noise' lighting-color='white' surfaceScale='3'%3E%3CfeDistantLight azimuth='45' elevation='35'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23leather)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  filter: contrast(1.9) brightness(0.4); 
+  opacity: 0.1;
+  /* Apply Mask */
+  -webkit-mask: url(#bezel-mask);
+  mask: url(#bezel-mask);
 }
 
 .crt-wrapper::after {
@@ -575,6 +581,9 @@ html, body, .crt-wrapper, * {
     radial-gradient(ellipse at 85% 70%, rgba(0,0,0,0.03) 0%, transparent 40%),
     radial-gradient(ellipse at 40% 90%, rgba(0,0,0,0.04) 0%, transparent 45%);
   opacity: 0.25;
+  /* Apply Mask to keep screen glass clean */
+  -webkit-mask: url(#bezel-mask);
+  mask: url(#bezel-mask);
 }
 
 /* Vintage Sticker Styles */
@@ -611,7 +620,7 @@ html, body, .crt-wrapper, * {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 11px solid #1d1d1d; 
+  border: 11px solid #222222; 
 }
 
 .app-container {
