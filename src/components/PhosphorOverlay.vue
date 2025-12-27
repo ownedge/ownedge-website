@@ -78,7 +78,7 @@ let animationFrameId = null;
       ctx.globalCompositeOperation = 'lighter';
       
       const canvasRect = canvas.getBoundingClientRect();
-      const targets = document.querySelectorAll('.boot-video, .logo-img, .typing-wrapper, .status, .id, .percentage, .log-text, .btn-go, .hint-text, .tui-header .title, .tui-header .clock, .pane-title, .col-name, .col-type, .col-date, .pane-footer, .f-key span, .f-label, .view-content pre, .cursor');
+      const targets = document.querySelectorAll('.boot-video, .logo-img, .typing-wrapper, .status, .id, .percentage, .log-text, .btn-go, .hint-text, .tui-header .title, .tui-header .clock, .pane-title, .col-name, .col-type, .col-date, .pane-footer, .f-key span, .f-label, .view-content pre, .cursor, .tracker-overlay canvas');
  
      targets.forEach(el => {
        const rect = el.getBoundingClientRect();
@@ -123,7 +123,7 @@ let animationFrameId = null;
        
        ctx.shadowBlur = 0;
        
-       if (el.tagName === 'IMG' || el.tagName === 'VIDEO') {
+       if (el.tagName === 'IMG' || el.tagName === 'VIDEO' || el.tagName === 'CANVAS') {
           try {
               if (style.filter && style.filter !== 'none') ctx.filter = style.filter;
               ctx.drawImage(el, x, y, w, h);

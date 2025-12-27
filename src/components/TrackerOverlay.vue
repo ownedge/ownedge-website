@@ -49,29 +49,13 @@ const draw = () => {
 
     // --- DATA FETCH ---
     let currentPos = SoundManager.getTrackerPosition();
-    let isMock = false;
     let isWaitingForData = false;
 
-    // --- MOCK DATA FALLBACK (Real S3M Preview) ---
     if (!currentPos) {
-        isMock = true;
-        
-        // Auto-scroll simulation
-        // Fast scroll: 120ms / row
-        const now = Date.now();
-        const simulatedRowIndex = Math.floor(now / 120);
-        
-        // Fetch from offline visualizer module
-        const previewData = SoundManager.getVisualizerData(simulatedRowIndex);
-        
-        if (previewData) {
-            currentPos = previewData;
-        } else {
-             // Visualizer not loaded yet
-             isWaitingForData = true;
-        }
+        // Visualizer not loaded yet
+        isWaitingForData = true;
     }
-    
+
     if (isWaitingForData) {
         animationFrameId = requestAnimationFrame(draw);
         return;
@@ -88,18 +72,8 @@ const draw = () => {
         let channels = [];
         
         if (rPos >= 0 && rPos < (currentPos.numRows || 64)) {
-            // Fetch real data or mock data
-            if (isMock) {
-                 // For offline visualizer
-                 const now = Date.now();
-                 const simulatedRowIndex = Math.floor(now / 120) + offset;
-                 const verifyData = SoundManager.getVisualizerData(simulatedRowIndex);
-                 
-                 channels = verifyData ? verifyData.channels : ["...", "...", "...", "..."];
-            } else {
-                channels = SoundManager.getPatternRowData(pPos, rPos) || [];
-                if (channels.length === 0) channels = ["???", "???", "???", "???"];
-            }
+            channels = SoundManager.getPatternRowData(pPos, rPos) || [];
+            if (channels.length === 0) channels = ["???", "???", "???", "???"];
         } else {
             // Out of bounds
             channels = ["", "", "", ""]; 
@@ -119,7 +93,7 @@ const draw = () => {
         } else {
             // Future Rows
             // Fade out slightly
-            const opacity = 0.7 - (offset * 0.15);
+            const opacity = 0.5 - (offset * 0.15);
             ctx.fillStyle = `rgba(33, 241, 235, ${opacity})`;
             ctx.font = '15px "Courier New", monospace';
         }
@@ -129,15 +103,14 @@ const draw = () => {
         // If empty row (out of bounds), show structure or blank?
         // Let's show blank if it's truly out of bounds, but keep alignment
         if (channels[0] !== "") {
-             const str = `${String(rPos).padStart(2,'0')} | ${channelStr}`;
-             
-             if (props.reflectionOnly) {
-                 // Mirror on Bezel
-                 ctx.save();
-                 ctx.translate(0, startY);
-                 ctx.scale(1, -0.41); // Flip UP
-                 ctx.fillText(str, startX +1, -4); // Small gap adjustment
-                 ctx.restore();
+            const str = `${String(rPos).padStart(2,'0')} | ${channelStr}`;
+            if (props.reflectionOnly) {
+                  // Mirror on Bezel
+                  ctx.save();
+                  ctx.translate(0, startY);
+                  ctx.scale(1, -0.41); // Flip UP
+                  ctx.fillText(str, startX +1, -4); // Small gap adjustment
+                  ctx.restore();
              } else {
                  // Normal
                  ctx.fillText(str, startX, y);
@@ -152,8 +125,8 @@ const draw = () => {
          ctx.globalCompositeOperation = 'destination-in';
          const mask = ctx.createLinearGradient(0, 0, canvas.width, 0);
          mask.addColorStop(0, 'rgba(0, 0, 0, 0)');      // 0: Transparent
-         mask.addColorStop(280 / canvas.width, 'rgba(0, 0, 0, 1)'); // 40px: Opaque
-         mask.addColorStop((canvas.width - 280) / canvas.width, 'rgba(0, 0, 0, 1)'); // End-40px: Opaque
+         mask.addColorStop(200 / canvas.width, 'rgba(0, 0, 0, 1)'); // 40px: Opaque
+         mask.addColorStop((canvas.width - 200) / canvas.width, 'rgba(0, 0, 0, 1)'); // End-40px: Opaque
          mask.addColorStop(1, 'rgba(0, 0, 0, 0)');      // End: Transparent
          
          ctx.fillStyle = mask;
@@ -202,8 +175,8 @@ onUnmounted(() => {
     left: 0;
     width: 100vw;
     height: 100vh;
-    opacity: 0.8;
-    filter: blur(3.25px);
+    opacity: 0.9;
+    filter: blur(3.85px);
     z-index: 100; /* Force above everything */
 }
 
