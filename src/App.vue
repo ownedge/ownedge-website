@@ -495,7 +495,7 @@ const ledMarkerStyle = computed(() => ({
 
     <!-- Rolling Sticker (Bottom Right) -->
     <div class="rolling-sticker">
-        <img src="./assets/rolling.png" alt="Rolling" />
+        <img src="./assets/stones.png" alt="Stones" />
         <div class="sticker-wear"></div>
     </div>
   </div>
@@ -617,21 +617,20 @@ html, body, .crt-wrapper, * {
 
 .rolling-sticker {
     position: absolute;
-    bottom: -47px; 
+    bottom: 0; 
     left: 555px;
     width: 120px; 
     height: auto;
     z-index: 15;
-    transform: rotate(12deg);
     filter: brightness(0.9) contrast(1.0) sepia(0.1);
-    opacity: 0.99;
+    opacity: 0.86;
     pointer-events: none;
     
     /* Scratch Mask: Renders random scratch areas invisible */
-    -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='scratch'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='5' seed='5'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9' result='c'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23scratch)' opacity='1' fill='white'/%3E%3C/svg%3E");
-    mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='scratch'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='5' seed='5'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9' result='c'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23scratch)' opacity='1' fill='white'/%3E%3C/svg%3E");
-    -webkit-mask-size: 2% 2%;
-    mask-size: 2% 2%;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='scratch'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.04' numOctaves='2' seed='5'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9' result='c'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23scratch)' opacity='0.2' fill='white'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='scratch'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='5.04' numOctaves='2' seed='5'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9' result='c'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23scratch)' opacity='1' fill='white'/%3E%3C/svg%3E");
+    -webkit-mask-size: 2.0% 2.0%;
+    mask-size: 2.0% 2.0%;
 }
 
 .rolling-sticker img {
