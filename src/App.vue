@@ -492,6 +492,12 @@ const ledMarkerStyle = computed(() => ({
         <img src="./assets/sony-sticker.png" alt="It's a Sony" />
         <div class="sticker-wear"></div>
     </div>
+
+    <!-- Rolling Sticker (Bottom Right) -->
+    <div class="rolling-sticker">
+        <img src="./assets/rolling.png" alt="Rolling" />
+        <div class="sticker-wear"></div>
+    </div>
   </div>
 </template>
 
@@ -574,13 +580,19 @@ html, body, .crt-wrapper, * {
   z-index: 1;
   /* Scratches and wear marks */
   background-image: 
+    url('./assets/bezel-scratches.png'), /* Top Right Scratch */
+    url('./assets/bezel-scratches.png'), /* Bottom Left Scratch */
     linear-gradient(15deg, transparent 48%, rgba(255,255,255,0.03) 49%, rgba(255,255,255,0.03) 50%, transparent 51%),
     linear-gradient(165deg, transparent 28%, rgba(0,0,0,0.08) 29%, rgba(0,0,0,0.08) 30%, transparent 31%),
     linear-gradient(75deg, transparent 73%, rgba(255,255,255,0.02) 74%, rgba(255,255,255,0.02) 75%, transparent 76%),
     radial-gradient(ellipse at 15% 20%, rgba(0,0,0,0.05) 0%, transparent 50%),
     radial-gradient(ellipse at 85% 70%, rgba(0,0,0,0.03) 0%, transparent 40%),
     radial-gradient(ellipse at 40% 90%, rgba(0,0,0,0.04) 0%, transparent 45%);
-  opacity: 0.25;
+  background-repeat: no-repeat, no-repeat, repeat, repeat, repeat, repeat, repeat, repeat;
+  background-position: 95% 5%, 5% 95%, center, center, center, center, center, center;
+  background-size: 400px 400px, 400px 400px, auto, auto, auto, auto, auto, auto;
+  opacity: 0.9;
+  mix-blend-mode: lighten;
   /* Apply Mask to keep screen glass clean */
   -webkit-mask: url(#bezel-mask);
   mask: url(#bezel-mask);
@@ -604,6 +616,31 @@ html, body, .crt-wrapper, * {
     display: block;
 }
 
+.rolling-sticker {
+    position: absolute;
+    bottom: -47px; 
+    left: 555px;
+    width: 120px; 
+    height: auto;
+    z-index: 15;
+    transform: rotate(12deg);
+    filter: brightness(0.9) contrast(1.0) sepia(0.1);
+    opacity: 0.99;
+    pointer-events: none;
+    
+    /* Scratch Mask: Renders random scratch areas invisible */
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='scratch'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='5' seed='5'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9' result='c'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23scratch)' opacity='1' fill='white'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='scratch'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='5' seed='5'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9' result='c'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23scratch)' opacity='1' fill='white'/%3E%3C/svg%3E");
+    -webkit-mask-size: 2% 2%;
+    mask-size: 2% 2%;
+}
+
+.rolling-sticker img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
 /* CRT Screen (The curvature and clipping) */
 .crt-screen {
   width: 100%;
@@ -620,7 +657,7 @@ html, body, .crt-wrapper, * {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 11px solid #222222; 
+  border: 11px solid #232323; 
 }
 
 .app-container {
