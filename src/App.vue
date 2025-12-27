@@ -413,6 +413,12 @@ const ledMarkerStyle = computed(() => ({
     />
 
     <!-- VFD Display (Replaces Logo) -->
+    <!-- VFD Label -->
+    <div class="vfd-label-box">
+        <div class="vfd-label-line1">VF-1000</div>
+        <div class="vfd-label-line2">SUPER</div>
+    </div>
+    
     <!-- VFD Display (Extracted to component) -->
     <VfdDisplay 
         :mode="vfdMode"
@@ -757,5 +763,45 @@ html, body, .crt-wrapper, * {
     background-color: #050908;
     border: 1px solid #1a1a1a; /* Darker border */
 }
+
+/* VFD Label Box */
+.vfd-label-box {
+    position: fixed;
+    bottom: 1.8rem; /* Same as power-panel/led-panel */
+    left: calc(50% - 180px); /* To the left of VFD which is centered */
+    padding: 4px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15); /* Match control label borders */
+    border-radius: 3px;
+    background-color: transparent; /* No background */
+    z-index: 10001;
+    pointer-events: none;
+}
+
+.vfd-label-line1 {
+    font-family: 'Microgramma', 'Courier New', monospace;
+    font-size: 0.6rem;
+    color: #444;
+    letter-spacing: 1px;
+    transition: all 0.25s ease;
+    background-color: #444;
+    background-clip: text;
+    -webkit-background-clip: text;
+    text-align: right;
+    line-height: 1.2;
+}
+
+.vfd-label-line2 {
+    font-family: 'Microgramma', 'Courier New', monospace;
+    font-size: 0.6rem;
+    color: #444;
+    letter-spacing: 1px;
+    transition: all 0.25s ease;
+    background-color: #444;
+    background-clip: text;
+    -webkit-background-clip: text;
+    text-align: right;
+    margin-top: 1px;
+}
+
 /* VFD Styles moved to VfdDisplay.vue */
 </style>
