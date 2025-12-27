@@ -474,6 +474,16 @@ const ledMarkerStyle = computed(() => ({
           <feTurbulence :baseFrequency="turbulenceFreq" numOctaves="1" result="noise" />
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" />
         </filter>
+        
+        <!-- Bezel Grain Filter -->
+        <filter id="bezel-grain" x="0%" y="0%" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" result="noise" />
+          <feColorMatrix type="saturate" values="0" in="noise" result="desaturated" />
+          <feComponentTransfer in="desaturated">
+            <feFuncA type="table" tableValues="0 0.10" />
+          </feComponentTransfer>
+          <feBlend mode="multiply" in2="SourceGraphic" />
+        </filter>
       </defs>
     </svg>
     
@@ -524,6 +534,52 @@ html, body, .crt-wrapper, * {
   justify-content: center;
   padding: 40px 40px 80px 40px; /* Thicker chin */
   cursor: none; /* Ensure hidden here too */
+  position: relative;
+  overflow: hidden;
+}
+
+/* Bezel Texture Layers */
+.crt-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  /* Subtle plastic grain */
+  background-image: 
+    repeating-linear-gradient(90deg, 
+      transparent 0px, 
+      rgba(255,255,255,0.01) 1px, 
+      transparent 2px),
+    repeating-linear-gradient(0deg, 
+      transparent 0px, 
+      rgba(255,255,255,0.01) 1px, 
+      transparent 2px);
+  /* Add SVG noise for fine grain */
+  filter: url(#bezel-grain);
+}
+
+.crt-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  /* Scratches and wear marks */
+  background-image: 
+    linear-gradient(15deg, transparent 48%, rgba(255,255,255,0.03) 49%, rgba(255,255,255,0.03) 50%, transparent 51%),
+    linear-gradient(165deg, transparent 28%, rgba(0,0,0,0.08) 29%, rgba(0,0,0,0.08) 30%, transparent 31%),
+    linear-gradient(75deg, transparent 73%, rgba(255,255,255,0.02) 74%, rgba(255,255,255,0.02) 75%, transparent 76%),
+    radial-gradient(ellipse at 15% 20%, rgba(0,0,0,0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 70%, rgba(0,0,0,0.03) 0%, transparent 40%),
+    radial-gradient(ellipse at 40% 90%, rgba(0,0,0,0.04) 0%, transparent 45%);
+  opacity: 0.25;
 }
 
 /* CRT Screen (The curvature and clipping) */
