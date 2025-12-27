@@ -2,6 +2,11 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import SoundManager from '../sfx/SoundManager';
 
+
+const props = defineProps({
+  screenRect: Object,
+  reflectionOnly: Boolean
+});
 const canvasRef = ref(null);
 let animationFrameId = null;
 
@@ -26,11 +31,21 @@ const draw = () => {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
 
+
     // --- RENDER CONSTANTS ---
-    const ROWS_TO_SHOW = 4; 
+    const ROWS_TO_SHOW = 4;
     const lineHeight = 16;
-    const startX = canvas.width / 2 - 40;
-    const startY = 6; 
+    
+    // Calculate Position Per Frame to handle prop updates
+    let startX = canvas.width / 2;
+    let startY = 6;
+    
+    // Y-Logic:
+    if (props.reflectionOnly && props.screenRect) {
+        startY = props.screenRect.top;
+        // X-Logic: Match the inner data's visual position.
+        startX = props.screenRect.left + (canvas.width / 2);
+    }
 
     // --- DATA FETCH ---
     let currentPos = SoundManager.getTrackerPosition();
@@ -44,7 +59,7 @@ const draw = () => {
         // Auto-scroll simulation
         // Fast scroll: 120ms / row
         const now = Date.now();
-        const simulatedRowIndex = Math.floor(now / 120); 
+        const simulatedRowIndex = Math.floor(now / 120);
         
         // Fetch from offline visualizer module
         const previewData = SoundManager.getVisualizerData(simulatedRowIndex);
@@ -57,21 +72,15 @@ const draw = () => {
         }
     }
     
-    // --- RENDER WINDOW ---
-    // User requested "First 3 lines inside top monitor frame"
-    // We interpret this as Current Row + Next 2 Rows
-
     if (isWaitingForData) {
-        ctx.fillStyle = 'rgba(33, 241, 235, 0.51)'; 
-        ctx.font = 'bold 19px "Courier New", monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText("NO DATA YET", startX, startY + lineHeight);
-        
         animationFrameId = requestAnimationFrame(draw);
         return;
     }
 
     for (let offset = 0; offset <= ROWS_TO_SHOW; offset++) {
+        // Reflection Only: Draw top row only (offset 0)
+        if (props.reflectionOnly && offset > 0) continue;
+        
         let rPos = currentPos.row + offset;
         let pPos = currentPos.pattern;
         
@@ -97,19 +106,22 @@ const draw = () => {
         }
 
         // Draw
-        const y = startY + (offset * lineHeight);
+        // Normal: startY + offset*lineHeight
+        // Reflection: startY (screenTop) 
+        let y = startY + (offset * lineHeight);
         
         // Style
         if (offset === 0) {
             // Current Row
-            ctx.fillStyle = 'rgba(33, 241, 235, 0.9)';
-            ctx.font = 'bold 14px "Courier New", monospace';
+            ctx.fillStyle = 'rgba(33, 241, 235, 0.8)';
+            if (props.reflectionOnly) ctx.fillStyle = 'rgba(33, 241, 235, 0.5)'; // Stronger reflection
+            ctx.font = 'bold 15px "Courier New", monospace';
         } else {
             // Future Rows
             // Fade out slightly
             const opacity = 0.7 - (offset * 0.15);
             ctx.fillStyle = `rgba(33, 241, 235, ${opacity})`;
-            ctx.font = '14px "Courier New", monospace';
+            ctx.font = '15px "Courier New", monospace';
         }
         
         // Render
@@ -118,10 +130,38 @@ const draw = () => {
         // Let's show blank if it's truly out of bounds, but keep alignment
         if (channels[0] !== "") {
              const str = `${String(rPos).padStart(2,'0')} | ${channelStr}`;
-             ctx.fillText(str, startX, y);
+             
+             if (props.reflectionOnly) {
+                 // Mirror on Bezel
+                 ctx.save();
+                 ctx.translate(0, startY);
+                 ctx.scale(1, -0.41); // Flip UP
+                 ctx.fillText(str, startX +1, -4); // Small gap adjustment
+                 ctx.restore();
+             } else {
+                 // Normal
+                 ctx.fillText(str, startX, y);
+             }
         }
     }
     
+    // EDGE FADE MASK (Reflection Only)
+    // "Hide reflected line from absolute 0 to 40 and -40 to full width"
+    if (props.reflectionOnly) {
+         ctx.save();
+         ctx.globalCompositeOperation = 'destination-in';
+         const mask = ctx.createLinearGradient(0, 0, canvas.width, 0);
+         mask.addColorStop(0, 'rgba(0, 0, 0, 0)');      // 0: Transparent
+         mask.addColorStop(280 / canvas.width, 'rgba(0, 0, 0, 1)'); // 40px: Opaque
+         mask.addColorStop((canvas.width - 280) / canvas.width, 'rgba(0, 0, 0, 1)'); // End-40px: Opaque
+         mask.addColorStop(1, 'rgba(0, 0, 0, 0)');      // End: Transparent
+         
+         ctx.fillStyle = mask;
+         // Fill entire top area where reflection lives
+         // Reflection goes upwards from startY. Let's just fill the whole canvas for simplicity
+         ctx.fillRect(0, 0, canvas.width, canvas.height);
+         ctx.restore();
+    }
     
     animationFrameId = requestAnimationFrame(draw);
 };
@@ -138,7 +178,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="tracker-overlay">
+    <div :class="['tracker-overlay', { 'reflection-mode': reflectionOnly }]">
         <canvas ref="canvasRef"></canvas>
     </div>
 </template>
@@ -155,6 +195,16 @@ onUnmounted(() => {
     overflow: hidden;
     /* Optional: borders */
     /* border-bottom: 1px solid rgba(64, 224, 208, 0.1); */
+}
+
+.tracker-overlay.reflection-mode {
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    opacity: 0.8;
+    filter: blur(3.25px);
+    z-index: 100; /* Force above everything */
 }
 
 canvas {

@@ -9,7 +9,7 @@ import BootLoader from './components/BootLoader.vue'
 import VfdDisplay from './components/VfdDisplay.vue'
 import CrtControls from './components/CrtControls.vue'
 import TrackerOverlay from './components/TrackerOverlay.vue'
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 
 
 let cursorInterval = null;
@@ -113,6 +113,20 @@ onMounted(() => {
   window.addEventListener('mousemove', handleMouseMove)
   window.addEventListener('resize', handleResize)
   
+  // Robust Screen Rect Init
+  nextTick(() => {
+      updateScreenRect();
+      // Retry for layout shifts
+      setTimeout(updateScreenRect, 100);
+      setTimeout(updateScreenRect, 500);
+      
+      // ResizeObserver for robustness
+      const el = document.querySelector('.app-container');
+      if (el) {
+          const ro = new ResizeObserver(updateScreenRect);
+          ro.observe(el);
+      }
+  });
   // Aggressively hide cursor
   hideCursor();
   cursorInterval = setInterval(hideCursor, 500);
@@ -408,8 +422,6 @@ const ledMarkerStyle = computed(() => ({
         :scanline-color="vfdBgColor"
     />
 
-    <!-- Speaker Grilles Removed -->
-
     <div class="crt-screen">
       <!-- Apply 'crt-content' class for filter -->
       <div class="app-container">
@@ -464,6 +476,9 @@ const ledMarkerStyle = computed(() => ({
         </filter>
       </defs>
     </svg>
+    
+    <!-- Bezel Reflection Overlay (Last item = Top Z) -->
+    <TrackerOverlay :reflection-only="true" :screen-rect="screenRect" />
   </div>
 </template>
 
