@@ -84,7 +84,7 @@ const startSpectrumAnalyzer = () => {
                  
                  const now = Date.now();
                  const elapsed = now - readyTimestamp.value;
-                 const blinkDuration = 30; // ms per phase
+                 const blinkDuration = 20; // ms per phase
                  const blinkCount = 2;
                  const totalBlinkTime = blinkCount * 2 * blinkDuration;
                  
@@ -398,7 +398,7 @@ watch(() => props.mode, (newMode) => {
     100% { 
         transform: scaleX(10) translateX(50px); 
         opacity: 0;
-        filter: blur(10px);
+        filter: blur(6px);
         letter-spacing: 50px; 
     }
 }

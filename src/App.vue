@@ -179,7 +179,7 @@ const handleBootStart = async () => {
   vfdMode.value = 'logo';
   setTimeout(() => {
         vfdMode.value = 'spectrum';
-  }, 3000); 
+  }, 2100); 
 }
 
 onMounted(() => {
