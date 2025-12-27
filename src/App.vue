@@ -657,7 +657,7 @@ html, body, .crt-wrapper, * {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 11px solid #232323; 
+  border: 11px solid #232323;
 }
 
 .app-container {

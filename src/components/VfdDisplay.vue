@@ -34,8 +34,13 @@ watch(() => props.bootState, (newState) => {
     if (newState === 'ready') {
         readyTimestamp.value = Date.now();
     }
-    // ensure loop runs
-    startSpectrumAnalyzer();
+});
+
+watch(() => props.mode, (newMode) => {
+    // Always restart loop on mode change to ensure freshness (if spectrum)
+    if (newMode === 'spectrum') {
+        startSpectrumAnalyzer();
+    }
 });
 
 const startSpectrumAnalyzer = () => {
@@ -119,6 +124,7 @@ const startSpectrumAnalyzer = () => {
              animationFrameId = requestAnimationFrame(draw);
              return;
         }
+
 
         // Normal Operation: Spectrum Analyzer
         if (props.mode !== 'spectrum') return;
@@ -221,19 +227,20 @@ watch(() => props.mode, (newMode) => {
        
        <!-- WELCOME Animation -->
        <Transition name="vfd-anim" mode="out-in">
-           <div v-if="mode === 'logo'" class="vfd-logo-container">
-               <span class="vfd-welcome-text">WELCOME</span>
-           </div>
-           
-           <div v-else-if="mode === 'knob'" class="vfd-info-container">
+           <div v-if="mode === 'knob'" class="vfd-info-container">
                <span class="vfd-label">{{ knobInfo.label }}</span>
                <span class="vfd-value">{{ knobInfo.value }}</span>
            </div>
+
+           <!-- Pinball Logic Animation -->
+           <div v-else-if="mode === 'logo'" class="pinball-container">
+                <div class="pinball-ball"></div>
+                <div class="pinball-text">WELCOME</div>
+           </div>
     
-           <!-- Spectrum Analyzer OR Loading Bar (Both use Canvas) -->
-           <!-- logic for showing canvas: if mode is spectrum OR if boot isn't complete (loading/ready) -->
+           <!-- Spectrum Analyzer OR Loading Bar -->
            <canvas 
-            v-else-if="mode === 'spectrum' || bootState !== 'complete'" 
+            v-else
             ref="vfdCanvas" 
             class="vfd-canvas"
             ></canvas>
@@ -285,56 +292,89 @@ watch(() => props.mode, (newMode) => {
   opacity: 0.9;
 }
 
-.vfd-logo-container {
+/* Pinball Animation Styles */
+.pinball-container {
     width: 100%;
     height: 100%;
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
 }
 
-.vfd-welcome-text {
-    font-family: 'Microgramma'; /* Sony-like Slab Serif */
+.pinball-ball {
+    position: absolute;
+    top: 50%;
+    left: -10px;
+    width: 6px;
+    height: 6px;
+    background-color: #40e0d0;
+    transform: translateY(-50%);
+    box-shadow: 0 0 5px #40e0d0;
+    animation: ball-roll 0.4s linear forwards;
+}
+
+.pinball-text {
+    font-family: 'Microgramma';
     color: #40e0d0;
     font-size: 1.6rem;
-    letter-spacing: 1px; /* Tighter tracking for Sony look */
-    font-weight: 900; /* Extra bold */
-    text-shadow: 0 0 8px #40e0d0, 0 0 15px rgba(64, 224, 208, 0.4);
-    opacity: 0.9;
-    animation: text-flicker 3s infinite;
+    font-weight: 900;
+    letter-spacing: 1px;
+    opacity: 0; 
+    animation: text-jackpot 2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    animation-delay: 0.38s; /* Wait for ball impact */
 }
 
-@keyframes text-flicker {
-    0% { opacity: 0.9; }
-    3% { opacity: 0.8; }
-    6% { opacity: 0.9; }
-    7% { opacity: 0.4; }
-    8% { opacity: 0.9; }
-    9% { opacity: 0.95; }
-    10% { opacity: 0.1; }
-    11% { opacity: 0.9; }
-    100% { opacity: 0.9; }
+@keyframes ball-roll {
+    0% { left: -10px; }
+    90% { left: 50%; opacity: 1; }
+    100% { left: 50%; opacity: 0; } /* Disappear on impact */
 }
 
-.vfd-canvas {
-    width: 100%;
-    height: 100%;
-    image-rendering: pixelated; 
-    opacity: 0.9;
+@keyframes text-jackpot {
+    0% { 
+        transform: scale(0);
+        opacity: 0;
+        text-shadow: 0 0 20px #fff;
+    }
+    1% {
+        opacity: 1;
+        color: #fff; /* Flash white */
+    }
+    5% {
+        transform: scale(1.3);
+        color: #40e0d0;
+    }
+    10% { transform: scale(0.9); }
+    15% { transform: scale(1.0); }
+    
+    /* Blink effects */
+    20% { color: #40e0d0; text-shadow: 0 0 15px #40e0d0; }
+    25% { color: #40e0d0; text-shadow: 0 0 8px #40e0d0; }
+    30% { color: #40e0d0; text-shadow: 0 0 15px #40e0d0; }
+    35% { color: #40e0d0; text-shadow: 0 0 8px #40e0d0; }
+    
+    100% { 
+        transform: scale(1); 
+        opacity: 1; 
+        color: #40e0d0; 
+        text-shadow: 0 0 8px #40e0d0;
+    }
 }
 
-/* VFD Transitions */
-.vfd-anim-enter-active {
-  transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+/* Special Exit (Warp Out) */
+.vfd-anim-leave-active.pinball-container {
+    /* Dummy animation to force Vue to wait 0.5s while keeping container visible */
+    animation: hold-visible 0.5s forwards !important;
+    opacity: 1 !important; 
+    transform: none !important;
 }
 
-.vfd-anim-leave-active {
-  transition: all 0.5s cubic-bezier(0.5, 0, 0.8, 0.2);
-}
+@keyframes hold-visible { from { opacity: 1; } to { opacity: 1; } }
 
-/* Special Exit for Logo Container (WELCOME text) */
-.vfd-anim-leave-active .vfd-welcome-text {
-    animation: text-warp-out 0.5s forwards;
+.vfd-anim-leave-active .pinball-text {
+    animation: text-warp-out 0.5s forwards !important;
 }
 
 @keyframes text-warp-out {
