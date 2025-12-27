@@ -8,6 +8,8 @@ const props = defineProps({
   reflectionOnly: Boolean
 });
 const canvasRef = ref(null);
+const hasStarted = ref(false);
+const dataFadeProgress = ref(0); // 0 to 1 for smooth fade-in
 let animationFrameId = null;
 
 const draw = () => {
@@ -54,6 +56,17 @@ const draw = () => {
     if (!currentPos) {
         // Visualizer not loaded yet
         isWaitingForData = true;
+    } else {
+        // Data found - trigger fade-in
+        if (!hasStarted.value) {
+            hasStarted.value = true;
+        }
+    }
+    
+    // Animate fade-in when data starts
+    if (hasStarted.value && dataFadeProgress.value < 1) {
+        dataFadeProgress.value += 0.02; // Fade over ~50 frames (about 1 second)
+        if (dataFadeProgress.value > 1) dataFadeProgress.value = 1;
     }
 
     if (isWaitingForData) {
@@ -112,8 +125,11 @@ const draw = () => {
                   ctx.fillText(str, startX +1, -4); // Small gap adjustment
                   ctx.restore();
              } else {
-                 // Normal
+                 // Normal - apply fade-in
+                 const prevAlpha = ctx.globalAlpha;
+                 ctx.globalAlpha = dataFadeProgress.value;
                  ctx.fillText(str, startX, y);
+                 ctx.globalAlpha = prevAlpha;
              }
         }
     }
