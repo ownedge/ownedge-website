@@ -90,21 +90,40 @@ const volKnobStyle = computed(() => ({ transform: getKnobRotation(props.volume, 
 const brtKnobStyle = computed(() => ({ transform: getKnobRotation(props.brightness, 0.5, 1.5) }));
 const conKnobStyle = computed(() => ({ transform: getKnobRotation(props.contrast, 0.5, 1.5) }));
 
+// Dynamic Light Spill Calculation
+const calculateSpill = (val, min, max) => {
+    // Normalize 0-1
+    const norm = (val - min) / (max - min);
+    
+    // 0deg (Top, norm 0.5) -> Furthest (0 opacity)
+    // -135deg (Bottom Left, norm 0) -> Closest (1 opacity)
+    // +135deg (Bottom Right, norm 1) -> Closest (1 opacity)
+    
+    const prominence = Math.abs(norm - 0.5) * 2; // 0 (top) to 1 (bottom)
+    
+    // Linear is usually better for "gradual" feel than square
+    // But let's boost it slightly so it starts glowing "earlier" in the turn
+    const opacityValues = Math.pow(prominence, 1.5); 
+    
+    // Convert to Percentage for CSS color-mix
+    return `${(opacityValues * 100).toFixed(0)}%`;
+};
+
 </script>
 
 <template>
     <div class="crt-controls">
          <!-- Fixed Status LEDs -->
         <div class="led-panel">
-            <div class="led-group">
+            <div class="led-group" style="--led-color: #33ff33;">
                 <div class="led active-caps" :class="{ active: isCapsLock }"></div>
                 <span class="led-label">CAPS</span>
             </div>
-            <div class="led-group">
+            <div class="led-group" style="--led-color: #ffaa00;">
                 <div class="led hdd-led" :class="{ active: isHddActive }"></div>
                 <span class="led-label">DISK</span>
             </div>
-            <div class="led-group">
+            <div class="led-group" style="--led-color: #ffff00;">
                 <div class="led turbo-led" :class="{ active: isTurbo }"></div>
                 <span class="led-label">TURBO</span>
             </div>
@@ -124,7 +143,12 @@ const conKnobStyle = computed(() => ({ transform: getKnobRotation(props.contrast
                          <div class="knob-marker"></div>
                      </div>
                  </div>
-                 <span class="led-label">VOLUME</span>
+                  <span class="led-label" 
+                      :style="{ 
+                          '--spill-opacity': calculateSpill(volume, 0, 1),
+                          '--led-color': '#ff0000'
+                      }"
+                  >VOLUME</span>
             </div>
 
             <!-- Brightness Knob -->
@@ -139,7 +163,12 @@ const conKnobStyle = computed(() => ({ transform: getKnobRotation(props.contrast
                          <div class="knob-marker"></div>
                      </div>
                  </div>
-                 <span class="led-label">BRIGHT</span>
+                  <span class="led-label" 
+                      :style="{ 
+                          '--spill-opacity': calculateSpill(brightness, 0.5, 1.5),
+                          '--led-color': '#ff0000'
+                      }"
+                  >BRIGHT</span>
             </div>
 
             <!-- Contrast Knob -->
@@ -153,11 +182,16 @@ const conKnobStyle = computed(() => ({ transform: getKnobRotation(props.contrast
                      <div class="knob" :style="conKnobStyle">
                          <div class="knob-marker"></div>
                      </div>
-                 </div>
-                 <span class="led-label">CONTRST</span>
+                  </div>
+                  <span class="led-label"
+                      :style="{ 
+                          '--spill-opacity': calculateSpill(contrast, 0.5, 1.5),
+                          '--led-color': '#ff0000'
+                      }"
+                  >CONTRST</span>
             </div>
 
-            <div class="led-group">
+            <div class="led-group" style="--led-color: #33ff33;">
                 <div class="led power-led" :class="{ active: powerLed }"></div>
                 <span class="led-label">POWER</span>
             </div>
@@ -177,6 +211,17 @@ const conKnobStyle = computed(() => ({ transform: getKnobRotation(props.contrast
     z-index: 10000;
 }
 
+.power-panel {
+    position: fixed;
+    bottom: 1.5rem; /* Sit in the bottom bezel padding */
+    right: 4rem;
+    display: flex;
+    align-items: flex-end; /* Align baselines of labels */
+    gap: 1.5rem;
+    pointer-events: none;
+    z-index: 10000;
+}
+
 .led-group {
     display: flex;
     flex-direction: column;
@@ -185,122 +230,90 @@ const conKnobStyle = computed(() => ({ transform: getKnobRotation(props.contrast
     width: 60px; /* Enforce overlapping width to keep centers equidistant */
 }
 
+/* Standardized LED Lighting */
+.led-group {
+    /* Default Green if not set */
+    --led-color: #33ff33; 
+    --led-off: #1a1a1a;
+}
+
+.knob-container, .volume-control {
+    --led-color: #ff0000;
+}
+
+/* Base LED Shape & Off State */
 .led {
     width: 18px;
     height: 7px;
-    background-color: #0b1d0b;
-    border: 1px solid #132a13;
-    box-shadow: inset 0 0 2px rgba(0,0,0,0.8);
-    transition: all 0.1s ease;
+    /* Mix a tiny bit of the color into the dark base for realism */
+    background-color: color-mix(in srgb, var(--led-color), #000 90%);
+    border: 1px solid #000;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.9);
+    transition: all 0.1s ease-out;
     
-    /* Dot Matrix Effect */
+    /* Dot Matrix Texture */
     background-image: 
-        radial-gradient(circle at center, rgba(0,0,0,0) 0.5px, rgba(0,0,0,0.24) 1.5px);
-    background-size: 2px 2px; /* 3px dots grid */
-    image-rendering: pixelated;
+        radial-gradient(circle at center, rgba(255,255,255,0.1) 0.5px, transparent 1px);
+    background-size: 2px 2px;
 }
 
-@keyframes led-pulse {
-    0%, 100% { filter: brightness(0.9); }
-    50% { filter: brightness(1.1) drop-shadow(0 0 6px rgba(255,255,255,0.2)); }
-}
-
-/* Common Active State for Animation */
-.led.active, .power-led {
+/* Active State (Unified) */
+.led.active, .power-led.active {
+    /* Core Hot Spot + Bloom */
+    background: radial-gradient(
+        circle at 40% 40%, 
+        color-mix(in srgb, var(--led-color), #fff 80%) 0%, 
+        var(--led-color) 40%, 
+        color-mix(in srgb, var(--led-color), #000 20%) 100%
+    );
+    
+    box-shadow: 
+        0 0 2px 1px #fff,             /* White Hot Core */
+        0 0 8px 2px var(--led-color), /* Inner intense glow */
+        0 0 15px 4px var(--led-color), /* Local Spill */
+        0 0 20px color-mix(in srgb, var(--led-color), transparent 80%); /* Atmo Haze */
+        
+    border-color: color-mix(in srgb, var(--led-color), #fff 40%);
+    z-index: 10002;
+    filter: brightness(1.2);
     animation: led-pulse 8s ease-in-out infinite;
 }
 
-/* CAPS (Standard Green) */
-.active-caps.active {
-    background-color: #33ff33;
-    box-shadow: 0 0 5px #33ff33, 0 0 10px #33ff33, 0 0 40px rgba(51, 255, 51, 0.4), inset 0 0 1px rgba(255,255,255,0.5);
-    border-color: #55ff55;
-    z-index: 10002;
-}
-
-/* HDD (Amber/Orange) */
-.hdd-led {
-    background-color: #3b2400; /* Dark Amber (Off) */
-    border-color: #422700;
-}
-
-.hdd-led.active {
-    background-color: #ffaa00;
-    box-shadow: 0 0 5px #ffaa00, 0 0 10px #ffaa00, 0 0 40px rgba(255, 170, 0, 0.4), inset 0 0 1px rgba(255,255,255,0.5);
-    border-color: #ffcc00;
-    z-index: 10002;
-}
-
-.led-group:has(.hdd-led.active) .led-label {
-    text-shadow: -1px -1px 0px rgba(0, 0, 0, 0.9), 0 0 15px rgba(255, 170, 0, 0.5);
-    color: #776644;
-}
-
-/* TURBO (Yellow) */
-.turbo-led {
-    background-color: #3b3b00; /* Dark Yellow (Off) */
-    border-color: #555500;
-}
-
-.turbo-led.active {
-    background-color: #ffff00;
-    box-shadow: 0 0 5px #ffff00, 0 0 10px #ffff00, 0 0 40px rgba(255, 255, 0, 0.4), inset 0 0 1px rgba(255,255,255,0.5);
-    border-color: #ffff88;
-    z-index: 10002;
-}
-
-.led-group:has(.turbo-led.active) .led-label {
-    text-shadow: -1px -1px 0px rgba(0, 0, 0, 0.9), 0 0 15px rgba(255, 255, 0, 0.5);
-    color: #777744;
-}
-
-/* Power LED Specifics */
-
+/* Label Spill (Standardized) */
 .led-label {
     font-family: 'Microgramma', 'Courier New', monospace;
     font-size: 0.6rem;
     color: #444; 
     letter-spacing: 1px;
     font-weight: bold;
-    text-shadow: -1px -1px 0px rgba(0, 0, 0, 0.9);
     transition: all 0.2s ease;
+    
+    background-color: #444;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: #444; 
 }
 
-/* Simulate light spilling onto the engraved text */
-.led-group:has(.led.active) .led-label {
-    text-shadow: 
-        -1px -1px 0px rgba(0, 0, 0, 0.9),
-        0 0 15px rgba(51, 255, 51, 0.5); /* Green wash */
-    color: #667766; /* Tinted by green light */
-}
-
-/* Power LED Specifics */
-.power-panel {
-    position: fixed;
-    bottom: 1.5rem;
-    right: 4rem;
-    display: flex;
-    align-items: flex-end; /* Fix alignment issues with mixed height items */
-    gap: 1.5rem; /* Standardized gap */
-    pointer-events: none;
-    z-index: 10000;
-}
-
-.power-led.active {
-    background-color: #33ff33; 
-    box-shadow: 
-        0 0 5px #33ff33,
-        0 0 10px #33ff33,
-        0 0 40px rgba(51, 255, 51, 0.4), /* Green Spill */
-        inset 0 0 1px rgba(255,255,255,0.5);
-    border-color: #55ff55;
-}
-
+/* Active Label Spill */
+.led-group:has(.led.active) .led-label,
 .power-panel .led-group:has(.power-led.active) .led-label {
-    text-shadow: 
-        -1px -1px 0px rgba(0, 0, 0, 0.9),
-        0 0 15px rgba(51, 255, 51, 0.5); /* Green wash */
-    color: #667766; /* Tinted by green light */
+    --spill-opacity: 100%; /* Default fully active for static LEDs */
+}
+
+/* Common Spill Logic */
+.led-group:has(.led.active) .led-label,
+.power-panel .led-group:has(.power-led.active) .led-label,
+.volume-control .led-label {
+    background-image: radial-gradient(
+        circle at 50% -15px, 
+        color-mix(in srgb, var(--led-color), transparent calc(100% - var(--spill-opacity, 0%))) 0%, 
+        #444 90%
+    );
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    
+    /* Subtle glow matching color */
+    text-shadow: 0 -1px 2px color-mix(in srgb, var(--led-color), transparent calc(100% - var(--spill-opacity, 0%) * 0.6));
 }
 
 /* Volume Knob */
@@ -378,11 +391,15 @@ const conKnobStyle = computed(() => ({ transform: getKnobRotation(props.contrast
     transform: translateX(-50%);
     width: 5px;
     height: 5px;
-    background-color: #e32a01;
-    box-shadow: 
-        0 0 2px #ff0000, 
-        0 0 5px rgba(255, 0, 0, 0.6);
     border-radius: 50%;
-    animation: led-pulse 8s ease-in-out infinite;
+    
+    /* Red Bloom Effect */
+    background: radial-gradient(circle at 40% 40%, #ffcccc 0%, #ff0000 40%, #990000 80%);
+    box-shadow: 
+        0 0 2px 1px #ffcccc,
+        0 0 5px 2px #ff0000,
+        0 0 8px 2px #cc0000;
+        
+    animation: led-pulse 4s ease-in-out infinite; /* Slower pulse for consistent warmth */
 }
 </style>

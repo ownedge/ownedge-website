@@ -591,8 +591,7 @@ html, body, .crt-wrapper, * {
   background-repeat: no-repeat, no-repeat, repeat, repeat, repeat, repeat, repeat, repeat;
   background-position: 95% 5%, 5% 95%, center, center, center, center, center, center;
   background-size: 400px 400px, 400px 400px, auto, auto, auto, auto, auto, auto;
-  opacity: 0.9;
-  mix-blend-mode: lighten;
+  mix-blend-mode: color-dodge;
   /* Apply Mask to keep screen glass clean */
   -webkit-mask: url(#bezel-mask);
   mask: url(#bezel-mask);
