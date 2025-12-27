@@ -64,16 +64,43 @@ const startSpectrumAnalyzer = () => {
              ctx.fillStyle = '#40e0d0';
 
              if (props.bootState === 'loading') {
-                 // Draw Progress Bar - 95% width
-                 const width = canvas.width * 0.95;
-                 const x = (canvas.width - width) / 2;
-                 const height = 32; // Taller bar
-                 const y = (canvas.height - height) / 2;
+                 // Explosive Counting Animation
+                 const progress = Math.min(props.bootProgress, 100);
+                 const targetNumber = Math.floor(progress);
                  
-                 // Fill - Map accurately 0-100%
-                 const fillWidth = width * (Math.min(props.bootProgress, 100) / 100);
+                 // Rapid counting with explosion effect
+                 const countSpeed = 200; // ms per number change
+                 const currentCount = Math.min(targetNumber, Math.floor(Date.now() / countSpeed) % 101);
                  
-                 if (fillWidth > 0) ctx.fillRect(x, y, fillWidth, height);
+                 // Calculate scale based on number change (explosion effect)
+                 const timeSinceChange = (Date.now() % countSpeed) / countSpeed;
+                 const explosionScale = 1 + (1 - timeSinceChange) * 0.5; // Starts big, shrinks to normal
+                 
+                 // Size increases as we get closer to 100
+                 const progressScale = 1 + (currentCount / 100) * 0.8;
+                 const finalScale = explosionScale * progressScale;
+                 
+                 // Font size grows with progress
+                 const baseFontSize = 28;
+                 const fontSize = baseFontSize * finalScale;
+                 
+                 ctx.font = `900 ${fontSize}px Microgramma, 'Arial Black', sans-serif`;
+                 ctx.textAlign = 'center';
+                 ctx.textBaseline = 'middle';
+                 
+                 // Keep color constant
+                 ctx.fillStyle = '#40e0d0';
+                 
+                 // Add glow effect that pulses
+                 const glowIntensity = (1 - timeSinceChange) * 15;
+                 ctx.shadowColor = `rgba(64, 224, 208, ${0.8 * (1 - timeSinceChange)})`;
+                 ctx.shadowBlur = glowIntensity;
+                 
+                 // Draw the number
+                 ctx.fillText(String(currentCount).padStart(2, '0'), canvas.width / 2, canvas.height / 2);
+                 
+                 // Reset shadow
+                 ctx.shadowBlur = 0;
                  
              } else if (props.bootState === 'ready') {
                  // 1. Calculate Geometry

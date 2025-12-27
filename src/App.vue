@@ -622,8 +622,8 @@ html, body, .crt-wrapper, * {
     width: 120px; 
     height: auto;
     z-index: 15;
-    filter: brightness(0.9) contrast(1.0) sepia(0.1);
-    opacity: 0.86;
+    filter: brightness(0.77) contrast(0.9) sepia(0.2);
+    opacity: 0.56;
     pointer-events: none;
     
     /* Scratch Mask: Renders random scratch areas invisible */
