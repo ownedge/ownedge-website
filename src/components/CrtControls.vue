@@ -259,23 +259,23 @@ const calculateSpill = (val, min, max) => {
 
 /* Active State (Unified) */
 .led.active, .power-led.active {
-    /* Core Hot Spot + Bloom */
+    /* Core Hot Spot + Bloom (Dimmed) */
     background: radial-gradient(
         circle at 40% 40%, 
-        color-mix(in srgb, var(--led-color), #fff 80%) 0%, 
+        color-mix(in srgb, var(--led-color), #fff 90%) 0%, 
         var(--led-color) 40%, 
-        color-mix(in srgb, var(--led-color), #000 20%) 100%
+        color-mix(in srgb, var(--led-color), #000 40%) 100%
     );
     
     box-shadow: 
-        0 0 2px 1px #fff,             /* White Hot Core */
-        0 0 8px 2px var(--led-color), /* Inner intense glow */
-        0 0 15px 4px var(--led-color), /* Local Spill */
-        0 0 20px color-mix(in srgb, var(--led-color), transparent 80%); /* Atmo Haze */
+        0 0 1px 1px #fff,             /* Tighter Core */
+        0 0 5px 1px var(--led-color), /* Reduced Inner glow */
+        0 0 10px 2px var(--led-color), /* Reduced Local Spill */
+        0 0 15px color-mix(in srgb, var(--led-color), transparent 85%); /* Subtle Haze */
         
-    border-color: color-mix(in srgb, var(--led-color), #fff 40%);
+    border-color: color-mix(in srgb, var(--led-color), #fff 20%);
     z-index: 10002;
-    filter: brightness(1.2);
+    filter: brightness(1.1); /* Reduced brightness boost */
     animation: led-pulse 8s ease-in-out infinite;
 }
 
@@ -285,9 +285,7 @@ const calculateSpill = (val, min, max) => {
     font-size: 0.6rem;
     color: #444; 
     letter-spacing: 1px;
-    font-weight: bold;
-    transition: all 0.2s ease;
-    
+    transition: all 0.25s ease;
     background-color: #444;
     background-clip: text;
     -webkit-background-clip: text;
@@ -297,7 +295,7 @@ const calculateSpill = (val, min, max) => {
 /* Active Label Spill */
 .led-group:has(.led.active) .led-label,
 .power-panel .led-group:has(.power-led.active) .led-label {
-    --spill-opacity: 100%; /* Default fully active for static LEDs */
+    --spill-opacity: 45%; /* Reduce max intensity */
 }
 
 /* Common Spill Logic */
@@ -306,14 +304,15 @@ const calculateSpill = (val, min, max) => {
 .volume-control .led-label {
     background-image: radial-gradient(
         circle at 50% -15px, 
-        color-mix(in srgb, var(--led-color), transparent calc(100% - var(--spill-opacity, 0%))) 0%, 
-        #444 90%
+        /* Mix led-color with some dark base opacity to reduce "neon" look */
+        color-mix(in srgb, var(--led-color), rgba(68,68,68,0.5) calc(100% - var(--spill-opacity, 0%))) 0%, 
+        #444 65%
     );
     color: transparent;
     -webkit-text-fill-color: transparent;
     
     /* Subtle glow matching color */
-    text-shadow: 0 -1px 2px color-mix(in srgb, var(--led-color), transparent calc(100% - var(--spill-opacity, 0%) * 0.6));
+    text-shadow: 0 -1px 2px color-mix(in srgb, var(--led-color), transparent calc(100% - var(--spill-opacity, 0%) * 0.4));
 }
 
 /* Volume Knob */
@@ -393,12 +392,12 @@ const calculateSpill = (val, min, max) => {
     height: 5px;
     border-radius: 50%;
     
-    /* Red Bloom Effect */
-    background: radial-gradient(circle at 40% 40%, #ffcccc 0%, #ff0000 40%, #990000 80%);
+    /* Red Bloom Effect (Dimmed) */
+    background: radial-gradient(circle at 40% 40%, #ffcccc 0%, #cc0000 40%, #880000 80%);
     box-shadow: 
-        0 0 2px 1px #ffcccc,
-        0 0 5px 2px #ff0000,
-        0 0 8px 2px #cc0000;
+        0 0 2px 0px #ffcccc,
+        0 0 4px 1px #aa0000,
+        0 0 6px 1px #660000;
         
     animation: led-pulse 4s ease-in-out infinite; /* Slower pulse for consistent warmth */
 }
