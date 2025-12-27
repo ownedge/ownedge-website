@@ -474,16 +474,6 @@ const ledMarkerStyle = computed(() => ({
           <feTurbulence :baseFrequency="turbulenceFreq" numOctaves="1" result="noise" />
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" />
         </filter>
-        
-        <!-- Bezel Grain Filter -->
-        <filter id="bezel-grain" x="0%" y="0%" width="100%" height="100%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" result="noise" />
-          <feColorMatrix type="saturate" values="0" in="noise" result="desaturated" />
-          <feComponentTransfer in="desaturated">
-            <feFuncA type="table" tableValues="0 0.10" />
-          </feComponentTransfer>
-          <feBlend mode="multiply" in2="SourceGraphic" />
-        </filter>
       </defs>
     </svg>
     

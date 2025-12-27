@@ -125,8 +125,8 @@ const draw = () => {
          ctx.globalCompositeOperation = 'destination-in';
          const mask = ctx.createLinearGradient(0, 0, canvas.width, 0);
          mask.addColorStop(0, 'rgba(0, 0, 0, 0)');      // 0: Transparent
-         mask.addColorStop(200 / canvas.width, 'rgba(0, 0, 0, 1)'); // 40px: Opaque
-         mask.addColorStop((canvas.width - 200) / canvas.width, 'rgba(0, 0, 0, 1)'); // End-40px: Opaque
+         mask.addColorStop(350 / canvas.width, 'rgba(0, 0, 0, 1)'); // 40px: Opaque
+         mask.addColorStop((canvas.width - 350) / canvas.width, 'rgba(0, 0, 0, 1)'); // End-40px: Opaque
          mask.addColorStop(1, 'rgba(0, 0, 0, 0)');      // End: Transparent
          
          ctx.fillStyle = mask;
