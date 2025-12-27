@@ -466,19 +466,24 @@ const ledMarkerStyle = computed(() => ({
       </div>
     </div>
     
-    <!-- SVG Filter for Glitch/Distortion (Efficient) -->
+    <!-- SVG Filter for Glitch/Distortion and Texture Masks -->
     <svg width="0" height="0" style="position: absolute; pointer-events: none;">
       <defs>
         <filter id="spherical-warp" x="-10%" y="-10%" width="200%" height="200%">
-          <!-- Simple Turbulence for Glitch Effect -->
           <feTurbulence :baseFrequency="turbulenceFreq" numOctaves="1" result="noise" />
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" />
         </filter>
       </defs>
     </svg>
     
-    <!-- Bezel Reflection Overlay (Last item = Top Z) -->
+    <!-- Bezel Reflection Overlay -->
     <TrackerOverlay :reflection-only="true" :screen-rect="screenRect" />
+
+    <!-- Vintage Sony Sticker (Top Left) -->
+    <div class="bezel-sticker">
+        <img src="./assets/sony-sticker.png" alt="It's a Sony" />
+        <div class="sticker-wear"></div>
+    </div>
   </div>
 </template>
 
@@ -548,8 +553,8 @@ html, body, .crt-wrapper, * {
       transparent 0px, 
       rgba(255,255,255,0.01) 1px, 
       transparent 2px);
-  /* Add SVG noise for fine grain */
-  filter: url(#bezel-grain);
+    /* Add SVG noise for fine grain */
+    filter: url(#bezel-grain);
 }
 
 .crt-wrapper::after {
@@ -570,6 +575,24 @@ html, body, .crt-wrapper, * {
     radial-gradient(ellipse at 85% 70%, rgba(0,0,0,0.03) 0%, transparent 40%),
     radial-gradient(ellipse at 40% 90%, rgba(0,0,0,0.04) 0%, transparent 45%);
   opacity: 0.25;
+}
+
+/* Vintage Sticker Styles */
+.bezel-sticker {
+    position: absolute;
+    top: 0px; /* Top bezel */
+    left: -6px; /* Left bezel */
+    width: 60px; /* Adjust size for Sony sticker */
+    height: auto;
+    z-index: 15;
+    filter: contrast(0.8);
+    transform: rotate(-2deg);
+}
+
+.bezel-sticker img {
+    width: 100%;
+    height: auto;
+    display: block;
 }
 
 /* CRT Screen (The curvature and clipping) */
