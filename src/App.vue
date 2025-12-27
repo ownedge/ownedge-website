@@ -622,7 +622,7 @@ html, body, .crt-wrapper, * {
     height: auto;
     z-index: 15;
     filter: contrast(0.8) brightness(1.7);
-    transform: rotate(-2deg);
+    transform: rotate(-1deg);
     opacity: 0.36;
 }
 
@@ -641,7 +641,7 @@ html, body, .crt-wrapper, * {
     height: auto;
     z-index: 15;
     filter: brightness(0.47) contrast(0.9) sepia(0.1);
-    opacity: 0.68;
+    opacity: 0.01;
     pointer-events: none;
 }
 
