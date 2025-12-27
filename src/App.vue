@@ -425,7 +425,7 @@ const ledMarkerStyle = computed(() => ({
     <!-- VFD Display (Replaces Logo) -->
     <!-- VFD Label -->
     <div class="vfd-label-box">
-        <div class="vfd-label-line1">VF-1000</div>
+        <div class="vfd-label-line1">VF-1OOO</div>
         <div class="vfd-label-line2">SUPER</div>
     </div>
     
