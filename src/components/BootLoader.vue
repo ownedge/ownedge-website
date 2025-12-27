@@ -2,8 +2,9 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import SoundManager from '../sfx/SoundManager';
 // Use direct import for asset to get hashed URL
-import bootVideoUrl from '../assets/test-ownedge.mp4';
+import bootVideoUrl from '../assets/ownedge.mp4';
 
+const videoRef = ref(null);
 const emit = defineEmits(['start', 'progress', 'ready']);
 const progress = ref(0);
 const isReady = ref(false);
@@ -50,6 +51,10 @@ const handleKeyup = (e) => {
 
 // Fake loading sequence
 onMounted(() => {
+  if (videoRef.value) {
+      videoRef.value.playbackRate = 0.8;
+  }
+
   window.addEventListener('keydown', handleKeydown);
   
   const steps = [
@@ -101,9 +106,11 @@ const handleStart = () => {
 
 <template>
   <div class="boot-loader">
-    <video class="boot-video" autoplay muted loop playsinline>
+    <video ref="videoRef" class="boot-video" autoplay muted loop playsinline>
         <source :src="bootVideoUrl" type="video/mp4">
     </video>
+    
+    <div class="scanlines-overlay"></div>
     
     <!-- Interaction Layer (Invisible but captures Enter) -->
     <div class="interaction-layer"></div>
@@ -117,16 +124,40 @@ const handleStart = () => {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 30;
+  z-index: 5; /* Below Grid (10) but above App BG (0) */
   overflow: hidden;
 }
 
 .boot-video {
+    position: relative;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 101%;
+    height: 101%;
+    object-fit: cover;
+    opacity: 0.26; /* Much darker */
+    mix-blend-mode: color-burn;
+    mix-blend-mode: color-burn;
+    filter: grayscale(0.6) contrast(2.3); /* Less color, gritty contrast */
+}
+
+.scanlines-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    opacity: 0.4; /* Much darker */
-    mix-blend-mode: screen; 
-    filter: grayscale(0.7) contrast(1.2); /* Less color, gritty contrast */
+    background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 2px,
+        rgba(0, 0, 0, 0.4) 3px,
+        rgba(0, 0, 0, 0.4) 4px
+    );
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0.9;
 }
+
 </style>

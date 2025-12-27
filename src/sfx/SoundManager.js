@@ -471,6 +471,160 @@ class SoundManager {
             this.trackerPlayer = null;
         }
     }
+
+    // --- VISUALIZATION ONLY (Offline Access) ---
+    async loadVisualizer(url) {
+        if (!window.libopenmpt) return;
+        
+        try {
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            const lib = window.libopenmpt;
+            
+            // Copy to Emscripten Heap
+            const byteArray = new Int8Array(arrayBuffer);
+            const ptr = lib._malloc(byteArray.byteLength);
+            lib.HEAP8.set(byteArray, ptr);
+            
+            // Create Module
+            this.visualMod = lib._openmpt_module_create_from_memory(ptr, byteArray.byteLength, 0, 0, 0);
+            lib._free(ptr);
+            
+            if (this.visualMod) {
+                console.log("Visualizer Module Loaded:", url);
+            }
+        } catch (e) {
+            console.error("Failed to load visualizer:", e);
+        }
+    }
+
+    // Helper to read from ANY module pointer (player or visualizer)
+    _readRowData(mod, p, r) {
+        if (!mod || !window.libopenmpt) return ["...", "...", "...", "..."];
+        const lib = window.libopenmpt;
+        const numChannels = lib._openmpt_module_get_num_channels(mod);
+        const channels = [];
+        
+        const hasFormatter = !!lib._openmpt_module_format_pattern_row_channel;
+        const hasRaw = !!lib._openmpt_module_get_pattern_row_channel_command;
+
+        for (let i = 0; i < numChannels; i++) {
+             let chStr = "...";
+             if (hasFormatter) {
+                const strPtr = lib._openmpt_module_format_pattern_row_channel(mod, p, r, i, 0, 0); 
+                if (strPtr) {
+                    // Manual UTF8ToString since lib.UTF8ToString is missing
+                    let str = "";
+                    let ptr = strPtr;
+                    if (lib.UTF8ToString) {
+                        str = lib.UTF8ToString(strPtr);
+                    } else {
+                        // Read until null terminator
+                        const bytes = [];
+                        while (true) {
+                            const byte = lib.HEAPU8[ptr];
+                            if (byte === 0) break;
+                            bytes.push(byte);
+                            ptr++;
+                        }
+                        str = new TextDecoder().decode(new Uint8Array(bytes));
+                    }
+                    
+                    chStr = str;
+                    lib._openmpt_free_string(strPtr); 
+                }
+             } else if (hasRaw) {
+                 const note = lib._openmpt_module_get_pattern_row_channel_command(mod, p, r, i, 0);
+                 if (note > 0 && note <= 120) chStr = `N:${note}`;
+                 else if (note === 254 || note === 255) chStr = "===";
+             }
+             if (!chStr || chStr.trim() === "") chStr = "...";
+             channels.push(chStr);
+        }
+        return channels;
+    }
+
+    getVisualizerData(simulatedRowIndex) {
+         if (!this.visualMod) return null;
+         const lib = window.libopenmpt;
+         
+         // 1. Determine Order and Row from the linear index
+         // We assume a standard "Speed" of 1 row per unit for simplicity in this offline view.
+         // Real tracking is complex, but this is enough for visuals.
+         
+         const numOrders = lib._openmpt_module_get_num_orders(this.visualMod);
+         if (numOrders === 0) return null;
+
+         // Wrap global index to song length (approx limit 500 orders * 64 rows?)
+         // Let's just wrap orders.
+         
+         // We'll perform a "safe" lookup:
+         // Iterate orders to find where this row falls? 
+         // Too expensive. Let's assume average 64 rows/pattern for the Seek, 
+         // but use actual lengths for the Read.
+         
+         const estimatedRowsPerPattern = 64;
+         const orderIndex = Math.floor(simulatedRowIndex / estimatedRowsPerPattern) % numOrders;
+         let row = simulatedRowIndex % estimatedRowsPerPattern;
+         
+         // 2. Get Actual Pattern from Order
+         const pattern = lib._openmpt_module_get_order_pattern(this.visualMod, orderIndex);
+         
+         // 3. Validate Row against Actual Pattern Length
+         const numRows = lib._openmpt_module_get_pattern_num_rows(this.visualMod, pattern);
+         
+         // If row is out of bounds for this specific pattern, we effectively "skip" or show silence
+         // simulating that this pattern ended early.
+         if (row >= numRows) {
+              return { pattern, row, channels: ["...", "...", "...", "..."], numRows };
+         }
+         
+         // 4. Fetch Data
+         const channels = this._readRowData(this.visualMod, pattern, row);
+         return { pattern, row, channels, numRows };
+    }
+
+    // Returns just position { pattern, row, numRowsInPattern }
+    getTrackerPosition() {
+        if (!this.trackerPlayer || !this.trackerPlayer.currentPlayingNode || !window.libopenmpt) return null;
+        const mod = this.trackerPlayer.currentPlayingNode.modulePtr;
+        if (!mod) return null;
+        const lib = window.libopenmpt;
+
+        const pattern = lib._openmpt_module_get_current_pattern(mod);
+        const row = lib._openmpt_module_get_current_row(mod);
+        const numChannels = lib._openmpt_module_get_num_channels(mod);
+        const numRows = lib._openmpt_module_get_pattern_num_rows(mod, pattern);
+
+        return { pattern, row, numChannels, numRows };
+    }
+
+    // Returns data for a specific pattern/row
+    getPatternRowData(p, r) {
+        // Prefer Active Player
+        if (this.trackerPlayer && this.trackerPlayer.currentPlayingNode) {
+             const mod = this.trackerPlayer.currentPlayingNode.modulePtr;
+             if (mod) return this._readRowData(mod, p, r);
+        }
+        // Fallback to Visualizer (if same context? No, pattern/row request implies context)
+        // If we are asking freely, we can use visualMod.
+        if (this.visualMod) {
+            return this._readRowData(this.visualMod, p, r);
+        }
+        return null;
+    }
+
+    // API-Compatible wrapper for VFD/Legacy
+    getTrackerData() {
+        const pos = this.getTrackerPosition();
+        if (!pos) return null;
+        const channels = this.getPatternRowData(pos.pattern, pos.row);
+        return {
+            row: pos.row,
+            pattern: pos.pattern,
+            channels
+        };
+    }
 }
 
 

@@ -8,6 +8,7 @@ import SoundManager from './sfx/SoundManager'
 import BootLoader from './components/BootLoader.vue'
 import VfdDisplay from './components/VfdDisplay.vue'
 import CrtControls from './components/CrtControls.vue'
+import TrackerOverlay from './components/TrackerOverlay.vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 
 
@@ -145,7 +146,13 @@ const handleBootStart = async () => {
   // 2. Play Boot Sound
   SoundManager.playBootSequence();
 
-  // 3. Start Tracker Music
+  // 2. Play Boot Sound
+  SoundManager.playBootSequence();
+  
+  // 3. Preload Tracker Data for Visuals (Offline)
+  SoundManager.loadVisualizer('/music/impulse.s3m');
+
+  // 4. Start Tracker Music
   setTimeout(() => {
     SoundManager.playTrackerMusic('/music/impulse.s3m');
   }, 3800); 
@@ -362,7 +369,8 @@ const currentHueDeg = computed(() => {
    return (defaultHue - 0.5) * 360 + 188;
 });
 
-const scanlineColor = computed(() => `hsl(${currentHueDeg.value}, 42%, 7%)`);
+const scanlineColor = computed(() => `hsl(199, 10%, 10%)`);
+const vfdBgColor = computed(() => `hsl(${currentHueDeg.value}, 42%, 7%)`);
 const ledColor = computed(() => `hsl(${currentHueDeg.value}, 100%, 50%)`);
 
 const ledMarkerStyle = computed(() => ({
@@ -397,7 +405,7 @@ const ledMarkerStyle = computed(() => ({
         :knob-info="vfdKnobInfo"
         :boot-state="vfdBootState"
         :boot-progress="bootProgress"
-        :scanline-color="scanlineColor"
+        :scanline-color="vfdBgColor"
     />
 
     <!-- Speaker Grilles Removed -->
@@ -417,6 +425,7 @@ const ledMarkerStyle = computed(() => ({
 
         <div class="fixed-background">
             <GridOverlay />
+            <TrackerOverlay />
         </div>
 
         <!-- Scrollable Content -->
@@ -498,7 +507,7 @@ html, body, .crt-wrapper, * {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 30px 30px 80px 30px; /* Thicker chin */
+  padding: 40px 40px 80px 40px; /* Thicker chin */
   cursor: none; /* Ensure hidden here too */
 }
 
@@ -518,7 +527,7 @@ html, body, .crt-wrapper, * {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 12px solid #1d1d1d; 
+  border: 11px solid #1d1d1d; 
 }
 
 .app-container {
@@ -526,7 +535,7 @@ html, body, .crt-wrapper, * {
   height: 101%;
   flex-shrink: 0; /* Prevent shrinking to fit */
   position: relative;
-  background: radial-gradient(circle at center, #15273d 1%, #000000 90%);
+  background: radial-gradient(circle at center, #2f2f2f00 1%, #0e0e0e 90%);
   overflow: hidden; /* Container is fixed window */
   filter: url(#spherical-warp) brightness(v-bind(brightness*0.9)) contrast(v-bind(contrast)); /* Apply content distortion + Settings */
 }

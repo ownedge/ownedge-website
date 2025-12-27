@@ -8,7 +8,7 @@
 :root {
   --color-bg: #101010; /* Darker for bezel contrast */
   --color-text: #ffffff;
-  --color-accent: #00ffcc; /* Cyan/Teal tech color */
+  --color-accent: #21f1eb; /* Cyan/Teal tech color */
   --grid-line: rgba(255, 255, 255, 0.08);
   --font-main: 'Microgramma', sans-serif;
   --font-mono: 'Courier New', Courier, monospace;

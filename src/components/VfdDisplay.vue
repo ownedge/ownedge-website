@@ -71,38 +71,48 @@ const startSpectrumAnalyzer = () => {
                  if (fillWidth > 0) ctx.fillRect(x, y, fillWidth, height);
                  
              } else if (props.bootState === 'ready') {
-                 // 1. Draw Full Solid Bar (The "100%" state)
+                 // 1. Calculate Geometry
                  const width = canvas.width * 0.95;
                  const x = (canvas.width - width) / 2;
-                 const height = 32; // Taller bar
+                 const height = 32; 
                  const y = (canvas.height - height) / 2;
                  
-                 ctx.fillStyle = '#40e0d0';
-                 ctx.fillRect(x, y, width, height);
-
-                 // 2. Draw Inverted Text (Cutout)
                  const now = Date.now();
                  const elapsed = now - readyTimestamp.value;
-                 const blinkDuration = 25; // ms per phase
-                 const blinkCount = 3;
+                 const blinkDuration = 30; // ms per phase
+                 const blinkCount = 2;
+                 const totalBlinkTime = blinkCount * 2 * blinkDuration;
                  
-                 let showText = true;
-                 
-                 if (elapsed < (blinkCount * 2 * blinkDuration)) {
-                     // Inside blink window
+                 // Phase 1: Inverted Blinking (Block with Cutout)
+                 if (elapsed < totalBlinkTime) {
+                     // Draw Solid Block
+                     ctx.fillStyle = '#40e0d0';
+                     ctx.fillRect(x, y, width, height);
+                     
                      const phase = Math.floor(elapsed / blinkDuration);
-                     if (phase % 2 !== 0) showText = false; // OFF on odd phases
-                 }
-                 // Else: showText remains true (Stay Visible)
-
-                 if (showText) {
-                     ctx.globalCompositeOperation = 'destination-out'; // This erases pixels!
+                     const showCutout = (phase % 2 === 0); // ON phase has hole
+                     
+                     if (showCutout) {
+                         ctx.globalCompositeOperation = 'destination-out';
+                         ctx.font = "bold 28px 'Microgramma'";
+                         ctx.textAlign = 'center';
+                         ctx.textBaseline = 'middle';
+                         ctx.fillText(" ENTER ↵", canvas.width / 2, canvas.height / 2);
+                         ctx.globalCompositeOperation = 'source-over';
+                     }
+                 } 
+                 // Phase 2: Lit Text (Normal Text, No Block)
+                 else {
+                     ctx.fillStyle = '#40e0d0';
                      ctx.font = "bold 28px 'Microgramma'";
                      ctx.textAlign = 'center';
                      ctx.textBaseline = 'middle';
-                     // No shadow for cutout, just pure erase
+                     
+                     // Add Glow for Lit State
+                     ctx.shadowColor = "rgba(64, 224, 208, 0.6)";
+                     ctx.shadowBlur = 8;
                      ctx.fillText(" ENTER ↵", canvas.width / 2, canvas.height / 2);
-                     ctx.globalCompositeOperation = 'source-over'; // Restore default
+                     ctx.shadowBlur = 0; 
                  }
              }
              
@@ -140,9 +150,13 @@ const startSpectrumAnalyzer = () => {
         // 185px width, 36px height at 100% zoom (approx)
         const dotSize = 0.5;
         const gap = 0; 
+        const paddingX = 4;
+        const paddingY = 2;
+        
         const step = dotSize + gap;
-        const cols = Math.floor(canvas.width / step);
-        const rows = Math.floor(canvas.height / step);
+        // Calculate columns based on width minus padding
+        const cols = Math.floor((canvas.width - (paddingX * 2)) / step);
+        const rows = Math.floor((canvas.height - (paddingY * 2)) / step);
         
         ctx.fillStyle = '#40e0d0'; // Teal VFD color
 
@@ -159,9 +173,9 @@ const startSpectrumAnalyzer = () => {
             for (let j = 0; j < rows; j++) {
                 // Draw from bottom up
                 if (j < activeDots) {
-                    // Invert Y to draw from bottom
-                    const y = canvas.height - (j * step) - dotSize;
-                    const x = i * step;
+                    // Invert Y to draw from bottom, accounting for padding
+                    const y = canvas.height - paddingY - (j * step) - dotSize;
+                    const x = paddingX + (i * step);
                     
                     // Opacity falloff for "glow"
                     ctx.globalAlpha = 0.8 + (value / 1200); 
