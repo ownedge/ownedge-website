@@ -106,7 +106,7 @@ const draw = () => {
         } else {
             // Future Rows
             // Fade out slightly
-            const opacity = 0.45 - (offset * 0.15);
+            const opacity = 0.49 - (offset * 0.15);
             ctx.fillStyle = `rgba(33, 241, 235, ${opacity})`;
             ctx.font = '16px "Courier New", monospace';
         }
@@ -121,7 +121,7 @@ const draw = () => {
                   // Mirror on Bezel
                   ctx.save();
                   ctx.translate(0, startY);
-                  ctx.scale(1, -0.41); // Flip UP
+                  ctx.scale(1, -0.4); // Flip UP
                   ctx.fillText(str, startX +1, -4); // Small gap adjustment
                   ctx.restore();
              } else {

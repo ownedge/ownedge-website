@@ -275,8 +275,8 @@ const calculateSpill = (val, min, max) => {
         
     border-color: color-mix(in srgb, var(--led-color), #fff 20%);
     z-index: 10002;
-    filter: brightness(1.1); /* Reduced brightness boost */
-    animation: led-pulse 8s ease-in-out infinite;
+    filter: brightness(0.8); /* Reduced brightness boost */
+    animation: led-pulse 6s ease-in-out infinite;
 }
 
 /* Label Spill (Standardized) */
@@ -312,7 +312,7 @@ const calculateSpill = (val, min, max) => {
     -webkit-text-fill-color: transparent;
     
     /* Subtle glow matching color */
-    text-shadow: 0 -1px 2px color-mix(in srgb, var(--led-color), transparent calc(100% - var(--spill-opacity, 0%) * 0.4));
+    text-shadow: 0 -1px 2px color-mix(in srgb, var(--led-color), transparent calc(100% - var(--spill-opacity, 0%) * 0.15));
 }
 
 /* Volume Knob */
@@ -400,5 +400,14 @@ const calculateSpill = (val, min, max) => {
         0 0 6px 1px #660000;
         
     animation: led-pulse 4s ease-in-out infinite; /* Slower pulse for consistent warmth */
+}
+
+@keyframes led-pulse {
+    0%, 100% {
+        filter: brightness(0.8);
+    }
+    50% {
+        filter: brightness(1.0);
+    }
 }
 </style>

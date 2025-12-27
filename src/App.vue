@@ -210,9 +210,9 @@ const bootProgress = ref(0);
 // VFD Label Glow - based on VFD activity
 const vfdLabelGlow = computed(() => {
   if (vfdMode.value === 'spectrum' || vfdBootState.value === 'loading') {
-    return '0.7'; // High glow during spectrum/loading
+    return '0.35'; // High glow during spectrum/loading
   } else if (vfdMode.value === 'logo' || vfdMode.value === 'knob') {
-    return '0.5'; // Medium glow
+    return '0.20'; // Medium glow
   }
   return '0.0'; // No glow when off
 });
@@ -640,8 +640,8 @@ html, body, .crt-wrapper, * {
     transform: rotate(-40deg);
     height: auto;
     z-index: 15;
-    filter: brightness(0.47) contrast(0.96) sepia(0.2);
-    opacity: 0.88;
+    filter: brightness(0.47) contrast(0.9) sepia(0.1);
+    opacity: 0.68;
     pointer-events: none;
 }
 
