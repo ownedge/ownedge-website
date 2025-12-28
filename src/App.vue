@@ -1,7 +1,7 @@
 <script setup>
 import GridOverlay from './components/GridOverlay.vue'
 import HeroDisplay from './components/HeroDisplay.vue'
-import PortfolioTUI from './components/PortfolioTUI.vue'
+import ContentCommander from './components/ContentCommander.vue'
 import PhosphorOverlay from './components/PhosphorOverlay.vue'
 import NoiseOverlay from './components/NoiseOverlay.vue'
 import SoundManager from './sfx/SoundManager'
@@ -448,7 +448,7 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
           </section>
           
           <section class="page-section">
-            <PortfolioTUI />
+            <ContentCommander />
           </section>
         </div>
         

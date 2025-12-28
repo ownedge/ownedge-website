@@ -2,12 +2,10 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import SoundManager from '../sfx/SoundManager';
 import dayPngPath from '../assets/day.png';
-import eveningPngPath from '../assets/evening.png';
 import nightPngPath from '../assets/night.png';
 
 const dayPng = new Image(); dayPng.src = dayPngPath;
-const eveningPng = new Image(); eveningPng.src = eveningPngPath;
-const nightPng = new Image(); nightPng.src = nightPngPath;
+const nightPng = new Image(); nightPng.src = nightPngPath; 
 
 const props = defineProps({
   mode: {
@@ -39,18 +37,14 @@ let animationFrameId = null;
 // Egg Animation State
 const eggState = ref('idle'); // 'idle', 'scroll', 'morph', 'explode'
 const eggProgress = ref(0);
-const eggType = ref({ text: '', icon: '' });
+const eggType = ref({ text: '', icon: '', period: '' });
 const particles = ref([]);
 
 const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour >= 5 && hour < 18) return { words: ["WONDERFUL", "DAY!"], icon: dayPng };
-    if (hour >= 17 && hour < 21) return { words: ["GOOD", "EVENING!"], icon: eveningPng };
-    return { words: ["ENJOY", "THE", "NIGHT!"], icon: nightPng };
-};
-
-const drawVfdIcon = (ctx, icon, x, y, size, progress) => {
-    // Replaced by GIF logic
+    if (hour >= 5 && hour < 18) return { words: ["WONDERFUL", "DAY!"], icon: dayPng, period: 'day' };
+    if (hour >= 18 && hour < 21) return { words: ["GOOD", "EVENING!"], icon: dayPng, period: 'evening' };
+    return { words: ["ENJOY", "THE", "NIGHT!"], icon: nightPng, period: 'night' };
 };
 
 let lastEggCheck = 0;
@@ -198,7 +192,7 @@ const startSpectrumAnalyzer = () => {
         const now = Date.now();
         if (eggState.value === 'idle' && now - lastEggCheck > 45000) {
             lastEggCheck = now;
-            if (Math.random() < 0.3) {
+            if (Math.random() < 99990.3) {
                 eggType.value = getGreeting();
                 eggState.value = 'scroll';
                 eggProgress.value = 0;
@@ -243,21 +237,34 @@ const startSpectrumAnalyzer = () => {
                 
                 const img = eggType.value.icon;
                 if (img && img.complete) {
-                    // Calculate Y animation: scroll in from top for the first 40% of the morph duration
                     const inDuration = 0.4;
-                    var yOffset = eggProgress.value < inDuration
-                        ? -canvas.height * (1 - (eggProgress.value / inDuration))
-                        : 0;
-                    if (yOffset > -15) yOffset = -15;
+                    const isDownUp = eggType.value.period === 'day' || eggType.value.period === 'night';
+                    const imgSize = 80;
+                    const targetY = isDownUp ? (canvas.height - imgSize) / 1.2 : (canvas.height - imgSize) / 4;
+                    const targetX = (canvas.width - imgSize) / 2;
+                    
+                    let yOffset = targetY;
+                    if (eggProgress.value < inDuration) {
+                        const progress = eggProgress.value / inDuration;
+                        if (isDownUp) {
+                            // Bottom to Top
+                            const startY = canvas.height;
+                            yOffset = startY + (targetY - startY) * progress;
+                        } else {
+                            // Top to Bottom (Evening) 
+                            const startY = -imgSize;
+                            yOffset = startY + (targetY - startY) * progress;
+                        }
+                    }
+
                     ctx.save();
                     // 1. Draw the icon as a mask
-                    ctx.drawImage(img, 30, yOffset, 120, 120);
+                    ctx.drawImage(img, targetX, yOffset, imgSize, imgSize);
                     // 2. Color it teal using 'source-in'
                     ctx.globalCompositeOperation = 'source-in';
                     ctx.fillStyle = '#40e0d0';
-                    ctx.fillRect(30, yOffset, 120, 120);
-
-                    ctx.restore();
+                    ctx.fillRect(targetX, yOffset, imgSize, imgSize);
+                    ctx.restore(); 
                 }
                 
                 if (eggProgress.value >= 1) {
