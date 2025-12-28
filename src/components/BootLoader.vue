@@ -5,6 +5,9 @@ import SoundManager from '../sfx/SoundManager';
 import bootVideoUrl from '../assets/ownedge.mp4';
 
 const videoRef = ref(null);
+const props = defineProps({
+  isBooted: { type: Boolean, default: false }
+});
 const emit = defineEmits(['start', 'progress', 'ready']);
 const progress = ref(0);
 const isReady = ref(false);
@@ -26,6 +29,8 @@ const triggerLaunch = () => {
 }
 
 const handleKeydown = async (e) => {
+  if (props.isBooted) return; // Ignore keys if already booted
+  
   // Allow arrow keys visual feedback anytime
   if (activeKeys.value.hasOwnProperty(e.key)) {
     // Initialize sound on first interaction
@@ -91,7 +96,12 @@ onMounted(() => {
   }
 
   // Delay loading start to let keys appear first
-  setTimeout(nextStep, 1100);
+  if (!props.isBooted) {
+    setTimeout(nextStep, 1100);
+  } else {
+    // If somehow mounted already booted, ensure state is correct
+    isReady.value = true;
+  }
 });
 
 onUnmounted(() => {
@@ -110,10 +120,12 @@ const handleStart = () => {
         <source :src="bootVideoUrl" type="video/mp4">
     </video>
     
-    <div class="scanlines-overlay"></div>
-    
-    <!-- Interaction Layer (Invisible but captures Enter) -->
-    <div class="interaction-layer"></div>
+    <template v-if="!isBooted">
+      <div class="scanlines-overlay"></div>
+      
+      <!-- Interaction Layer (Invisible but captures Enter) -->
+      <div class="interaction-layer"></div>
+    </template>
   </div>
 </template>
 
@@ -124,8 +136,10 @@ const handleStart = () => {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 5; /* Below Grid (10) but above App BG (0) */
+  z-index: 1; /* Lowest child level for background */
   overflow: hidden;
+  /* Disable pointer events after boot to avoid blocking content */
+  pointer-events: v-bind("isBooted ? 'none' : 'auto'");
 }
 
 .boot-video {

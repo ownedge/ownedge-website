@@ -428,14 +428,13 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
       <!-- Apply 'crt-content' class for filter -->
       <div class="app-container">
         <!-- Fixed Background/Overlays -->
-        <NoiseOverlay />
-        
         <BootLoader 
-          v-if="!isBooted" 
+          :is-booted="isBooted" 
           @start="handleBootStart"
           @progress="(p) => bootProgress = p"
           @ready="() => vfdBootState = 'ready'"
         />
+        <NoiseOverlay />
 
         <div class="fixed-background">
             <GridOverlay />
@@ -520,7 +519,7 @@ html, body, .crt-wrapper, * {
   left: 0;
   width: 24px;
   height: 24px;
-  background-image: url("data:image/svg+xml,%3Csvg width='34' height='34' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19135L11.7841 12.3673H5.65376Z' fill='rgba(233, 18, 18, 0.6)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='34' height='34' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19135L11.7841 12.3673H5.65376Z' fill='rgba(255, 255, 0, 0.7)'/%3E%3C/svg%3E");
   background-size: contain;
   background-repeat: no-repeat;
   pointer-events: none;
@@ -530,7 +529,7 @@ html, body, .crt-wrapper, * {
   mix-blend-mode: normal; 
   will-change: transform;
   /* Add a drop shadow for glowing effect */
-  filter: drop-shadow(0 0 5px rgba(233, 18, 18, 0.8));
+  filter: drop-shadow(0 0 5px rgba(255, 255, 0, 0.9));
   /* opacity controlled by JS */
   transition: opacity 0.5s ease;
 }

@@ -566,14 +566,47 @@ watch(() => props.mode, (newMode) => {
     }
 }
 
+.vfd-anim-enter-active,
+.vfd-anim-leave-active {
+  transition: all 0.35s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+/* Specialized Exit for Knob UI */
+.vfd-anim-leave-active.vfd-info-container {
+    animation: knob-warp-out 0.4s forwards;
+    transition: none !important;
+}
+
+@keyframes knob-warp-out {
+    0% { 
+        transform: scaleX(1) translateY(0); 
+        opacity: 1;
+        filter: blur(0px);
+    }
+    15% {
+        transform: scaleX(1.4) translateY(-2px);
+        opacity: 1;
+        filter: blur(1px);
+    }
+    100% { 
+        transform: scaleX(6) translateY(-15px); 
+        opacity: 0;
+        filter: blur(8px);
+    }
+}
+
 .vfd-anim-enter-from {
   opacity: 0;
-  transform: translateY(-20px);
+  transform: translateY(-100%);
+}
+
+.vfd-anim-enter-from.vfd-canvas {
+  transform: translateY(100%);
 }
 
 .vfd-anim-leave-to {
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(100%);
 }
 
 .vfd-info-container {
