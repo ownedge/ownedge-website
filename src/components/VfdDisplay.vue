@@ -1,7 +1,13 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import SoundManager from '../sfx/SoundManager';
-// import sonyLogo from '../assets/sony-logo.png'; // No longer used, handled by CSS text
+import dayPngPath from '../assets/day.png';
+import eveningPngPath from '../assets/evening.png';
+import nightPngPath from '../assets/night.png';
+
+const dayPng = new Image(); dayPng.src = dayPngPath;
+const eveningPng = new Image(); eveningPng.src = eveningPngPath;
+const nightPng = new Image(); nightPng.src = nightPngPath;
 
 const props = defineProps({
   mode: {
@@ -29,6 +35,25 @@ const props = defineProps({
 const vfdCanvas = ref(null);
 const readyTimestamp = ref(0);
 let animationFrameId = null;
+
+// Egg Animation State
+const eggState = ref('idle'); // 'idle', 'scroll', 'morph', 'explode'
+const eggProgress = ref(0);
+const eggType = ref({ text: '', icon: '' });
+const particles = ref([]);
+
+const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 18) return { words: ["WONDERFUL", "DAY!"], icon: dayPng };
+    if (hour >= 17 && hour < 21) return { words: ["GOOD", "EVENING!"], icon: eveningPng };
+    return { words: ["ENJOY", "THE", "NIGHT!"], icon: nightPng };
+};
+
+const drawVfdIcon = (ctx, icon, x, y, size, progress) => {
+    // Replaced by GIF logic
+};
+
+let lastEggCheck = 0;
 
 watch(() => props.bootState, (newState) => {
     if (newState === 'ready') {
@@ -167,6 +192,117 @@ const startSpectrumAnalyzer = () => {
         if (canvas.width !== 185) {
             canvas.width = 185;
             canvas.height = 36;
+        }
+
+        // --- Easter Egg Handling ---
+        const now = Date.now();
+        if (eggState.value === 'idle' && now - lastEggCheck > 45000) {
+            lastEggCheck = now;
+            if (Math.random() < 0.4) {
+                eggType.value = getGreeting();
+                eggState.value = 'scroll';
+                eggProgress.value = 0;
+            }
+        }
+
+        if (eggState.value !== 'idle') {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#40e0d0';
+            ctx.font = "900 24px Microgramma, sans-serif";
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            if (eggState.value === 'scroll') {
+                eggProgress.value += 0.007; 
+                const words = eggType.value.words || [];
+                const wordIndex = Math.floor(eggProgress.value * words.length);
+                
+                if (wordIndex < words.length) {
+                    const word = words[wordIndex];
+                    const wordProgress = (eggProgress.value * words.length) % 1;
+                    const scale = 0.3 + Math.pow(wordProgress, 0.5) * 1.5;
+                    let opacity = 1;
+                    if (wordProgress < 0.2) opacity = wordProgress / 0.2;
+                    else if (wordProgress > 0.8) opacity = 1 - (wordProgress - 0.8) / 0.2;
+
+                    ctx.save();
+                    ctx.globalAlpha = opacity;
+                    ctx.translate(canvas.width / 2, canvas.height / 2);
+                    ctx.scale(scale, scale);
+                    ctx.font = "900 20px Microgramma, sans-serif";
+                    ctx.fillText(word, 0, 0);
+                    ctx.restore();
+                }
+                
+                if (eggProgress.value >= 1) {
+                    eggState.value = 'morph';
+                    eggProgress.value = 0;
+                }
+            } else if (eggState.value === 'morph') {
+                eggProgress.value += 0.008; 
+                
+                const img = eggType.value.icon;
+                if (img && img.complete) {
+                    // Calculate Y animation: scroll in from top for the first 40% of the morph duration
+                    const inDuration = 0.4;
+                    const yOffset = eggProgress.value < inDuration 
+                        ? -canvas.height * (1 - (eggProgress.value / inDuration))
+                        : 0;
+
+                    ctx.save();
+                    // Clip the drawing to the VFD area
+                    ctx.beginPath();
+                    ctx.rect(0, 0, canvas.width, canvas.height);
+                    ctx.clip();
+
+                    // 1. Fill the area with the target teal color first
+                    ctx.fillStyle = "#40e0d0";
+                    ctx.fillRect(0, 0, canvas.width, canvas.height); 
+                    
+                    // 2. Multiply that color with a high-contrast grayscale version of the image
+                    ctx.globalCompositeOperation = 'multiply';
+                    ctx.filter = 'invert(1) grayscale(0.99) contrast(1.2) brightness(10)';
+                    ctx.drawImage(img, 0, yOffset, canvas.width, canvas.height); 
+                    ctx.restore();
+                }
+                
+                if (eggProgress.value >= 1) {
+                    eggState.value = 'explode';
+                    particles.value = [];
+                    for (let i = 0; i < 50; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = 0.5 + Math.random() * 5;
+                        particles.value.push({
+                            x: canvas.width / 2,
+                            y: canvas.height / 2,
+                            vx: Math.cos(angle) * speed,
+                            vy: Math.sin(angle) * speed,
+                            life: 1.0,
+                            size: 0.5 + Math.random() * 2
+                        });
+                    }
+                }
+            } else if (eggState.value === 'explode') {
+                let active = false;
+                particles.value.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life -= 0.02;
+                    if (p.life > 0) {
+                        active = true;
+                        ctx.globalAlpha = p.life;
+                        ctx.fillRect(p.x, p.y, p.size, p.size);
+                    }
+                });
+                ctx.globalAlpha = 1.0;
+                if (!active) {
+                    eggState.value = 'idle';
+                    lastEggCheck = Date.now();
+                }
+            }
+
+            animationFrameId = requestAnimationFrame(draw);
+            return;
         }
 
         const data = SoundManager.getAudioData();

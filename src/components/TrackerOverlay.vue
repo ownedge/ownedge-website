@@ -100,13 +100,13 @@ const draw = () => {
         // Style
         if (offset === 0) {
             // Current Row
-            ctx.fillStyle = 'rgba(33, 241, 235, 0.8)';
+            ctx.fillStyle = 'rgba(33, 241, 235)';
             if (props.reflectionOnly) ctx.fillStyle = 'rgba(33, 241, 235, 0.5)'; // Stronger reflection
             ctx.font = 'bold 16px "Courier New", monospace';
         } else {
             // Future Rows
             // Fade out slightly
-            const opacity = 0.49 - (offset * 0.05);
+            const opacity = 0.45 - (offset * 0.05);
             ctx.fillStyle = `rgba(33, 241, 235, ${opacity})`;
             ctx.font = '16px "Courier New", monospace';
         }

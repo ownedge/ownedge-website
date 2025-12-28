@@ -393,7 +393,7 @@ const currentHueDeg = computed(() => {
    return (defaultHue - 0.5) * 360 + 188;
 });
 
-const scanlineColor = computed(() => `hsl(199, 10%, 10%)`);
+const scanlineColor = computed(() => `hsl(10, 1%, 40%)`);
 const vfdBgColor = computed(() => `hsl(${currentHueDeg.value}, 42%, 7%)`);
 const ledColor = computed(() => `hsl(${currentHueDeg.value}, 100%, 50%)`);
 
@@ -616,13 +616,13 @@ html, body, .crt-wrapper, * {
 /* Vintage Sticker Styles */
 .bezel-sticker {
     position: absolute;
-    top: 2px; /* Top bezel */
-    left: -3px; /* Left bezel */
-    width: 60px; /* Adjust size for Sony sticker */
+    top: 8px; /* Top bezel */
+    left: 8px; /* Left bezel */
+    width: 40px; /* Adjust size for Sony sticker */
     height: auto;
     z-index: 15;
     filter: contrast(0.8) brightness(1.7);
-    transform: rotate(-1deg);
+    transform: rotate(-0.5deg);
     opacity: 0.36;
 }
 
