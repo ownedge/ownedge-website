@@ -384,23 +384,9 @@ const updateKnobText = (type, val) => {
     vfdKnobInfo.value = { label, value: `${pct}%` };
 };
 
-// --- Hue Logic ---
-// 0.5 (Center) should map to Teal (approx 188deg)
-// Let's assume range 0-1 maps to 0-360 shift relative to base
-const currentHueDeg = computed(() => {
-   // Use default hue value since knob is removed
-   const defaultHue = SYSTEM_CONFIG.VISUALS.HUE_DEFAULT;
-   return (defaultHue - 0.5) * 360 + 188;
-});
+const scanlineColor = `hsl(10, 0%, 10%)`;
+const vfdBgColor = `hsl(188, 42%, 7%)`;
 
-const scanlineColor = computed(() => `hsl(10, 1%, 40%)`);
-const vfdBgColor = computed(() => `hsl(${currentHueDeg.value}, 42%, 7%)`);
-const ledColor = computed(() => `hsl(${currentHueDeg.value}, 100%, 50%)`);
-
-const ledMarkerStyle = computed(() => ({
-    backgroundColor: ledColor.value,
-    boxShadow: `0 0 2px ${ledColor.value}, 0 0 5px ${ledColor.value}`
-}));
 
 </script>
 
