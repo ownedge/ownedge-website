@@ -239,20 +239,19 @@ const startSpectrumAnalyzer = () => {
                     eggProgress.value = 0;
                 }
             } else if (eggState.value === 'morph') {
-                eggProgress.value += 0.008; 
+                eggProgress.value += 0.006; 
                 
                 const img = eggType.value.icon;
                 if (img && img.complete) {
                     // Calculate Y animation: scroll in from top for the first 40% of the morph duration
                     const inDuration = 0.4;
-                    const yOffset = eggProgress.value < inDuration 
+                    var yOffset = eggProgress.value < inDuration
                         ? -canvas.height * (1 - (eggProgress.value / inDuration))
                         : 0;
-
+                    if (yOffset > -15) yOffset = -15;
                     ctx.save();
                     // 1. Draw the icon as a mask
                     ctx.drawImage(img, 30, yOffset, 120, 120);
-
                     // 2. Color it teal using 'source-in'
                     ctx.globalCompositeOperation = 'source-in';
                     ctx.fillStyle = '#40e0d0';

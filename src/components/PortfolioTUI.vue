@@ -171,7 +171,7 @@ onUnmounted(() => {
       <!-- Top Bar -->
       <div class="tui-header">
         <span class="title">R-CONTENT COMMAND3R (0.3b)</span>
-        <span class="clock">MEM: 640K OK</span>
+        <span class="clock">MEM: 640K</span>
       </div>
 
       <!-- Main Content Area: Split Panes -->
