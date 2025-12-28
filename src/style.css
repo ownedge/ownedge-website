@@ -5,6 +5,13 @@
   font-style: normal;
 }
 
+@font-face {
+  font-family: 'Rockybilly';
+  src: url('./assets/fonts/Rockybilly.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 :root {
   --color-bg: #101010; /* Darker for bezel contrast */
   --color-text: #ffffff;
@@ -12,6 +19,7 @@
   --grid-line: rgba(255, 255, 255, 0.08);
   --font-main: 'Microgramma', sans-serif;
   --font-mono: 'Courier New', Courier, monospace;
+  --font-script: 'Rockybilly', cursive;
 }
 
 * {
