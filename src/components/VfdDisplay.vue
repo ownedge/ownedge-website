@@ -194,7 +194,7 @@ const startSpectrumAnalyzer = () => {
         const now = Date.now();
         if (eggState.value === 'idle' && now - lastEggCheck > 45000) {
             lastEggCheck = now;
-            if (Math.random() < 0.3) {
+            if (Math.random() < 0.2) {
                 eggType.value = getGreeting();
                 eggState.value = 'scroll';
                 eggProgress.value = 0;
