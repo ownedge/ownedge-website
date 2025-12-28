@@ -239,8 +239,8 @@ const startSpectrumAnalyzer = () => {
                 if (img && img.complete) {
                     const inDuration = 0.4;
                     const isDownUp = eggType.value.period === 'day' || eggType.value.period === 'night';
-                    const imgSize = 80;
-                    const targetY = isDownUp ? (canvas.height - imgSize) / 1.2 : (canvas.height - imgSize) / 4;
+                    const imgSize = 110;
+                    const targetY = isDownUp ? (canvas.height - imgSize) / 1.2 : (canvas.height - imgSize) / 6;
                     const targetX = (canvas.width - imgSize) / 2;
                     
                     let yOffset = targetY;

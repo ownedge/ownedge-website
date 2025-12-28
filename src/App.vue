@@ -1,7 +1,7 @@
 <script setup>
 import GridOverlay from './components/GridOverlay.vue'
 import HeroDisplay from './components/HeroDisplay.vue'
-import ContentCommander from './components/ContentCommander.vue'
+import ContentCommander from './components/ContentCommander/ContentCommander.vue'
 import PhosphorOverlay from './components/PhosphorOverlay.vue'
 import NoiseOverlay from './components/NoiseOverlay.vue'
 import SoundManager from './sfx/SoundManager'
