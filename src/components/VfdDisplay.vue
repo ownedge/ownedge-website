@@ -1,11 +1,13 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import SoundManager from '../sfx/SoundManager';
-import dayPngPath from '../assets/day.png';
-import nightPngPath from '../assets/night.png';
+import funnySunPath from '../assets/funny_sun.png';
+import funnyEveningPath from '../assets/funny_evening.png';
+import funnyNightPath from '../assets/funny_night.png';
 
-const dayPng = new Image(); dayPng.src = dayPngPath;
-const nightPng = new Image(); nightPng.src = nightPngPath; 
+const funnySun = new Image(); funnySun.src = funnySunPath;
+const funnyEvening = new Image(); funnyEvening.src = funnyEveningPath;
+const funnyNight = new Image(); funnyNight.src = funnyNightPath; 
 
 const props = defineProps({
   mode: {
@@ -42,9 +44,9 @@ const particles = ref([]);
 
 const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour >= 5 && hour < 18) return { words: ["WONDERFUL", "DAY!"], icon: dayPng, period: 'day' };
-    if (hour >= 18 && hour < 21) return { words: ["GOOD", "EVENING!"], icon: dayPng, period: 'evening' };
-    return { words: ["ENJOY", "THE", "NIGHT!"], icon: nightPng, period: 'night' };
+    if (hour >= 5 && hour < 18) return { words: ["WONDERFUL", "DAY!"], icon: funnySun, period: 'day' };
+    if (hour >= 18 && hour < 21) return { words: ["GOOD", "EVENING!"], icon: funnyEvening, period: 'evening' };
+    return { words: ["ENJOY", "THE", "NIGHT!"], icon: funnyNight, period: 'night' };
 };
 
 let lastEggCheck = 0;
@@ -192,7 +194,7 @@ const startSpectrumAnalyzer = () => {
         const now = Date.now();
         if (eggState.value === 'idle' && now - lastEggCheck > 45000) {
             lastEggCheck = now;
-            if (Math.random() < 99990.3) {
+            if (Math.random() < 0.3) {
                 eggType.value = getGreeting();
                 eggState.value = 'scroll';
                 eggProgress.value = 0;
@@ -240,30 +242,57 @@ const startSpectrumAnalyzer = () => {
                     const inDuration = 0.4;
                     const isDownUp = eggType.value.period === 'day' || eggType.value.period === 'night';
                     const imgSize = 110;
-                    const targetY = isDownUp ? (canvas.height - imgSize) / 1.2 : (canvas.height - imgSize) / 6;
+                    const targetY = isDownUp ? (canvas.height - imgSize) / 2 : (canvas.height - imgSize) / 2;
                     const targetX = (canvas.width - imgSize) / 2;
                     
                     let yOffset = targetY;
                     if (eggProgress.value < inDuration) {
                         const progress = eggProgress.value / inDuration;
                         if (isDownUp) {
-                            // Bottom to Top
                             const startY = canvas.height;
                             yOffset = startY + (targetY - startY) * progress;
                         } else {
-                            // Top to Bottom (Evening) 
                             const startY = -imgSize;
                             yOffset = startY + (targetY - startY) * progress;
                         }
                     }
 
                     ctx.save();
+                    
+                    // Procedural Animation Logic
+                    const time = Date.now() / 1000;
+                    let rotate = 0;
+                    let scaleBoost = 1.0;
+                    let extraX = 0;
+                    let extraY = 0;
+
+                    if (eggType.value.period === 'day') {
+                        // Sunny-Dude: Energetic Wobble & Breathe
+                        rotate = Math.sin(time * 10) * 0.1;
+                        scaleBoost = 1 + Math.sin(time * 5) * 0.05;
+                    } else if (eggType.value.period === 'evening') {
+                        // Sleepy Sun: Slow Nodding
+                        rotate = Math.sin(time * 2) * 0.05;
+                    } else if (eggType.value.period === 'night') {
+                        // Sneaker Moon: Excited Jiggle Jump
+                        extraY = Math.abs(Math.sin(time * 12)) * -5;
+                        rotate = Math.sin(time * 15) * 0.08;
+                    }
+
+                    // Apply transformation relative to center of icon
+                    ctx.translate(targetX + imgSize/2 + extraX, yOffset + imgSize/2 + extraY);
+                    ctx.rotate(rotate);
+                    ctx.scale(scaleBoost, scaleBoost);
+                    ctx.translate(-(imgSize/2), -(imgSize/2));
+
                     // 1. Draw the icon as a mask
-                    ctx.drawImage(img, targetX, yOffset, imgSize, imgSize);
+                    ctx.drawImage(img, 0, 0, imgSize, imgSize);
+                    
                     // 2. Color it teal using 'source-in'
                     ctx.globalCompositeOperation = 'source-in';
                     ctx.fillStyle = '#40e0d0';
-                    ctx.fillRect(targetX, yOffset, imgSize, imgSize);
+                    ctx.fillRect(0, 0, imgSize, imgSize);
+                    
                     ctx.restore(); 
                 }
                 
