@@ -198,7 +198,7 @@ const startSpectrumAnalyzer = () => {
         const now = Date.now();
         if (eggState.value === 'idle' && now - lastEggCheck > 45000) {
             lastEggCheck = now;
-            if (Math.random() < 0.4) {
+            if (Math.random() < 0.3) {
                 eggType.value = getGreeting();
                 eggState.value = 'scroll';
                 eggProgress.value = 0;
@@ -250,19 +250,14 @@ const startSpectrumAnalyzer = () => {
                         : 0;
 
                     ctx.save();
-                    // Clip the drawing to the VFD area
-                    ctx.beginPath();
-                    ctx.rect(0, 0, canvas.width, canvas.height);
-                    ctx.clip();
+                    // 1. Draw the icon as a mask
+                    ctx.drawImage(img, 30, yOffset, 120, 120);
 
-                    // 1. Fill the area with the target teal color first
-                    ctx.fillStyle = "#40e0d0";
-                    ctx.fillRect(0, 0, canvas.width, canvas.height); 
-                    
-                    // 2. Multiply that color with a high-contrast grayscale version of the image
-                    ctx.globalCompositeOperation = 'multiply';
-                    ctx.filter = 'invert(1) grayscale(0.99) contrast(1.2) brightness(10)';
-                    ctx.drawImage(img, 0, yOffset, canvas.width, canvas.height); 
+                    // 2. Color it teal using 'source-in'
+                    ctx.globalCompositeOperation = 'source-in';
+                    ctx.fillStyle = '#40e0d0';
+                    ctx.fillRect(30, yOffset, 120, 120);
+
                     ctx.restore();
                 }
                 
