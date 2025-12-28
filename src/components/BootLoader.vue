@@ -31,6 +31,11 @@ const triggerLaunch = () => {
 const handleKeydown = async (e) => {
   if (props.isBooted) return; // Ignore keys if already booted
   
+  // Only allow launch when system is ready
+  if (isReady.value) {
+    triggerLaunch();
+  }
+
   // Allow arrow keys visual feedback anytime
   if (activeKeys.value.hasOwnProperty(e.key)) {
     // Initialize sound on first interaction
@@ -40,12 +45,17 @@ const handleKeydown = async (e) => {
     SoundManager.playTypingSound();
     activeKeys.value[e.key] = true;
   }
-
-  // Only allow Enter when system is ready
-  if (isReady.value && e.key === 'Enter') {
-    triggerLaunch();
-  }
 }
+
+const handleMousedown = () => {
+    if (props.isBooted || !isReady.value) return;
+    triggerLaunch();
+};
+
+const handleWheel = () => {
+    if (props.isBooted || !isReady.value) return;
+    triggerLaunch();
+};
 
 const handleKeyup = (e) => {
     if (activeKeys.value.hasOwnProperty(e.key)) {
@@ -61,6 +71,8 @@ onMounted(() => {
   }
 
   window.addEventListener('keydown', handleKeydown);
+  window.addEventListener('mousedown', handleMousedown);
+  window.addEventListener('wheel', handleWheel);
   
   const steps = [
     { p: 10 },
@@ -106,6 +118,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown);
+  window.removeEventListener('mousedown', handleMousedown);
+  window.removeEventListener('wheel', handleWheel);
   window.removeEventListener('keyup', handleKeyup);
 });
 
@@ -150,10 +164,10 @@ const handleStart = () => {
     width: 101%;
     height: 101%;
     object-fit: cover;
-    opacity: 0.26; /* Much darker */
+    opacity: v-bind("isBooted ? 0 : 0.26"); 
     mix-blend-mode: color-burn;
-    mix-blend-mode: color-burn;
-    filter: grayscale(0.6) contrast(2.3); /* Less color, gritty contrast */
+    filter: grayscale(0.6) contrast(2.3) v-bind("isBooted ? 'brightness(0.5)' : 'brightness(1)'");
+    transition: opacity 2s ease-in-out, filter 2s ease-in-out;
 }
 
 .scanlines-overlay {
