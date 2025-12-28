@@ -35,7 +35,7 @@ const draw = () => {
 
 
     // --- RENDER CONSTANTS ---
-    const ROWS_TO_SHOW = 4;
+    const ROWS_TO_SHOW = 10;
     const lineHeight = 16;
     
     // Calculate Position Per Frame to handle prop updates
@@ -100,13 +100,13 @@ const draw = () => {
         // Style
         if (offset === 0) {
             // Current Row
-            ctx.fillStyle = 'rgba(33, 241, 235, 0.6)';
+            ctx.fillStyle = 'rgba(33, 241, 235, 0.8)';
             if (props.reflectionOnly) ctx.fillStyle = 'rgba(33, 241, 235, 0.5)'; // Stronger reflection
             ctx.font = 'bold 16px "Courier New", monospace';
         } else {
             // Future Rows
             // Fade out slightly
-            const opacity = 0.49 - (offset * 0.15);
+            const opacity = 0.49 - (offset * 0.05);
             ctx.fillStyle = `rgba(33, 241, 235, ${opacity})`;
             ctx.font = '16px "Courier New", monospace';
         }
@@ -121,7 +121,7 @@ const draw = () => {
                   // Mirror on Bezel
                   ctx.save();
                   ctx.translate(0, startY);
-                  ctx.scale(1, -0.4); // Flip UP
+                  ctx.scale(1, -0.35); // Flip UP
                   ctx.fillText(str, startX +1, -4); // Small gap adjustment
                   ctx.restore();
              } else {
@@ -137,19 +137,17 @@ const draw = () => {
     // EDGE FADE MASK (Reflection Only)
     // "Hide reflected line from absolute 0 to 40 and -40 to full width"
     if (props.reflectionOnly) {
-         ctx.save();
-         ctx.globalCompositeOperation = 'destination-in';
-         const mask = ctx.createLinearGradient(0, 0, canvas.width, 0);
-         mask.addColorStop(0, 'rgba(0, 0, 0, 0)');      // 0: Transparent
-         mask.addColorStop(350 / canvas.width, 'rgba(0, 0, 0, 1)'); // 40px: Opaque
-         mask.addColorStop((canvas.width - 350) / canvas.width, 'rgba(0, 0, 0, 1)'); // End-40px: Opaque
-         mask.addColorStop(1, 'rgba(0, 0, 0, 0)');      // End: Transparent
-         
-         ctx.fillStyle = mask;
-         // Fill entire top area where reflection lives
-         // Reflection goes upwards from startY. Let's just fill the whole canvas for simplicity
-         ctx.fillRect(0, 0, canvas.width, canvas.height);
-         ctx.restore();
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-in';
+        ctx.fillStyle = '#000';
+        ctx.fillRect(65, 0, canvas.width - 130, canvas.height);
+        ctx.restore();
+    } else {
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-in';
+        ctx.fillStyle = '#000';
+        ctx.fillRect(15, 0, canvas.width - 130, canvas.height);
+        ctx.restore();
     }
     
     animationFrameId = requestAnimationFrame(draw);
@@ -191,8 +189,8 @@ onUnmounted(() => {
     left: 0;
     width: 100vw;
     height: 100vh;
-    opacity: 0.9;
-    filter: blur(3.85px);
+    opacity: 0.55;
+    filter: blur(4.45px);
     z-index: 100; /* Force above everything */
 }
 
