@@ -44,7 +44,7 @@ let animationFrameId = null;
       // 1. Decay 
       ctx.globalCompositeOperation = 'source-over';
       // Decreased opacity to 0.05 to make trails fade slower ("more burn in")
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)'; 
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.06)'; 
       ctx.fillRect(0, 0, width, height);
 
       // 2. Draw cursor trail
@@ -55,7 +55,7 @@ let animationFrameId = null;
         const y = mouseY.value - rect.top;
 
         ctx.globalCompositeOperation = 'lighter';
-        ctx.fillStyle = '#ff0055'; // Pink trail color
+        ctx.fillStyle = '#FFDD00'; // Yellow trail color
 
         ctx.save();
         // Translate to exact position (no offset needed as SVG origin is tip)
@@ -63,11 +63,11 @@ let animationFrameId = null;
         
         // Draw the arrow shape from App.vue custom-cursor
         ctx.beginPath();
-        ctx.moveTo(0.5, 1.19);   // Top Tip
-        ctx.lineTo(11.78, 12.36); // Right Wing
-        ctx.lineTo(5.65, 12.36);  // Inner corner
-        ctx.lineTo(5.31, 12.49);  // Inner detail
-        ctx.lineTo(0.5, 16.88);   // Bottom Tip
+        ctx.moveTo(0.6, 1.43);   // Top Tip
+        ctx.lineTo(14.14, 14.84); // Right Wing
+        ctx.lineTo(6.78, 14.84);  // Inner corner
+        ctx.lineTo(6.38, 15.00);  // Inner detail
+        ctx.lineTo(0.6, 20.26);   // Bottom Tip
         ctx.closePath();
         
         ctx.fill();

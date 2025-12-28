@@ -529,7 +529,7 @@ html, body, .crt-wrapper, * {
   mix-blend-mode: normal; 
   will-change: transform;
   /* Add a drop shadow for glowing effect */
-  filter: drop-shadow(0 0 5px rgba(255, 255, 0, 0.9));
+  filter: drop-shadow(0 0 5px rgb(255, 187, 0));
   /* opacity controlled by JS */
   transition: opacity 0.5s ease;
 }
