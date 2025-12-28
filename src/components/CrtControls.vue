@@ -203,7 +203,7 @@ const calculateSpill = (val, min, max) => {
 /* LED Status Panel */
 .led-panel {
     position: fixed;
-    bottom: 1.5rem; /* Sit in the bottom bezel padding */
+    bottom: 1.0rem; /* Sit in the bottom bezel padding */
     left: 4rem;
     display: flex;
     gap: 1.5rem;
@@ -213,7 +213,7 @@ const calculateSpill = (val, min, max) => {
 
 .power-panel {
     position: fixed;
-    bottom: 1.5rem; /* Sit in the bottom bezel padding */
+    bottom:1.0rem; /* Sit in the bottom bezel padding */
     right: 4rem;
     display: flex;
     align-items: flex-end; /* Align baselines of labels */
@@ -243,17 +243,17 @@ const calculateSpill = (val, min, max) => {
 
 /* Base LED Shape & Off State */
 .led {
-    width: 18px;
-    height: 7px;
+    width: 20px;
+    height: 6px;
+    border: 0.1px solid #161616;
     /* Mix a tiny bit of the color into the dark base for realism */
     background-color: color-mix(in srgb, var(--led-color), #000 90%);
-    border: 1px solid #000;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.9);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
     transition: all 0.1s ease-out;
-    
-    /* Dot Matrix Texture */
+
+    /* Dot Matrix Texture - Reduced for the thin shape */
     background-image: 
-        radial-gradient(circle at center, rgba(255,255,255,0.1) 0.5px, transparent 1px);
+        radial-gradient(circle at center, rgba(255,255,255,0.05) 0.5px, transparent 1px);
     background-size: 2px 2px;
 }
 
@@ -261,22 +261,17 @@ const calculateSpill = (val, min, max) => {
 .led.active, .power-led.active {
     /* Core Hot Spot + Bloom (Dimmed) */
     background: radial-gradient(
-        circle at 40% 40%, 
-        color-mix(in srgb, var(--led-color), #fff 90%) 0%, 
-        var(--led-color) 40%, 
-        color-mix(in srgb, var(--led-color), #000 40%) 100%
+        circle at 50% 50%, 
+        color-mix(in srgb, var(--led-color), #fff 70%) 0%, 
+        var(--led-color) 70%,
+        color-mix(in srgb, var(--led-color), #000 60%) 100%
     );
-    
-    box-shadow: 
-        0 0 1px 1px #fff,             /* Tighter Core */
-        0 0 5px 1px var(--led-color), /* Reduced Inner glow */
-        0 0 10px 2px var(--led-color), /* Reduced Local Spill */
-        0 0 15px color-mix(in srgb, var(--led-color), transparent 85%); /* Subtle Haze */
+
         
-    border-color: color-mix(in srgb, var(--led-color), #fff 20%);
+    border-color: color-mix(in srgb, var(--led-color), #000000 100%);
     z-index: 10002;
-    filter: brightness(0.8); /* Reduced brightness boost */
-    animation: led-pulse 6s ease-in-out infinite;
+    filter: brightness(0.9); /* Reduced brightness for a modern feel */
+    animation: led-pulse 4s ease-in-out infinite;
 }
 
 /* Label Spill (Standardized) */
@@ -407,7 +402,7 @@ const calculateSpill = (val, min, max) => {
         filter: brightness(0.8);
     }
     50% {
-        filter: brightness(1.0);
+        filter: brightness(0.9);
     }
 }
 </style>

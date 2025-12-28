@@ -603,7 +603,7 @@ html, body, .crt-wrapper, * {
 .bezel-sticker {
     position: absolute;
     top: 8px; /* Top bezel */
-    left: 8px; /* Left bezel */
+    left: 11px; /* Left bezel */
     width: 40px; /* Adjust size for Sony sticker */
     height: auto;
     z-index: 15;

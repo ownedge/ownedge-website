@@ -17,7 +17,7 @@ let typingTimeout = null;
 let titleTimeout = null;
 const isSubtitleActive = ref(false); // New state to control subtitle start
 
-const chars = "ABCDEFGHIJKLДMNOPQRЯSTUVWXYZ0123456789";
+const chars = "AЯCDEFGHIJKLДMNOPQRЯSTUVWXYZ0123456789";
 
 const heroRoot = ref(null);
 const isVisible = ref(true);
