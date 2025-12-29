@@ -1,7 +1,7 @@
 export const SYSTEM_CONFIG = {
     // --- Audio Settings ---
     AUDIO: {
-        MASTER_VOL: 0.5,
+        MASTER_VOL: 0.9,
         // Relative volumes per section
         BOOT_VOL: 0.7,
         ATMOSPHERE_VOL: 0.02,
