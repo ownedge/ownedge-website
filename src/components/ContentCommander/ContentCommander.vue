@@ -81,8 +81,6 @@ onUnmounted(() => {
     <div class="tui-frame">
       <!-- Top Bar -->
       <div class="tui-header">
-        <span class="title"></span>
-        <span class="clock">640K BASE MEM OK</span>
       </div>
 
       <!-- Tab Bar -->

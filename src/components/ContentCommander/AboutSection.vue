@@ -117,10 +117,10 @@
 .ceo-photo {
     width: 220px;
     height: auto;
-    filter: grayscale(1) contrast(1.5);
+    filter: grayscale(1) contrast(1.8) brightness(0.8);
     display: block;
     mix-blend-mode: screen;
-    opacity: 0.9;
+    opacity: 0.79;
 }
 
 .frame-label {
