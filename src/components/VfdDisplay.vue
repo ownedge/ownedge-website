@@ -655,7 +655,7 @@ watch(() => props.mode, (newMode) => {
     /* left: 8px; */
     font-family: 'Microgramma', monospace; 
     color: #40e0d0;
-    font-size: 0.9rem; /* Tiny label */
+    font-size: 0.55rem; /* Tiny label */
     letter-spacing: 1px;
     font-weight: bold;
     text-shadow: 0 0 5px #40e0d0;
