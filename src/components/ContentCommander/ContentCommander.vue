@@ -81,7 +81,7 @@ onUnmounted(() => {
     <div class="tui-frame">
       <!-- Top Bar -->
       <div class="tui-header">
-        <span class="title">CONTENT COMMANDER (v1.0)</span>
+        <span class="title"></span>
         <span class="clock">640K BASE MEM OK</span>
       </div>
 
@@ -94,9 +94,7 @@ onUnmounted(() => {
             :class="{ active: activeTabIndex === index }"
             @click="selectTab(index)"
           >
-            <span class="tab-bracket">[</span>
             <span class="tab-name">{{ tab.name }}</span>
-            <span class="tab-bracket">]</span>
           </div>
       </div>
 
@@ -145,51 +143,60 @@ onUnmounted(() => {
   align-items: flex-end;
   font-weight: bold;
   font-size: 1.1rem;
-  border-bottom: 2px solid #fff;
   letter-spacing: 2px;
 }
 
 /* Tab Bar */
 .tui-tab-bar {
     display: flex;
-    background: rgba(255,255,255,0.03);
-    border-bottom: 1px solid rgba(255,255,255,0.2);
-    padding: 10px 20px;
-    gap: 10px;
+    padding: 0;
+    gap: 0;
+    align-items: stretch;
+    height: 44px;
+    margin: 15px 0; /* Margin for overlapping mask */
+}
+
+.tui-tab-bar::before {
+    content: '';
+    width: 30px; /* Left-side cap */
+    background: #fff;
+}
+
+.tui-tab-bar::after {
+    content: '';
+    flex: 1; /* Pushes tabs to the left */
+    background: #fff;
+    min-width: 15px;
 }
 
 .tui-tab {
-    padding: 5px 15px;
+    padding: 0 30px;
     cursor: pointer;
-    opacity: 0.6;
-    transition: all 0.2s;
+    color: #000;
+    background: #fff;
     display: flex;
     align-items: center;
-    gap: 4px;
+    transition: none;
+    height: 100%;
 }
 
-.tui-tab:hover {
-    opacity: 1;
-    background: rgba(255,255,255,0.05);
+.tui-tab:hover:not(.active) {
+    background: #f0f0f0;
 }
 
 .tui-tab.active {
-    opacity: 1;
-    color: var(--color-accent);
-}
-
-.tab-bracket {
-    font-weight: bold;
-    color: #444;
-}
-
-.active .tab-bracket {
-    color: var(--color-accent);
+    background: transparent;
+    color: #fff;
+    height: 64px; /* Taller than the bar */
+    align-self: center;
+    position: relative;
+    z-index: 5;
 }
 
 .tab-name {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: bold;
+    letter-spacing: 1px;
 }
 
 /* Viewport Area */

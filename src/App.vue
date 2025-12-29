@@ -607,7 +607,7 @@ html, body, .crt-wrapper, * {
     height: auto;
     z-index: 15;
     filter: contrast(0.8) brightness(1.7);
-    transform: rotate(-0.5deg);
+    transform: rotate(90deg);
     opacity: 0.36;
 }
 

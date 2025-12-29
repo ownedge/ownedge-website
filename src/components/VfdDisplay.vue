@@ -19,7 +19,7 @@ const props = defineProps({
     default: () => ({ label: '', value: '' })
   },
   bootState: {
-    type: String, 
+    type: String,
     default: 'complete' // 'loading', 'ready', 'complete'
   },
   bootProgress: {
