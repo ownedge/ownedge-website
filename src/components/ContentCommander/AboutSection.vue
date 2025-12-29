@@ -18,10 +18,16 @@
       <div class="ceo-profile">
         <div class="photo-frame">
           <img src="../../assets/juca.png" alt="CEO" class="ceo-photo" />
-          <div class="frame-label">CEO.IMG</div>
+          <div class="frame-label">MY.IMG</div>
         </div>
         <div class="signature">
-          <div class="signature-line">P/CATALÃO</div>
+          <div class="signature-line">
+            <a href="https://www.linkedin.com/in/pedrocatalao" target="_blank" class="linkedin-icon-link" title="">
+              <svg viewBox="0 0 24 24" class="linkedin-svg">
+                <path d="M24 24H0V0h24v24zM8.1 19V9H5.4v10h2.7zM6.8 7.8c0.9 0 1.6-0.7 1.6-1.6c0-0.9-0.7-1.6-1.6-1.6c-0.9 0-1.6 0.7-1.6 1.6C5.1 7.1 5.8 7.8 6.8 7.8zM19 19v-5.6c0-2.7-0.6-4.8-3.7-4.8c-1.5 0-2.5 0.8-2.9 1.6H12.3V9h-2.6v10h2.7v-4.3c0-1.1 0.2-2.2 1.6-2.2c1.3 0 1.4 1.3 1.4 2.3V19H19z"/>
+              </svg>
+            </a>PEDRO C.
+          </div>
           <div class="signature-title">OWNER</div>
         </div>
       </div>
@@ -30,6 +36,10 @@
 </template>
 
 <style scoped>
+:host, .section-content {
+    --linkedin-icon-size: 16px;
+}
+
 .section-content h3 {
     margin-top: 0;
     color: var(--color-accent);
@@ -153,6 +163,33 @@
     font-size: 0.7rem;
     color: var(--color-accent);
     letter-spacing: 2px;
+    margin-bottom: 10px;
+}
+
+.linkedin-icon-link {
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    opacity: 0.5;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.linkedin-svg {
+    width: var(--linkedin-icon-size);
+    height: var(--linkedin-icon-size);
+    fill: #fff;
+    filter: drop-shadow(0 0 0px var(--color-accent));
+}
+
+.linkedin-icon-link:hover {
+    opacity: 1;
+    transform: translateY(-2px);
+}
+
+.linkedin-icon-link:hover .linkedin-svg {
+    fill: var(--color-accent);
+    filter: drop-shadow(0 0 8px var(--color-accent));
 }
 
 .animate-in {

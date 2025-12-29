@@ -653,7 +653,7 @@ watch(() => props.mode, (newMode) => {
     /* position: absolute; Removed for flex centering */
     /* top: 2px; */
     /* left: 8px; */
-    font-family: 'Microgramma', monospace; 
+    font-family: 'Microgramma', monospace;
     color: #40e0d0;
     font-size: 0.55rem; /* Tiny label */
     letter-spacing: 1px;
