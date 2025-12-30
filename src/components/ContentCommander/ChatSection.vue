@@ -50,7 +50,7 @@ const handleConnect = async () => {
     
     // Final join messages
     await chatStore.addMessage({ type: 'system', text: `*** ${chatStore.nickname} has joined #ownedge` });
-    await chatStore.addMessage({ type: 'system', text: '*** Topic is: OWNEDGE - EST 2011 | DELIBERATE CRAFTSMANSHIP' });
+    await chatStore.addMessage({ type: 'system', text: '*** Topic is: OWNEDGE - EST 2011' });
     
     scrollToBottom();
     focusInput();
