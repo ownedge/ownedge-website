@@ -35,32 +35,50 @@ function save_data($file, $data) {
 if (!file_exists($log_file)) save_data($log_file, []);
 if (!file_exists($users_file)) save_data($users_file, []);
 
-// --- PRE-PROCESS: Presence Cleanup ---
-$users = fetch_data($users_file);
-$now = time();
-$changed = false;
-$active_users = [];
+// --- PRE-PROCESS: Atomic Presence Cleanup ---
+$lock_file = '.cleanup.lock';
+$lock_fp = fopen($lock_file, 'c+');
 
-foreach ($users as $nick => $lastSeen) {
-    if ($now - $lastSeen > 20) { // 20 second timeout
-        $messages = fetch_data($log_file);
-        $messages[] = [
-            'id' => microtime(true) . rand(),
-            'type' => 'system',
-            'text' => "*** $nick has left (timeout)",
-            'timestamp' => date('c')
-        ];
-        save_data($log_file, array_slice($messages, -100));
-        $changed = true;
-    } else {
-        $active_users[$nick] = $lastSeen;
+if ($lock_fp && flock($lock_fp, LOCK_EX | LOCK_NB)) { // Non-blocking lock
+    $users = fetch_data($users_file);
+    $now = time();
+    $changed = false;
+    $active_users = [];
+    $timed_out_nicks = [];
+
+    foreach ($users as $nick => $lastSeen) {
+        if ($now - $lastSeen > 45) { // 45 second timeout
+            $timed_out_nicks[] = $nick;
+            $changed = true;
+        } else {
+            $active_users[$nick] = $lastSeen;
+        }
     }
+
+    if ($changed) {
+        $messages = fetch_data($log_file);
+        foreach ($timed_out_nicks as $nick) {
+            $messages[] = [
+                'id' => microtime(true) . rand(),
+                'type' => 'system',
+                'text' => "*** $nick has left (timeout)",
+                'timestamp' => date('c')
+            ];
+        }
+        save_data($log_file, array_slice($messages, -100));
+        save_data($users_file, $active_users);
+    }
+    
+    flock($lock_fp, LOCK_UN);
+    fclose($lock_fp);
+} else {
+    // If we couldn't get the lock, another process is already cleaning up.
+    // Just close and move on.
+    if ($lock_fp) fclose($lock_fp);
 }
 
-if ($changed) {
-    save_data($users_file, $active_users);
-    $users = $active_users;
-}
+// Refresh $users for the rest of the request
+$users = fetch_data($users_file);
 
 // --- ROUTING ---
 $action = isset($_GET['action']) ? $_GET['action'] : 'messages';

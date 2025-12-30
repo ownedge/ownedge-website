@@ -1,6 +1,7 @@
 import { reactive } from 'vue';
 
-const API_BASE = '/chat.php';
+const isProd = import.meta.env.PROD;
+const API_BASE = isProd ? '/chat.php' : 'https://ownedge.com/chat.php';
 
 export const chatStore = reactive({
     nickname: '',
@@ -97,14 +98,28 @@ export const chatStore = reactive({
             this.isServerOnline = false;
         }
     },
-    
+
+    handleVisibility() {
+        if (document.visibilityState === 'visible' && this.isConnected) {
+            this.sendHeartbeat();
+            this.fetchMessages();
+        }
+    },
+
     startPolling() {
         if (this.pollingInterval) return;
+        
+        // Immediate updates
+        this.sendHeartbeat();
+        
         this.pollingInterval = setInterval(() => {
             this.fetchMessages();
             this.fetchUsers();
         }, 2000);
-        this.heartbeatInterval = setInterval(() => this.sendHeartbeat(), 5000);
+
+        this.heartbeatInterval = setInterval(() => this.sendHeartbeat(), 10000); // 10s is fine with 45s timeout
+        
+        document.addEventListener('visibilitychange', this.handleVisibility.bind(this));
     },
 
     stopPolling() {
@@ -116,6 +131,7 @@ export const chatStore = reactive({
             clearInterval(this.heartbeatInterval);
             this.heartbeatInterval = null;
         }
+        document.removeEventListener('visibilitychange', this.handleVisibility.bind(this));
     },
 
     clearHistory() {

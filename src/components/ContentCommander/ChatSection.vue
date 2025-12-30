@@ -252,17 +252,20 @@ onUnmounted(() => {
 <style scoped>
 .irc-container {
     display: grid;
-    grid-template-columns: 1fr 180px;
-    height: 450px;
+    grid-template-columns: 1fr 200px; /* Slightly wider sidebar */
+    height: 500px; /* Fixed height for the IRC "window" */
     background: #050505;
     border: 1px solid #333;
     font-family: 'JetBrains Mono', monospace;
+    overflow: hidden; /* Prevent container from expanding */
 }
 
 .irc-main {
     display: flex;
     flex-direction: column;
     border-right: 1px solid #333;
+    min-height: 0; /* CRITICAL: Allow flex item to shrink below content height */
+    height: 100%; /* Force it to fill the irc-container grid cell */
 }
 
 .irc-header {
@@ -317,6 +320,8 @@ onUnmounted(() => {
     background: #0a0a0a;
     display: flex;
     flex-direction: column;
+    min-height: 0; /* CRITICAL: Allow flex item to shrink below content height */
+    height: 100%; /* Force it to fill the irc-container grid cell */
 }
 
 .sidebar-header {
@@ -329,8 +334,12 @@ onUnmounted(() => {
 }
 
 .user-list {
+    flex: 1;
     padding: 10px;
     font-size: 0.85rem;
+    overflow-y: auto; /* Scrollable users if list is long */
+    scrollbar-width: thin;
+    scrollbar-color: #333 transparent;
 }
 
 .user-item { color: #ccc; margin-bottom: 4px; }
