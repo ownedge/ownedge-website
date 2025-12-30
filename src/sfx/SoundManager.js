@@ -138,6 +138,35 @@ class SoundManager {
         }, 1500);
     }
 
+    async playDialUpSound() {
+        if (!this.ctx) return;
+        await this.resume();
+        
+        try {
+            const response = await fetch('/sfx/dial-up.mp3');
+            const arrayBuffer = await response.arrayBuffer();
+            const audioBuffer = await this.ctx.decodeAudioData(arrayBuffer);
+            
+            const source = this.ctx.createBufferSource();
+            source.buffer = audioBuffer;
+            
+            const gain = this.ctx.createGain();
+            gain.gain.value = this.config.BOOT_VOL; // Reuse boot volume scale
+            
+            source.connect(gain);
+            gain.connect(this.masterGain);
+            
+            return new Promise((resolve) => {
+                source.onended = () => resolve();
+                source.start(0);
+            });
+        } catch (e) {
+            console.error("Failed to play dial-up sound:", e);
+            // Fallback: resolve immediately so UI isn't stuck
+            return Promise.resolve();
+        }
+    }
+
     playDecodeSound() {
         if (!this.ctx || this.isMuted) return;
         const t = this.ctx.currentTime;
