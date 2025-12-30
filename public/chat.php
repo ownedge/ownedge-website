@@ -1,12 +1,15 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 /**
- * Simple PHP Chat Backend
- * Stores history in chat-log.json
+ * Robust PHP Chat Backend
  */
 
 $log_file = 'chat-log.json';
+$users_file = 'chat-users.json';
 
-// CORS Headers
+// CORS Implementation
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
@@ -16,51 +19,98 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// Ensure log file exists
-if (!file_exists($log_file)) {
-    file_put_contents($log_file, json_encode([]));
+// Helpers
+function fetch_data($file) {
+    if (!file_exists($file)) return [];
+    $content = @file_get_contents($file);
+    if ($content === false) return [];
+    return json_decode($content, true) ?: [];
 }
 
-$method = $_SERVER['REQUEST_METHOD'];
-
-if ($method === 'GET') {
-    $content = file_get_contents($log_file);
-    header('Content-Type: application/json');
-    echo $content ?: '[]';
-    exit;
+function save_data($file, $data) {
+    return file_put_contents($file, json_encode($data), LOCK_EX);
 }
 
-if ($method === 'POST') {
-    $json = file_get_contents('php://input');
-    $newMessage = json_decode($json, true);
-    
-    if ($newMessage) {
-        $messages = json_decode(file_get_contents($log_file), true);
-        if (!$messages) $messages = [];
-        
-        // Add consistent ID and timestamp
-        $newMessage['id'] = microtime(true) . rand();
-        if (!isset($newMessage['timestamp'])) {
-            $newMessage['timestamp'] = date('c');
-        }
-        
-        $messages[] = $newMessage;
-        
-        // Limit history to 100 messages
-        $messages = array_slice($messages, -100);
-        
-        file_put_contents($log_file, json_encode($messages));
-        
-        header('Content-Type: application/json', true, 201);
-        echo json_encode($newMessage);
-        exit;
+// Ensure files exist
+if (!file_exists($log_file)) save_data($log_file, []);
+if (!file_exists($users_file)) save_data($users_file, []);
+
+// --- PRE-PROCESS: Presence Cleanup ---
+$users = fetch_data($users_file);
+$now = time();
+$changed = false;
+$active_users = [];
+
+foreach ($users as $nick => $lastSeen) {
+    if ($now - $lastSeen > 20) { // 20 second timeout
+        $messages = fetch_data($log_file);
+        $messages[] = [
+            'id' => microtime(true) . rand(),
+            'type' => 'system',
+            'text' => "*** $nick has left (timeout)",
+            'timestamp' => date('c')
+        ];
+        save_data($log_file, array_slice($messages, -100));
+        $changed = true;
     } else {
-        http_response_code(400);
-        echo "Invalid JSON";
+        $active_users[$nick] = $lastSeen;
+    }
+}
+
+if ($changed) {
+    save_data($users_file, $active_users);
+    $users = $active_users;
+}
+
+// --- ROUTING ---
+$action = isset($_GET['action']) ? $_GET['action'] : 'messages';
+if ($action === 'chat.php') $action = 'messages';
+
+header('Content-Type: application/json');
+
+if ($action === 'messages') {
+    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+        echo json_encode(fetch_data($log_file));
+        exit;
+    }
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $json = file_get_contents('php://input');
+        $newMessage = json_decode($json, true);
+        if ($newMessage) {
+            $messages = fetch_data($log_file);
+            $newMessage['id'] = microtime(true) . rand();
+            if (!isset($newMessage['timestamp'])) $newMessage['timestamp'] = date('c');
+            $messages[] = $newMessage;
+            save_data($log_file, array_slice($messages, -100));
+            
+            // Update presence on message
+            if (isset($newMessage['user'])) {
+                $users[$newMessage['user']] = time();
+                save_data($users_file, $users);
+            }
+            
+            http_response_code(201);
+            echo json_encode($newMessage);
+            exit;
+        }
+    }
+}
+
+if ($action === 'presence' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $json = file_get_contents('php://input');
+    $data = json_decode($json, true);
+    if (isset($data['nickname'])) {
+        $users[$data['nickname']] = time();
+        save_data($users_file, $users);
+        echo json_encode(["status" => "ok"]);
         exit;
     }
 }
 
+if ($action === 'users') {
+    echo json_encode(array_values(array_keys($users)));
+    exit;
+}
+
 http_response_code(404);
-echo "Not Found";
-?>
+echo json_encode(["error" => "Action $action Not Found"]);

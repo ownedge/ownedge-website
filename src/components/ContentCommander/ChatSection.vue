@@ -5,11 +5,22 @@ import { chatStore } from '../../store/chatStore';
 
 const isConnecting = ref(false);
 const inputMessage = ref('');
+const inputRef = ref(null);
 const chatScroll = ref(null);
 const canvasRef = ref(null);
 let animationFrameId = null;
 
 const isValidNickname = computed(() => chatStore.nickname.trim().length >= 3);
+
+// --- CONFIGURATION ---
+const VISUALIZATION_CONFIG = {
+    minFreqIndex: 0,    // Start bin (0-127)
+    maxFreqIndex: 15,   // End bin (0-127) - Precise focus on typical modem handshake frequencies
+    threshold: 150,     // Signal sensitivity (0-255)
+    dotSize: 4.0,
+    gap: 5,
+    horizontalPadding: 10 // Added to prevent clipping on the left
+};
 
 const handleConnect = async () => {
     if (!isValidNickname.value || isConnecting.value) return;
@@ -42,6 +53,7 @@ const handleConnect = async () => {
     await chatStore.addMessage({ type: 'system', text: '*** Topic is: OWNEDGE - EST 2011 | DELIBERATE CRAFTSMANSHIP' });
     
     scrollToBottom();
+    focusInput();
 };
 
 const startVisualization = () => {
@@ -51,19 +63,31 @@ const startVisualization = () => {
     if (!ctx) return;
 
     const draw = () => {
-        const data = SoundManager.getAudioData();
+        const data = SoundManager.getDialUpAudioData();
         if (data) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#40e0d0';
-            const barWidth = 3;
-            const gap = 1;
-            const step = Math.floor(data.length / (canvas.width / (barWidth + gap)));
             
-            for (let i = 0; i < data.length; i += step) {
-                const val = (data[i] / 255) * canvas.height;
-                const x = (i / step) * (barWidth + gap);
-                ctx.fillRect(x, canvas.height - val, barWidth, val);
+            const { minFreqIndex, maxFreqIndex, threshold, dotSize, gap, horizontalPadding } = VISUALIZATION_CONFIG;
+            const range = maxFreqIndex - minFreqIndex;
+            // Subtract padding from both sides to center the visualization range
+            const pointsToShow = Math.floor((canvas.width - (horizontalPadding * 2)) / (dotSize + gap));
+            const step = range / pointsToShow;
+            
+            ctx.shadowBlur = 0;
+            ctx.shadowColor = '#ff0000';
+            ctx.fillStyle = '#ff0000';
+
+            for (let i = 0; i < pointsToShow; i++) {
+                const dataIndex = Math.floor(minFreqIndex + (i * step));
+                if (dataIndex < data.length && data[dataIndex] > threshold) {
+                    const x = horizontalPadding + (i * (dotSize + gap));
+                    const val = (data[dataIndex] / 255) * canvas.height;
+                    
+                    // Draw square dots instead of circles
+                    ctx.fillRect(x - dotSize/2, canvas.height - val - dotSize/2, dotSize, dotSize);
+                }
             }
+            ctx.shadowBlur = 0; // Reset for next frame
         }
         animationFrameId = requestAnimationFrame(draw);
     };
@@ -113,6 +137,11 @@ const handleCommand = (cmd) => {
     }
 };
 
+const focusInput = async () => {
+    await nextTick();
+    inputRef.value?.focus();
+};
+
 const scrollToBottom = async () => {
     await nextTick();
     if (chatScroll.value) {
@@ -130,6 +159,7 @@ onMounted(() => {
     if (chatStore.isConnected) {
         chatStore.startPolling();
         scrollToBottom();
+        focusInput();
     }
 });
 
@@ -201,6 +231,7 @@ onUnmounted(() => {
         <div class="irc-input-row">
           <span class="nick">[{{ chatStore.nickname }}]</span>
           <input 
+            ref="inputRef"
             v-model="inputMessage" 
             placeholder="Type message or /command..." 
             @keyup.enter="sendMessage"
@@ -210,7 +241,7 @@ onUnmounted(() => {
       <div class="irc-sidebar">
         <div class="sidebar-header">USERS [{{ chatStore.users.length + 1 }}]</div>
         <div class="user-list">
-          <div class="user-item self">@{{ chatStore.nickname }}</div>
+          <div class="user-item self">{{ chatStore.nickname }}</div>
           <div v-for="u in chatStore.users" :key="u" class="user-item">{{ u }}</div>
         </div>
       </div>

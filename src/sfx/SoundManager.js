@@ -11,6 +11,7 @@ class SoundManager {
         this.config = SYSTEM_CONFIG.AUDIO; // Helper alias
         this.userVolume = SYSTEM_CONFIG.AUDIO.MASTER_VOL;
         this.musicGain = null;
+        this.dialUpAnalyser = null;
     }
 
     init() {
@@ -45,6 +46,14 @@ class SoundManager {
         const bufferLength = this.analyser.frequencyBinCount;
         const dataArray = new Uint8Array(bufferLength);
         this.analyser.getByteFrequencyData(dataArray);
+        return dataArray;
+    }
+
+    getDialUpAudioData() {
+        if (!this.dialUpAnalyser) return null;
+        const bufferLength = this.dialUpAnalyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        this.dialUpAnalyser.getByteFrequencyData(dataArray);
         return dataArray;
     }
 
@@ -150,14 +159,22 @@ class SoundManager {
             const source = this.ctx.createBufferSource();
             source.buffer = audioBuffer;
             
-            const gain = this.ctx.createGain();
-            gain.gain.value = this.config.BOOT_VOL; // Reuse boot volume scale
+            // Dedicated analyser for dial-up
+            this.dialUpAnalyser = this.ctx.createAnalyser();
+            this.dialUpAnalyser.fftSize = 256;
             
-            source.connect(gain);
+            const gain = this.ctx.createGain();
+            gain.gain.value = this.config.BOOT_VOL;
+            
+            source.connect(this.dialUpAnalyser);
+            this.dialUpAnalyser.connect(gain);
             gain.connect(this.masterGain);
             
             return new Promise((resolve) => {
-                source.onended = () => resolve();
+                source.onended = () => {
+                    this.dialUpAnalyser = null; // Clean up
+                    resolve();
+                };
                 source.start(0);
             });
         } catch (e) {
