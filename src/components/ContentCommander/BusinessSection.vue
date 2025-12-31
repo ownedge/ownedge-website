@@ -63,12 +63,42 @@ onUnmounted(() => {
       <div class="business-viewport">
         <div v-if="activeTabId === 'group'" class="tab-content">
           <h4>THE GROUP</h4>
-          <p>OWNEDGE is a boutique collective of specialists dedicated to building resilient systems and high-end digital products.</p>
-          <p>Founded on the principles of direct responsibility and technical excellence, we operate as a distributed unit of architects, engineers, and designers.</p>
-          <div class="stat-box">
-            <div class="stat-line">STATUS: OPERATIONAL</div>
-            <div class="stat-line">NODES: DISTRIBUTED</div>
-            <div class="stat-line">SINCE: 2011</div>
+          <div class="group-grid">
+            <!-- Syndiscape -->
+            <div class="group-box">
+              <div class="box-header">SYNDISCAPE</div>
+              <div class="box-body">
+                <p class="box-desc">Full-stack design and software studio. Engineering digital products with a focus on high-fidelity interactive systems and creative code.</p>
+                <div class="box-meta">STATUS: ACTIVE</div>
+              </div>
+            </div>
+
+            <!-- Zizara -->
+            <div class="group-box">
+              <div class="box-header">ZIZARA</div>
+              <div class="box-body">
+                <p class="box-desc">Venture and angel capital. Providing strategic guidance and early-stage funding for ambitious startups in their embryonic phase.</p>
+                <div class="box-meta">STATUS: ACTIVE</div>
+              </div>
+            </div>
+
+            <!-- Raven -->
+            <div class="group-box">
+              <div class="box-header">RAVEN</div>
+              <div class="box-body">
+                <p class="box-desc">Comprehensive aviation solutions. Specialized in advanced flight training, certification protocols, and aircraft electronics.</p>
+                <div class="box-meta">STATUS: ACTIVE</div>
+              </div>
+            </div>
+
+            <!-- Advech Engineering -->
+            <div class="group-box">
+              <div class="box-header">ADVECH ENGINEERING</div>
+              <div class="box-body">
+                <p class="box-desc">Industrial design and precision manufacturing. Producing custom equipment and parts via composites, CNC, and 3D printing.</p>
+                <div class="box-meta">STATUS: ACTIVE</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -76,16 +106,28 @@ onUnmounted(() => {
           <h4>SERVICES</h4>
           <div class="service-grid">
             <div class="service-block">
-              <h5>UI/UX ENGINEERING</h5>
-              <p>Specialized in low-latency, high-fidelity interfaces and custom design systems.</p>
+              <h5>INTERACTIVE SYSTEMS</h5>
+              <p>Engineering low-latency, high-fidelity interfaces and custom design systems. Specialized in WebGL, real-time visualization, and reactive architecture.</p>
             </div>
             <div class="service-block">
-              <h5>3D SYNTHESIS</h5>
-              <p>WebGL, Three.js, and real-time visualization for complex data sets.</p>
+              <h5>CINEMATIC TECH PROPS</h5>
+              <p>Design and fabrication of period-accurate and retro-futuristic interfaces for film. Technically correct terminal systems and hardware peripherals.</p>
+            </div>
+            <div class="service-block">
+              <h5>AEROSPACE & AVIONICS</h5>
+              <p>Specialized aviation solutions including advanced flight training systems, certification protocols, and custom aircraft electronics integration.</p>
+            </div>
+            <div class="service-block">
+              <h5>PRECISION ENGINEERING</h5>
+              <p>Industrial design and manufacturing of custom equipment. Expertise in composite materials, high-precision CNC machining, and industrial 3D printing.</p>
+            </div>
+            <div class="service-block">
+              <h5>STRATEGIC VENTURE</h5>
+              <p>Strategic guidance and seed-stage funding for technical startups. Providing the architectural and capital foundation for ambitious embryonic projects.</p>
             </div>
             <div class="service-block">
               <h5>INFRASTRUCTURE</h5>
-              <p>Scalable, secure, and permanent infrastructure design for modern assets.</p>
+              <p>Design and deployment of resilient, permanent digital infrastructure. Focus on secure, high-availability architecture for modern enterprise assets.</p>
             </div>
           </div>
         </div>
@@ -192,19 +234,24 @@ onUnmounted(() => {
 
 .service-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    margin-top: 10px;
 }
 
 .service-block h5 {
     color: var(--color-accent);
-    margin: 0 0 5px 0;
-    font-size: 1rem;
+    margin: 0 0 8px 0;
+    font-size: 0.9rem;
+    font-weight: bold;
+    letter-spacing: 1px;
 }
 
 .service-block p {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    line-height: 1.5;
     margin: 0;
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .customer-list {
@@ -236,9 +283,66 @@ onUnmounted(() => {
     animation: slideUp 0.3s ease-out;
 }
 
-@keyframes slideUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+/* Group Grid Styles */
+.group-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-top: 10px;
+}
+
+.group-box {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+    display: flex;
+    flex-direction: column;
+}
+
+.box-header {
+    background: #fff;
+    color: #000;
+    padding: 6px 14px;
+    font-size: 1rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.box-body {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.box-desc {
+    font-size: 1.1rem !important;
+    line-height: 1.6 !important;
+    margin-bottom: 12px !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.box-meta {
+    margin-top: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    color: var(--color-accent);
+}
+
+.sub-entity {
+    margin-bottom: 15px;
+}
+
+.sub-entity:last-child {
+    margin-bottom: 0;
+}
+
+.entity-name {
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: bold;
+    margin-bottom: 4px;
+    border-left: 2px solid var(--color-accent);
+    padding-left: 8px;
 }
 
 @media (max-width: 768px) {
