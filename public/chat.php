@@ -131,10 +131,54 @@ if ($action === 'presence' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             ];
             save_data($log_file, array_slice($messages, -100));
 
-            // NEW: Email Notification
-            $admin_email = "hello@ownedge.com"; // Placeholder - please update as needed
-            $subject = "OWNEDGE: User Join Detected";
-            $body = "Terminal node identified: $nick\nSync established at: " . date('Y-m-d H:i:s');
+            // --- ENHANCED METADATA CAPTURE ---
+            $ip = $_SERVER['REMOTE_ADDR'];
+            if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+                $ip = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0];
+            } elseif (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+                $ip = $_SERVER['HTTP_CLIENT_IP'];
+            }
+
+            // User Agent Parsing (Basic OS/Browser)
+            $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+            $os = "Unknown OS";
+            if (preg_match('/windows|win32/i', $ua)) $os = "Windows";
+            else if (preg_match('/macintosh|mac os x/i', $ua)) $os = "macOS";
+            else if (preg_match('/linux/i', $ua)) $os = "Linux";
+            else if (preg_match('/iphone|ipad|ipod/i', $ua)) $os = "iOS";
+            else if (preg_match('/android/i', $ua)) $os = "Android";
+
+            $browser = "Unknown Browser";
+            if (preg_match('/firefox/i', $ua)) $browser = "Firefox";
+            else if (preg_match('/chrome/i', $ua)) $browser = "Chrome";
+            else if (preg_match('/safari/i', $ua)) $browser = "Safari";
+            else if (preg_match('/edge/i', $ua)) $browser = "Edge";
+            else if (preg_match('/opera|opr/i', $ua)) $browser = "Opera";
+
+            // Geolocation Lookup (ip-api.com)
+            $location = "Unknown Location";
+            $geo_json = @file_get_contents("http://ip-api.com/json/$ip?fields=status,country,city,isp");
+            if ($geo_json) {
+                $geo_data = json_decode($geo_json, true);
+                if ($geo_data && $geo_data['status'] === 'success') {
+                    $location = "{$geo_data['city']}, {$geo_data['country']} (ISP: {$geo_data['isp']})";
+                }
+            }
+
+            // NEW: Enhanced Email Notification
+            $admin_email = "hello@ownedge.com"; 
+            $subject = "OWNEDGE: Intelligence Briefing - Join Detected";
+            $body = "INTELLIGENCE REPORT\n";
+            $body .= "====================\n";
+            $body .= "NODE ID     : $nick\n";
+            $body .= "TIMESTAMP   : " . date('Y-m-d H:i:s') . "\n";
+            $body .= "IP ADDRESS  : $ip\n";
+            $body .= "LOCATION    : $location\n";
+            $body .= "OPERATING SYS: $os\n";
+            $body .= "BROWSER     : $browser\n\n";
+            $body .= "RAW UA      : $ua\n";
+            $body .= "====================";
+            
             $headers = "From: node-monitor@ownedge.com";
             @mail($admin_email, $subject, $body, $headers);
         }
