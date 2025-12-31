@@ -33,6 +33,15 @@ const isCursorVisible = ref(false)
 const isBooted = ref(false)
 let hideCursorTimeout = null
 const screenRect = ref(null); // Cache for performance
+const activeTabIndex = ref(0);
+
+const tabs = [
+  { id: 'about', name: 'ABOUT' },
+  { id: 'business', name: 'BUSINESS' },
+  { id: 'blog', name: 'BLOG' },
+  { id: 'guestbook', name: 'GUESTBOOK' },
+  { id: 'chat', name: 'CHAT' }
+];
 
 const updateScreenRect = () => {
     const el = document.querySelector('.app-container');
@@ -243,13 +252,22 @@ const handleGlobalKeydown = (e) => {
   const isAtTop = scrollContainer.scrollTop < window.innerHeight / 2;
 
   if (isAtTop && (e.key === 'ArrowDown' || e.key === 'Enter')) {
-      // Scroll to next section (Portfolio)
-      const sections = document.querySelectorAll('.page-section');
-      if (sections.length > 1) {
-          sections[1].scrollIntoView({ behavior: 'smooth' });
-      }
+      scrollToContent();
   }
 }
+
+const scrollToContent = () => {
+    const scrollContainer = document.querySelector('.scroll-content');
+    const sections = document.querySelectorAll('.page-section');
+    if (sections.length > 1) {
+        sections[1].scrollIntoView({ behavior: 'smooth' });
+    }
+};
+
+const handleTabSelect = (index) => {
+    activeTabIndex.value = index;
+    scrollToContent();
+};
 
 // Glitch Effect
 const turbulenceFreq = ref(0.0002);
@@ -448,7 +466,7 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
           </section>
           
           <section class="page-section">
-            <ContentCommander />
+            <ContentCommander :tabs="tabs" v-model:active-index="activeTabIndex" />
           </section>
         </div>
         
@@ -708,7 +726,7 @@ html, body, .crt-wrapper, * {
 }
 
 .hero-section {
-  /* Apply parallax transform here if needed, or keep passing it */
+  height: 90%; /* Reveal next section peeking from bottom */
   transition: transform 0.1s ease-out;
 }
 

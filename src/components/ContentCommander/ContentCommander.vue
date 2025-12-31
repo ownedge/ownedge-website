@@ -6,31 +6,47 @@ import BusinessSection from './BusinessSection.vue';
 import BlogSection from './BlogSection.vue';
 import GuestbookSection from './GuestbookSection.vue';
 import ChatSection from './ChatSection.vue';
+import TabSwitcher from './TabSwitcher.vue';
 
-const tabs = [
-  { id: 'about', name: 'ABOUT', component: AboutSection },
-  { id: 'business', name: 'BUSINESS', component: BusinessSection },
-  { id: 'blog', name: 'BLOG', component: BlogSection },
-  { id: 'guestbook', name: 'GUESTBOOK', component: GuestbookSection },
-  { id: 'chat', name: 'CHAT', component: ChatSection }
-];
+const props = defineProps({
+  tabs: { type: Array, required: true },
+  activeIndex: { type: Number, default: 0 }
+});
 
-const activeTabIndex = ref(0);
+const emit = defineEmits(['update:activeIndex']);
+
+const sections = {
+  about: AboutSection,
+  business: BusinessSection,
+  blog: BlogSection,
+  guestbook: GuestbookSection,
+  chat: ChatSection
+};
+
 const activeKey = ref(null);
 const viewportContent = ref(null);
 
-const activeTab = computed(() => tabs[activeTabIndex.value]);
+const activeTab = computed(() => {
+    const tabData = props.tabs[props.activeIndex];
+    return sections[tabData.id];
+});
 
 const selectTab = (index) => {
-  if (activeTabIndex.value !== index) {
-      activeTabIndex.value = index;
+  if (props.activeIndex !== index) {
+      emit('update:activeIndex', index);
       SoundManager.playHoverSound();
+      
+      // If we are peeking, scroll to ourselves
+      const el = document.querySelector('.page-section:nth-child(2)');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+
       if (viewportContent.value) viewportContent.value.scrollTop = 0;
   }
 };
 
 // Keyboard Navigation
 const handleKeydown = (e) => {
+
     // F-keys visual feedback
     if (e.key.startsWith('F')) {
         e.preventDefault();
@@ -42,11 +58,11 @@ const handleKeydown = (e) => {
     // Tab switching
     if (e.key === 'ArrowRight' || e.key === 'Tab') {
         e.preventDefault();
-        selectTab((activeTabIndex.value + 1) % tabs.length);
+        selectTab((props.activeIndex + 1) % props.tabs.length);
         SoundManager.playTypingSound();
     } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        selectTab((activeTabIndex.value - 1 + tabs.length) % tabs.length);
+        selectTab((props.activeIndex - 1 + props.tabs.length) % props.tabs.length);
         SoundManager.playTypingSound();
     }
 
@@ -79,26 +95,16 @@ onUnmounted(() => {
 <template>
   <div class="tui-container">
     <div class="tui-frame">
-      <!-- Top Bar -->
-      <div class="tui-header">
-      </div>
-
-      <!-- Tab Bar -->
-      <div class="tui-tab-bar">
-          <div 
-            v-for="(tab, index) in tabs" 
-            :key="tab.id"
-            class="tui-tab"
-            :class="{ active: activeTabIndex === index }"
-            @click="selectTab(index)"
-          >
-            <span class="tab-name">{{ tab.name }}</span>
-          </div>
-      </div>
+      <!-- Tab Bar (sit at absolute top) -->
+      <TabSwitcher 
+        :tabs="tabs" 
+        :active-index="activeIndex" 
+        @select="selectTab"
+      />
 
       <!-- Main Contents -->
       <div class="tui-viewport custom-scroll" ref="viewportContent">
-          <component :is="activeTab.component" />
+          <component :is="activeTab" />
       </div>
 
       <!-- Bottom Function Keys -->
@@ -134,15 +140,7 @@ onUnmounted(() => {
   flex-direction: column;
 }
 
-.tui-header {
-  padding: 15px 30px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  font-weight: bold;
-  font-size: 1.1rem;
-  letter-spacing: 2px;
-}
+/* Tab Bar Override (if needed) */
 
 /* Tab Bar */
 .tui-tab-bar {
@@ -205,6 +203,11 @@ onUnmounted(() => {
   font-size: 1.2rem;
   line-height: 1.5;
 }
+
+/* Custom Scroll */
+.custom-scroll::-webkit-scrollbar { width: 6px; }
+.custom-scroll::-webkit-scrollbar-track { background: transparent; }
+.custom-scroll::-webkit-scrollbar-thumb { background: #333; }
 
 /* Custom Scroll */
 .custom-scroll::-webkit-scrollbar { width: 6px; }
