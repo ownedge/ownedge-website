@@ -241,15 +241,15 @@ onUnmounted(() => {
 
 .service-block h5 {
     color: var(--color-accent);
-    margin: 0 0 8px 0;
-    font-size: 0.9rem;
+    margin: 0 0 10px 0;
+    font-size: 1.1rem;
     font-weight: bold;
     letter-spacing: 1px;
 }
 
 .service-block p {
-    font-size: 0.85rem;
-    line-height: 1.5;
+    font-size: 1.05rem;
+    line-height: 1.6;
     margin: 0;
     color: rgba(255, 255, 255, 0.7);
 }
