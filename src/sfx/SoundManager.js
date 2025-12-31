@@ -93,22 +93,6 @@ class SoundManager {
         const t = this.ctx.currentTime;
         const vol = this.config.BOOT_VOL;
 
-        // 1. BIOS POST Beep (The classic single beep)
-        const beepOsc = this.ctx.createOscillator();
-        const beepGain = this.ctx.createGain();
-        beepOsc.connect(beepGain);
-        beepGain.connect(this.masterGain);
-
-        beepOsc.type = 'sawtooth';
-        beepOsc.frequency.setValueAtTime(800, t + 0.1); 
-        
-        beepGain.gain.setValueAtTime(0, t);
-        beepGain.gain.setValueAtTime(0.1 * vol, t + 0.1);
-        beepGain.gain.setValueAtTime(0, t + 0.25); // Short beep
-
-        beepOsc.start(t);
-        beepOsc.stop(t + 0.5);
-
         // 2. Hard Drive Spin Up (Mechanical Whine)
         const spinOsc = this.ctx.createOscillator();
         const spinGain = this.ctx.createGain();
@@ -116,39 +100,15 @@ class SoundManager {
         spinGain.connect(this.masterGain);
 
         spinOsc.type = 'sawtooth'; // Gritty motor sound
-        spinOsc.frequency.setValueAtTime(40, t);
+        spinOsc.frequency.setValueAtTime(30, t);
         spinOsc.frequency.exponentialRampToValueAtTime(300, t + this.config.BOOT_SPIN_DURATION * 0.8); 
 
         spinGain.gain.setValueAtTime(0, t);
-        spinGain.gain.linearRampToValueAtTime(0.05 * vol, t + 0.5); // Fade in
+        spinGain.gain.linearRampToValueAtTime(0.015 * vol, t + 0.5); // Fade in
         spinGain.gain.linearRampToValueAtTime(0, t + this.config.BOOT_SPIN_DURATION); // Fade out
 
         spinOsc.start(t);
         spinOsc.stop(t + this.config.BOOT_SPIN_DURATION);
-
-        // 3. Disk Seek Chatter (Random pulses)
-        const makeClick = (time) => {
-            const clickOsc = this.ctx.createOscillator();
-            const clickGain = this.ctx.createGain();
-            clickOsc.connect(clickGain);
-            clickGain.connect(this.masterGain);
-            
-            clickOsc.type = 'sawtooth';
-            clickOsc.frequency.setValueAtTime(Math.random() * 30 + 100, time);
-            
-            clickGain.gain.setValueAtTime(0.05 * vol, time);
-            clickGain.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
-            
-            clickOsc.start(time);
-            clickOsc.stop(time + 0.05);
-        };
-
-        // Rhythmic seeking pattern
-        let seekTime = t + 0.5;
-        for(let i=0; i<this.config.BOOT_SEEK_COUNT; i++) {
-             makeClick(seekTime);
-             seekTime += Math.random() * 0.1 + 0.05;
-        }
 
         // 4. Transitions to Atmosphere
         setTimeout(() => {

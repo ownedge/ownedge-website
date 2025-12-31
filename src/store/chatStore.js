@@ -109,17 +109,35 @@ export const chatStore = reactive({
     startPolling() {
         if (this.pollingInterval) return;
         
-        // Immediate updates
+        // 1. Setup Visibility Listener with saved reference for clean removal
+        this._handler = this.handleVisibility.bind(this);
+        document.addEventListener('visibilitychange', this._handler);
+
+        // 2. Initial Sync
         this.sendHeartbeat();
+        this.fetchMessages();
+        this.fetchUsers();
         
+        // 3. Main Sync Loop (Messages/Users)
+        let lastBackgroundSync = 0;
         this.pollingInterval = setInterval(() => {
-            this.fetchMessages();
-            this.fetchUsers();
+            const isVisible = document.visibilityState === 'visible';
+            const now = Date.now();
+
+            if (isVisible) {
+                // Foreground: Regular 2s sync
+                this.fetchMessages();
+                this.fetchUsers();
+            } else if (now - lastBackgroundSync > 30000) {
+                // Background: Slow 30s sync
+                this.fetchMessages();
+                this.fetchUsers();
+                lastBackgroundSync = now;
+            }
         }, 2000);
 
-        this.heartbeatInterval = setInterval(() => this.sendHeartbeat(), 10000); // 10s is fine with 45s timeout
-        
-        document.addEventListener('visibilitychange', this.handleVisibility.bind(this));
+        // 4. Heartbeat Loop (Stays consistent at 10s to prevent timeout)
+        this.heartbeatInterval = setInterval(() => this.sendHeartbeat(), 10000);
     },
 
     stopPolling() {
@@ -131,13 +149,13 @@ export const chatStore = reactive({
             clearInterval(this.heartbeatInterval);
             this.heartbeatInterval = null;
         }
-        document.removeEventListener('visibilitychange', this.handleVisibility.bind(this));
+        if (this._handler) {
+            document.removeEventListener('visibilitychange', this._handler);
+            this._handler = null;
+        }
     },
 
     clearHistory() {
-        // Technically this should be a server command too, 
-        // but for now we'll just clear local view if needed.
-        // Actually, let's just make it clear local for this client.
         this.messages = [];
     }
 });

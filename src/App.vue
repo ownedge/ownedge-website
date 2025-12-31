@@ -224,7 +224,8 @@ onMounted(() => {
 const vfdMode = ref('spectrum'); // Start with canvas for loading bar
 const vfdKnobInfo = ref({ label: '', value: '' });
 // Boot items
-const vfdBootState = ref('loading'); // 'loading', 'ready', 'complete'
+const vfdBootState = ref('loading'); // 'loading', 'ready', 'complete', 'connecting'
+const vfdStatusText = ref('wait');
 const bootProgress = ref(0);
 
 // VFD Label Glow - based on VFD activity
@@ -528,6 +529,7 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
         :knob-info="vfdKnobInfo"
         :boot-state="vfdBootState"
         :boot-progress="bootProgress"
+        :status-text="vfdStatusText"
         :scanline-color="vfdBgColor"
     />
 
@@ -540,6 +542,8 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
           @start="handleBootStart"
           @progress="(p) => bootProgress = p"
           @ready="() => vfdBootState = 'ready'"
+          @connecting="() => vfdBootState = 'connecting'"
+          @status-update="(s) => vfdStatusText = s"
         />
         <NoiseOverlay />
 

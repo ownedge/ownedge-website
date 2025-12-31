@@ -81,7 +81,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-    chatStore.stopPolling();
+    // Polling remains active globally for background sync
 });
 </script>
 

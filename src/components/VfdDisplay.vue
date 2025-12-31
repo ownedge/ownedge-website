@@ -29,6 +29,10 @@ const props = defineProps({
   scanlineColor: {
     type: String,
     default: 'rgba(0,0,0,0.9)'
+  },
+  statusText: {
+    type: String,
+    default: 'wait'
   }
 });
 
@@ -123,6 +127,18 @@ const startSpectrumAnalyzer = () => {
                  // Reset shadow
                  ctx.shadowBlur = 0;
                  
+             } else if (props.bootState === 'connecting') {
+                 ctx.fillStyle = '#40e0d0';
+                 ctx.font = "bold 16px 'Microgramma'";
+                 ctx.textAlign = 'center';
+                 ctx.textBaseline = 'middle';
+                 
+                 // Add Glow for Lit State
+                 ctx.shadowColor = "rgba(64, 224, 208, 0.6)";
+                 ctx.shadowBlur = 8;
+                 ctx.fillText(props.statusText, canvas.width / 2, canvas.height / 2);
+                 ctx.shadowBlur = 0; 
+
              } else if (props.bootState === 'ready') {
                  // 1. Calculate Geometry
                  const width = canvas.width * 0.95;

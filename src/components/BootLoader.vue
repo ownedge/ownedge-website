@@ -12,7 +12,7 @@ const nicknameInputRef = ref(null);
 const props = defineProps({
   isBooted: { type: Boolean, default: false }
 });
-const emit = defineEmits(['start', 'progress', 'ready']);
+const emit = defineEmits(['start', 'progress', 'ready', 'connecting', 'status-update']);
 
 const bootStage = ref('bios'); // bios, login, connecting, ready
 const bootMessages = ref([]);
@@ -30,10 +30,20 @@ const VISUALIZATION_CONFIG = {
 
 const isValidNickname = computed(() => chatStore.nickname.trim().length >= 3);
 
+const parseMessage = (text) => {
+    // Regex to split by chunks of special characters: > or █ or ✔
+    // We keep the delimiters in the result
+    const parts = text.split(/([>█+✔]+)/g);
+    return parts.map(part => ({
+        text: part,
+        isHighlight: /^[>█+✔]+$/.test(part)
+    })).filter(p => p.text !== '');
+};
+
 const addMessage = (text, delay = 0) => {
     return new Promise(resolve => {
         setTimeout(() => {
-            bootMessages.value.push(text);
+            bootMessages.value.push(parseMessage(text));
             SoundManager.playTypingSound();
             resolve();
         }, delay);
@@ -49,15 +59,15 @@ const runBiosSequence = async () => {
     const targetMem = 65536;
     const memStep = 2048;
     for (let m = 0; m <= targetMem; m += memStep) {
-        bootMessages.value[memLineIdx] = `> MEMORY TEST: ${m} KB`;
+        bootMessages.value[memLineIdx] = parseMessage(`> MEMORY TEST: ${m} KB`);
         await new Promise(r => setTimeout(r, 20));
     }
-    bootMessages.value[memLineIdx] = `> MEMORY TEST: ${targetMem} KB [OK]`;
+    bootMessages.value[memLineIdx] = parseMessage(`> MEMORY TEST: ${targetMem} KB ✔`);
     SoundManager.playTypingSound();
     emit('progress', 20);
     await addMessage('> DETECTING PRIMARY MASTER... OWNEDGE-CORE-V1', 400);
     emit('progress', 30);
-    await addMessage('> DRIVE 0: [OK] MOUNTING CORE_OS...', 200);
+    await addMessage('> DRIVE 0: MOUNTING CORE_OS... ✔', 200);
     
     // Animate Kernel Loading Bar
     const barLineIdx = bootMessages.value.length;
@@ -65,7 +75,7 @@ const runBiosSequence = async () => {
     for (let p = 0; p <= 100; p += 5) {
         const bars = '█'.repeat(Math.floor(p / 10));
         const spaces = ' '.repeat(10 - Math.floor(p / 10));
-        bootMessages.value[barLineIdx] = `LOADING KERNEL [${bars}${spaces}] ${p}%`;
+        bootMessages.value[barLineIdx] = parseMessage(`LOADING KERNEL [${bars}${spaces}] ${p}%`);
         emit('progress', 30 + (p * 0.4)); // Map 30-70% to kernel load
         await new Promise(r => setTimeout(r, 40));
     }
@@ -89,6 +99,8 @@ const handleConnect = async () => {
     
     isConnecting.value = true;
     bootStage.value = 'connecting';
+    emit('connecting');
+    emit('status-update', 'dialing...');
     
     if (!SoundManager.initialized) SoundManager.init();
     
@@ -96,13 +108,38 @@ const handleConnect = async () => {
     
     const soundPromise = SoundManager.playDialUpSound();
     
+    // Status sequencing for VFD
+    setTimeout(() => { 
+        if (bootStage.value === 'connecting') emit('status-update', 'connecting...'); 
+    }, 3250);
+    
+    setTimeout(() => { 
+        if (bootStage.value === 'connecting') emit('status-update', 'LINK OK!'); 
+    }, 9300);
+
     await nextTick();
     startVisualization();
     
     await soundPromise;
     
+    bootStage.value = 'ready'; // Dismiss popup immediately after sound
     stopVisualization();
-    await addMessage('> CONNECTED. SESSION ESTABLISHED.', 200);
+    await addMessage('> CONNECTED. SESSION ESTABLISHED. ✔', 200);
+    
+    // New Lines: Driver Loading
+    await addMessage('> INITIALIZING MODULE LOADER...', 100);
+    const driverLineIdx = bootMessages.value.length;
+    bootMessages.value.push(parseMessage('LOADING DRIVERS [          ] 0%'));
+    for (let p = 0; p <= 100; p += 10) {
+        const bars = '█'.repeat(Math.floor(p / 10));
+        const spaces = ' '.repeat(10 - Math.floor(p / 10));
+        bootMessages.value[driverLineIdx] = parseMessage(`LOADING DRIVERS [${bars}${spaces}] ${p}%`);
+        await new Promise(r => setTimeout(r, 60));
+    }
+    await addMessage('> VIRTUAL FILE SYSTEM MOUNTED ✔', 100);
+    await addMessage('> SYNCING WITH REMOTE CLUSTER...', 200);
+    await addMessage('> SECURITY HANDSHAKE: ✔ VERIFIED', 200);
+    
     await addMessage('> PREPARING WORKSPACE...', 300);
     
     // Log them into chatStore
@@ -171,12 +208,18 @@ onUnmounted(() => {
       
       <div class="terminal-overlay">
         <div class="terminal-content">
-          <div v-for="(msg, i) in bootMessages" :key="i" class="boot-line">{{ msg }}</div>
+          <div v-for="(msg, i) in bootMessages" :key="i" class="boot-line">
+            <span 
+              v-for="(segment, si) in msg" 
+              :key="si" 
+              :class="{ 'highlight': segment.isHighlight }"
+            >{{ segment.text }}</span>
+          </div>
           
           <!-- Dial-Up Popup -->
           <transition name="fade">
             <div v-if="bootStage === 'login' || bootStage === 'connecting'" class="popup-overlay">
-              <div class="popup-header">ESTABLISHING SERVER CONNECTION</div>
+              <div class="popup-header">REMOTE NODE LINK</div>
               <div class="popup-body">
                 <template v-if="bootStage === 'login'">
                     <p>PLEASE IDENTIFY YOUR TERMINAL NODE TO INITIALIZE SYNC.</p>
@@ -266,6 +309,12 @@ onUnmounted(() => {
     font-size: 1.1rem;
     line-height: 1.4;
     margin-bottom: 5px;
+    color: rgba(255, 255, 255, 0.45); /* Greyed out by default */
+    text-shadow: none;
+}
+
+.boot-line .highlight {
+    color: var(--color-accent);
     text-shadow: 0 0 5px var(--color-accent);
 }
 
@@ -364,6 +413,16 @@ onUnmounted(() => {
     pointer-events: none;
     z-index: 10;
     opacity: 0.9;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 </style>
