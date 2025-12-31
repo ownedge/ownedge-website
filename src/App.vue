@@ -10,6 +10,7 @@ import VfdDisplay from './components/VfdDisplay.vue'
 import CrtControls from './components/CrtControls.vue'
 import TrackerOverlay from './components/TrackerOverlay.vue'
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { chatStore } from './store/chatStore';
 
 
 let cursorInterval = null;
@@ -34,11 +35,13 @@ const isBooted = ref(false)
 let hideCursorTimeout = null
 const screenRect = ref(null); // Cache for performance
 const activeTabIndex = ref(0);
+const lastActiveContentTab = ref(1); // Default to BUSINESS
+const isScrollingManually = ref(false);
 
 const tabs = [
-  { id: 'about', name: 'ABOUT' },
+  { id: 'home', name: 'HOME' },
   { id: 'business', name: 'BUSINESS' },
-  { id: 'blog', name: 'BLOG' },
+  { id: 'about', name: 'ABOUT' },
   { id: 'guestbook', name: 'GUESTBOOK' },
   { id: 'chat', name: 'CHAT' }
 ];
@@ -152,6 +155,14 @@ onMounted(() => {
   window.addEventListener('mousemove', updateLockStates); 
   
   simulateHddActivity();
+
+  // PRECISION: Sync scroll lock with browser's scrollend event
+  const scrollContainer = document.querySelector('.scroll-content');
+  if (scrollContainer) {
+      scrollContainer.addEventListener('scrollend', () => {
+          isScrollingManually.value = false;
+      });
+  }
 })
 
 const handleGlobalHover = (e) => {
@@ -252,8 +263,31 @@ const handleGlobalKeydown = (e) => {
   const isAtTop = scrollContainer.scrollTop < window.innerHeight / 2;
 
   if (isAtTop && (e.key === 'ArrowDown' || e.key === 'Enter')) {
-      scrollToContent();
+      // Move to the last active content tab (or Business)
+      handleTabSelect(lastActiveContentTab.value);
   }
+}
+
+const handleScroll = (e) => {
+    // If we just clicked a tab, ignore the scroll events triggered by that smooth scroll
+    if (isScrollingManually.value) return;
+
+    const scrollTop = e.target.scrollTop;
+    
+    // TWEAK: Decisive thresholds to prevent flickering
+    // High sensitivity for HOME when at top, larger gap for content
+    const heroThreshold = window.innerHeight * 0.15; // Re-select HOME very early when scrolling UP
+    const contentThreshold = window.innerHeight * 0.55; // Re-select CONTENT only when half-way down
+    
+    if (scrollTop < heroThreshold) {
+        if (activeTabIndex.value !== 0) {
+            activeTabIndex.value = 0;
+        }
+    } else if (scrollTop >= contentThreshold) {
+        if (activeTabIndex.value === 0) {
+            activeTabIndex.value = lastActiveContentTab.value;
+        }
+    }
 }
 
 const scrollToContent = () => {
@@ -265,8 +299,39 @@ const scrollToContent = () => {
 };
 
 const handleTabSelect = (index) => {
+    // CRITICAL: Set lock BEFORE updating index to stop observer immediately
+    isScrollingManually.value = true;
+    
     activeTabIndex.value = index;
-    scrollToContent();
+    
+    // Update lastActiveContentTab if not HOME (0)
+    if (index > 0) {
+        lastActiveContentTab.value = index;
+    }
+
+    const finishScroll = () => {
+        // Fallback timeout if scrollend doesn't fire
+        setTimeout(() => { isScrollingManually.value = false; }, 800); 
+    };
+
+    if (tabs[index].id === 'home') {
+        const scrollContainer = document.querySelector('.scroll-content');
+        if (scrollContainer) {
+            scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+            finishScroll();
+        }
+    } else {
+        scrollToContent();
+        finishScroll();
+    }
+};
+
+const resetToDefaults = () => {
+    brightness.value = 1;
+    contrast.value = 1;
+    hue.value = 0.5;
+    SoundManager.setMasterVolume(0.9);
+    SoundManager.playTypingSound();
 };
 
 // Glitch Effect
@@ -320,6 +385,7 @@ const heroStyle = computed(() => {
 import { SYSTEM_CONFIG } from './config';
 
 const SETTINGS_KEY = 'crt_settings';
+const NICKNAME_KEY = 'chat_nickname';
 
 const loadSettings = () => {
     try {
@@ -330,6 +396,19 @@ const loadSettings = () => {
         return null;
     }
 };
+
+const loadNickname = () => {
+    try {
+        const saved = localStorage.getItem(NICKNAME_KEY);
+        return saved || '';
+    } catch (e) {
+        return '';
+    }
+};
+
+// 1. Load nickname FIRST and sync with store immediately (before other refs)
+const initialNickname = loadNickname();
+chatStore.nickname = initialNickname;
 
 const savedSettings = loadSettings();
 
@@ -349,8 +428,15 @@ const saveSettings = () => {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 };
 
+const saveNickname = (nick) => {
+    localStorage.setItem(NICKNAME_KEY, nick);
+};
+
 // Auto-save on change
 watch([volume, brightness, contrast], saveSettings);
+watch(() => chatStore.nickname, (newNick) => {
+    saveNickname(newNick);
+});
 
 // Generic Knob State handled in CrtControls
 // VFD Updates
@@ -429,8 +515,11 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
     <!-- VFD Display (Replaces Logo) -->
     <!-- VFD Label -->
     <div class="vfd-label-box">
-        <div class="vfd-label-line1">VF-1OOO</div>
-        <div class="vfd-label-line2">SUPER</div>
+        <img src="./assets/ownedge-logo.png" class="bezel-logo" />
+        <div class="vfd-label-text">
+            <div class="vfd-label-line1">VF-1OOO</div>
+            <div class="vfd-label-line2">SUPER</div>
+        </div>
     </div>
     
     <!-- VFD Display (Extracted to component) -->
@@ -460,13 +549,18 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
         </div>
 
         <!-- Scrollable Content -->
-        <div class="scroll-content" v-if="isBooted">
+        <div class="scroll-content" v-if="isBooted" @scroll.passive="handleScroll">
           <section class="page-section hero-section" :style="heroStyle">
             <HeroDisplay />
           </section>
           
           <section class="page-section">
-            <ContentCommander :tabs="tabs" v-model:active-index="activeTabIndex" />
+            <ContentCommander 
+               :tabs="tabs" 
+               :active-index="activeTabIndex" 
+               @update:active-index="handleTabSelect"
+               @reset-settings="resetToDefaults"
+            />
           </section>
         </div>
         
@@ -509,12 +603,6 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
     <!-- Vintage Sony Sticker (Top Left) -->
     <div class="bezel-sticker">
         <img src="./assets/sony-sticker.png" alt="It's a Sony" />
-        <div class="sticker-wear"></div>
-    </div>
-
-    <!-- Rolling Sticker (Bottom Right) -->
-    <div class="rolling-sticker">
-        <img src="./assets/stones.png" alt="Stones" />
         <div class="sticker-wear"></div>
     </div>
   </div>
@@ -635,25 +723,6 @@ html, body, .crt-wrapper, * {
     display: block;
 }
 
-.rolling-sticker {
-    position: absolute;
-    top: 10px; 
-    right: -37px;
-    width: 85px;
-    transform: rotate(-40deg);
-    height: auto;
-    z-index: 15;
-    filter: brightness(0.47) contrast(0.9) sepia(0.1);
-    opacity: 0.01;
-    pointer-events: none;
-}
-
-.rolling-sticker img {
-    width: 100%;
-    height: auto;
-    display: block;
-}
-
 /* CRT Screen (The curvature and clipping) */
 .crt-screen {
   width: 100%;
@@ -726,7 +795,7 @@ html, body, .crt-wrapper, * {
 }
 
 .hero-section {
-  height: 90%; /* Reveal next section peeking from bottom */
+  height: 85%; /* Reveal next section peeking from bottom */
   transition: transform 0.1s ease-out;
 }
 
@@ -775,14 +844,27 @@ html, body, .crt-wrapper, * {
 /* VFD Label Box */
 .vfd-label-box {
     position: fixed;
-    bottom: 1.8rem; /* Same as power-panel/led-panel */
-    left: calc(50% - 166px); /* To the left of VFD which is centered */
-    padding: 4px 8px;
-    border: 0px solid rgba(255, 255, 255, 0.15); /* Match control label borders */
-    border-radius: 3px;
-    background-color: transparent; /* No background */
-    z-index: 10001;
+    bottom: 1.8rem;
+    left: calc(50% - 208px); /* Shifted to keep text in same absolute spot */
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
     pointer-events: none;
+    z-index: 10001;
+}
+
+.bezel-logo {
+    height: 34px;
+    width: 37px;
+    /* Invert because the logo is likely dark, then dim to match the worn #444 labels */
+    filter: invert(1) brightness(0.4) contrast(1.2) opacity(0.43);
+    mix-blend-mode: normal; /* Normal for better visibility on dark */
+}
+
+.vfd-label-text {
+    display: flex;
+    flex-direction: column;
 }
 
 .vfd-label-line1 {

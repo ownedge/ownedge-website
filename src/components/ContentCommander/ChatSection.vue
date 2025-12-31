@@ -209,7 +209,7 @@ onUnmounted(() => {
 }
 
 .sidebar-header {
-    padding: 8px 12px;
+    padding: 9px 12px;
     background: #111;
     border-bottom: 1px solid #333;
     font-size: 0.75rem;

@@ -1,4 +1,5 @@
 import { SYSTEM_CONFIG } from '../config';
+import { reactive } from 'vue';
 
 class SoundManager {
     constructor() {
@@ -10,8 +11,16 @@ class SoundManager {
         this.initialized = false;
         this.config = SYSTEM_CONFIG.AUDIO; // Helper alias
         this.userVolume = SYSTEM_CONFIG.AUDIO.MASTER_VOL;
-        this.musicGain = null;
         this.dialUpAnalyser = null;
+        this.playlist = [
+            '/sfx/music.mod',
+            '/sfx/atmosphere.mod',
+        ];
+        // Internal reactive state for UI
+        this.state = reactive({
+            isMusicPlaying: false,
+            currentSongIndex: 0
+        });
     }
 
     init() {
@@ -515,6 +524,30 @@ class SoundManager {
         if (this.trackerPlayer) {
             this.trackerPlayer.stop();
             this.trackerPlayer = null;
+            this.state.isMusicPlaying = false;
+        }
+    }
+
+    toggleMusic() {
+        if (this.state.isMusicPlaying) {
+            this.stopTrackerMusic();
+        } else {
+            this.playTrackerMusic(this.playlist[this.state.currentSongIndex]);
+            this.state.isMusicPlaying = true;
+        }
+    }
+
+    nextSong() {
+        this.state.currentSongIndex = (this.state.currentSongIndex + 1) % this.playlist.length;
+        if (this.state.isMusicPlaying) {
+            this.playTrackerMusic(this.playlist[this.state.currentSongIndex]);
+        }
+    }
+
+    prevSong() {
+        this.state.currentSongIndex = (this.state.currentSongIndex - 1 + this.playlist.length) % this.playlist.length;
+        if (this.state.isMusicPlaying) {
+            this.playTrackerMusic(this.playlist[this.state.currentSongIndex]);
         }
     }
 

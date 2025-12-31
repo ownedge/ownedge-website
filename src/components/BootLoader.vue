@@ -176,12 +176,12 @@ onUnmounted(() => {
           <!-- Dial-Up Popup -->
           <transition name="fade">
             <div v-if="bootStage === 'login' || bootStage === 'connecting'" class="popup-overlay">
-              <div class="popup-header">ESTABLISHING IRC CONNECTION...</div>
+              <div class="popup-header">ESTABLISHING SERVER CONNECTION</div>
               <div class="popup-body">
                 <template v-if="bootStage === 'login'">
                     <p>PLEASE IDENTIFY YOUR TERMINAL NODE TO INITIALIZE SYNC.</p>
                     <div class="input-group">
-                        <span class="prompt">NICK:</span>
+                        <span class="prompt">NICKNAME:</span>
                         <input 
                             ref="nicknameInputRef"
                             v-model="chatStore.nickname" 

@@ -13,12 +13,11 @@ const props = defineProps({
   activeIndex: { type: Number, default: 0 }
 });
 
-const emit = defineEmits(['update:activeIndex']);
+const emit = defineEmits(['update:activeIndex', 'reset-settings']);
 
 const sections = {
-  about: AboutSection,
   business: BusinessSection,
-  blog: BlogSection,
+  about: AboutSection,
   guestbook: GuestbookSection,
   chat: ChatSection
 };
@@ -28,7 +27,7 @@ const viewportContent = ref(null);
 
 const activeTab = computed(() => {
     const tabData = props.tabs[props.activeIndex];
-    return sections[tabData.id];
+    return sections[tabData.id] || null;
 });
 
 const selectTab = (index) => {
@@ -36,9 +35,11 @@ const selectTab = (index) => {
       emit('update:activeIndex', index);
       SoundManager.playHoverSound();
       
-      // If we are peeking, scroll to ourselves
-      const el = document.querySelector('.page-section:nth-child(2)');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
+      // If we are peeking, scroll to ourselves (unless it's HOME)
+      if (props.tabs[index].id !== 'home') {
+          const el = document.querySelector('.page-section:nth-child(2)');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }
 
       if (viewportContent.value) viewportContent.value.scrollTop = 0;
   }
@@ -100,11 +101,15 @@ onUnmounted(() => {
         :tabs="tabs" 
         :active-index="activeIndex" 
         @select="selectTab"
+        @reset-settings="emit('reset-settings')"
       />
 
       <!-- Main Contents -->
       <div class="tui-viewport custom-scroll" ref="viewportContent">
-          <component :is="activeTab" />
+          <component :is="activeTab" v-if="activeTab" />
+          <div v-else class="home-placeholder">
+              <!-- No content for HOME tab inside Commander, as it maps back to Hero -->
+          </div>
       </div>
 
       <!-- Bottom Function Keys -->
@@ -125,7 +130,7 @@ onUnmounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 0;
+  padding: 20px 0 0 0;
   background-color: transparent;
   font-family: 'Microgramma', monospace; 
   color: #fff;
