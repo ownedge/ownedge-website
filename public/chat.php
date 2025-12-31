@@ -130,6 +130,13 @@ if ($action === 'presence' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'timestamp' => date('c')
             ];
             save_data($log_file, array_slice($messages, -100));
+
+            // NEW: Email Notification
+            $admin_email = "hello@ownedge.com"; // Placeholder - please update as needed
+            $subject = "OWNEDGE: User Join Detected";
+            $body = "Terminal node identified: $nick\nSync established at: " . date('Y-m-d H:i:s');
+            $headers = "From: node-monitor@ownedge.com";
+            @mail($admin_email, $subject, $body, $headers);
         }
 
         $users[$nick] = time();
