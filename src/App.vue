@@ -157,12 +157,7 @@ onMounted(() => {
   simulateHddActivity();
 
   // PRECISION: Sync scroll lock with browser's scrollend event
-  const scrollContainer = document.querySelector('.scroll-content');
-  if (scrollContainer) {
-      scrollContainer.addEventListener('scrollend', () => {
-          isScrollingManually.value = false;
-      });
-  }
+  // Re-attached when isBooted changes since the element is conditional
 })
 
 const handleGlobalHover = (e) => {
@@ -215,7 +210,7 @@ onMounted(() => {
   document.addEventListener('mouseenter', hideCursor);
   
   document.addEventListener('mouseover', handleGlobalHover);
-  window.addEventListener('keydown', handleGlobalKeydown);
+  window.addEventListener('keydown', handleGlobalKeydown, { capture: true }); // Capture to intercept before inputs if needed, but we check target
 
   // Start glitch loop immediately
   triggerGlitch();
@@ -257,17 +252,53 @@ onUnmounted(() => {
 const handleGlobalKeydown = (e) => {
   if (!isBooted.value) return;
 
+  // 1. Ignore if typing in an input or textarea
+  const target = e.target;
+  if (target.matches('input, textarea, [contenteditable="true"]')) {
+      return; 
+  }
+
   // Check if we are currently at the top (Hero section)
   const scrollContainer = document.querySelector('.scroll-content');
   if (!scrollContainer) return;
 
   const isAtTop = scrollContainer.scrollTop < window.innerHeight / 2;
 
+  // 2. Tab Navigation (Centralized)
+  if (e.key === 'ArrowRight' || e.key === 'Tab') {
+      e.preventDefault();
+      const nextIndex = (activeTabIndex.value + 1) % tabs.length;
+      handleTabSelect(nextIndex);
+      SoundManager.playTypingSound();
+  } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const prevIndex = (activeTabIndex.value - 1 + tabs.length) % tabs.length;
+      handleTabSelect(prevIndex);
+      SoundManager.playTypingSound();
+  }
+
+  // 3. Hero Transition
   if (isAtTop && (e.key === 'ArrowDown' || e.key === 'Enter')) {
       // Move to the last active content tab (or Business)
-      handleTabSelect(lastActiveContentTab.value);
+      if (activeTabIndex.value === 0) {
+          handleTabSelect(lastActiveContentTab.value);
+      }
   }
 }
+
+// 4. Robust Scroll Listener Attachment
+watch(isBooted, (booted) => {
+    if (booted) {
+        nextTick(() => {
+            const scrollContainer = document.querySelector('.scroll-content');
+            if (scrollContainer) {
+                scrollContainer.addEventListener('scrollend', () => {
+                    isScrollingManually.value = false;
+                });
+            }
+        });
+    }
+});
 
 const handleScroll = (e) => {
     // If we just clicked a tab, ignore the scroll events triggered by that smooth scroll
@@ -311,8 +342,8 @@ const handleTabSelect = (index) => {
     }
 
     const finishScroll = () => {
-        // Fallback timeout if scrollend doesn't fire
-        setTimeout(() => { isScrollingManually.value = false; }, 800); 
+        // Fallback timeout: Increased to 2000ms to cover long wrap-around scrolls (Chat -> Home)
+        setTimeout(() => { isScrollingManually.value = false; }, 2000);
     };
 
     if (tabs[index].id === 'home') {

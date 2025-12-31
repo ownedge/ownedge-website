@@ -76,7 +76,8 @@ onMounted(() => {
     if (chatStore.isConnected) {
         chatStore.startPolling();
         scrollToBottom();
-        focusInput();
+        // Small delay ensures users manually cycling past the tab with arrows don't get trapped in the input
+        setTimeout(focusInput, 500);
     }
 });
 
