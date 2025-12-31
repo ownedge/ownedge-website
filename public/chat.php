@@ -118,7 +118,21 @@ if ($action === 'presence' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $json = file_get_contents('php://input');
     $data = json_decode($json, true);
     if (isset($data['nickname'])) {
-        $users[$data['nickname']] = time();
+        $nick = $data['nickname'];
+        
+        // Log Join Message if user is new to the active list
+        if (!isset($users[$nick])) {
+            $messages = fetch_data($log_file);
+            $messages[] = [
+                'id' => microtime(true) . rand(),
+                'type' => 'system',
+                'text' => "*** $nick has joined the cluster",
+                'timestamp' => date('c')
+            ];
+            save_data($log_file, array_slice($messages, -100));
+        }
+
+        $users[$nick] = time();
         save_data($users_file, $users);
         echo json_encode(["status" => "ok"]);
         exit;

@@ -55,7 +55,7 @@ let animationFrameId = null;
         const y = mouseY.value - rect.top;
 
         ctx.globalCompositeOperation = 'lighter';
-        ctx.fillStyle = '#FFDD00'; // Yellow trail color
+        ctx.fillStyle = '#FF0000'; // Red trail color
 
         ctx.save();
         // Translate to exact position (no offset needed as SVG origin is tip)

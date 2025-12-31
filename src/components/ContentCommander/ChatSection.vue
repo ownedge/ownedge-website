@@ -82,8 +82,18 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-    // Polling remains active globally for background sync
+// Polling remains active globally for background sync
 });
+
+const formatTime = (isoString) => {
+    if (!isoString) return '--:--';
+    const date = new Date(isoString);
+    return date.toLocaleTimeString('en-GB', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: false 
+    });
+};
 </script>
 
 <template>
@@ -100,8 +110,13 @@ onUnmounted(() => {
         </div>
         <div class="irc-log" ref="chatScroll">
           <div v-for="msg in chatStore.messages" :key="msg.id" :class="['msg', msg.type]">
-            <template v-if="msg.type === 'system'">{{ msg.text }}</template>
-            <template v-else-if="msg.type === 'action'">{{ msg.text }}</template>
+            <span class="msg-time">[{{ formatTime(msg.timestamp) }}]</span>
+            <template v-if="msg.type === 'system'">
+              <span class="msg-content">{{ msg.text }}</span>
+            </template>
+            <template v-else-if="msg.type === 'action'">
+              <span class="msg-content">{{ msg.text }}</span>
+            </template>
             <template v-else>
               <span class="msg-user">&lt;{{ msg.user }}&gt;</span>
               <span class="msg-text">{{ msg.text }}</span>
@@ -175,11 +190,13 @@ onUnmounted(() => {
     scrollbar-color: #333 transparent;
 }
 
-.msg { margin-bottom: 4px; line-height: 1.4; }
+.msg { margin-bottom: 4px; line-height: 1.4; display: flex; gap: 8px; }
+.msg-time { color: #555; font-size: 0.8rem; flex-shrink: 0; }
 .msg.system { color: #00ff00; font-size: 0.8rem; opacity: 0.8; }
 .msg.action { color: var(--color-accent); font-style: italic; }
-.msg-user { color: #fff; font-weight: bold; margin-right: 8px; }
+.msg-user { color: #fff; font-weight: bold; flex-shrink: 0; }
 .msg-text { color: rgba(255,255,255,0.9); }
+.msg-content { white-space: pre-wrap; word-break: break-all; }
 
 .irc-input-row {
     padding: 10px;

@@ -660,7 +660,7 @@ html, body, .crt-wrapper, * {
   left: 0;
   width: 24px;
   height: 24px;
-  background-image: url("data:image/svg+xml,%3Csvg width='34' height='34' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19135L11.7841 12.3673H5.65376Z' fill='rgba(255, 255, 0, 0.7)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='34' height='34' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19135L11.7841 12.3673H5.65376Z' fill='rgba(255, 51, 51, 0.8)'/%3E%3C/svg%3E");
   background-size: contain;
   background-repeat: no-repeat;
   pointer-events: none;
@@ -670,7 +670,7 @@ html, body, .crt-wrapper, * {
   mix-blend-mode: normal; 
   will-change: transform;
   /* Add a drop shadow for glowing effect */
-  filter: drop-shadow(0 0 5px rgb(255, 187, 0));
+  filter: drop-shadow(0 0 5px rgb(255, 51, 51));
   /* opacity controlled by JS */
   transition: opacity 0.5s ease;
 }
@@ -908,7 +908,7 @@ html, body, .crt-wrapper, * {
     color: #444;
     letter-spacing: 1px;
     transition: all 0.25s ease;
-    text-align: right;
+    text-align: left;
     line-height: 1.2;
     /* Radial gradient glow from VFD (right side) */
     background-image: radial-gradient(
@@ -926,7 +926,7 @@ html, body, .crt-wrapper, * {
     color: #444;
     letter-spacing: 1px;
     transition: all 0.25s ease;
-    text-align: right;
+    text-align: left;
     margin-top: 1px;
     /* Radial gradient glow from VFD (right side) */
     background-image: radial-gradient(
