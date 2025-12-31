@@ -134,12 +134,16 @@ onUnmounted(() => {
 
         <div v-if="activeTabId === 'customers'" class="tab-content">
           <h4>CUSTOMERS</h4>
-          <p>We work with partners who value long-term thinking and technical craftsmanship.</p>
+          <p>Strategic partnerships with global industry leaders and visionaries.</p>
           <ul class="customer-list">
-            <li>GLOBAL FINTECH FIRMS</li>
-            <li>CREATIVE TECHNOLOGY STUDIOS</li>
-            <li>INFRASTRUCTURE PROVIDERS</li>
-            <li>INDEPENDENT ARTISANS</li>
+            <li>CONTROLINVEST (GLOBAL MEDIA GROUP)</li>
+            <li>THALES</li>
+            <li>LITHO FORMAS</li>
+            <li>COPIDATA</li>
+            <li>BARCLAYS</li>
+            <li>KABISA</li>
+            <li>PHILIPS</li>
+            <li>FLUXYGEN</li>
           </ul>
         </div>
       </div>
@@ -263,7 +267,7 @@ onUnmounted(() => {
 }
 
 .customer-list li {
-    font-size: 1rem;
+    font-size: 1.15rem;
     color: #fff;
     padding-left: 20px;
     position: relative;
