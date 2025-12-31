@@ -341,11 +341,17 @@ onUnmounted(() => {
 }
 
 .popup-body {
-    padding: 20px;
+    padding: 20px 25px;
     text-align: center;
+    min-height: 180px; /* Fixed height to prevent resizing on state change */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
 }
 
-.popup-body p { font-size: 0.8rem; color: #888; margin-bottom: 20px; }
+.popup-body p { font-size: 0.8rem; color: #888; margin: 0; }
 
 .input-group {
     display: flex;
@@ -354,7 +360,6 @@ onUnmounted(() => {
     background: #111;
     padding: 8px 12px;
     border: 1px solid #333;
-    margin-bottom: 20px;
 }
 
 .prompt { color: var(--color-accent); font-size: 0.8rem; font-weight: bold; }
@@ -369,7 +374,7 @@ onUnmounted(() => {
 }
 
 .connection-status {
-    margin-bottom: 20px;
+    width: 100%;
 }
 
 .connect-btn {

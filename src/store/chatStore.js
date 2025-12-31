@@ -26,8 +26,13 @@ export const chatStore = reactive({
             const response = await fetch(`${API_BASE}?action=messages`);
             if (response.ok) {
                 const data = await response.json();
-                if (Array.isArray(data) && data.length !== this.messages.length) {
-                    this.messages = data;
+                if (Array.isArray(data)) {
+                    const lastLocal = this.messages[this.messages.length - 1];
+                    const lastServer = data[data.length - 1];
+                    
+                    if (!lastLocal || !lastServer || lastLocal.id !== lastServer.id || data.length !== this.messages.length) {
+                        this.messages = data;
+                    }
                 }
                 this.isServerOnline = true;
             } else {
@@ -99,6 +104,18 @@ export const chatStore = reactive({
         }
     },
 
+    async leave() {
+        if (!this.isConnected || !this.nickname) return;
+        try {
+            await fetch(`${API_BASE}?action=leave`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nickname: this.nickname }),
+                keepalive: true 
+            });
+        } catch (e) {}
+    },
+
     handleVisibility() {
         if (document.visibilityState === 'visible' && this.isConnected) {
             this.sendHeartbeat();
@@ -138,6 +155,10 @@ export const chatStore = reactive({
 
         // 4. Heartbeat Loop (Stays consistent at 10s to prevent timeout)
         this.heartbeatInterval = setInterval(() => this.sendHeartbeat(), 10000);
+
+        // 5. Exit Listener
+        this._unloadHandler = () => this.leave();
+        window.addEventListener('beforeunload', this._unloadHandler);
     },
 
     stopPolling() {

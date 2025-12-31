@@ -162,7 +162,7 @@ class SoundManager {
         
         // Grittier low data sound
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(200 + Math.random() * 20, t); 
+        osc.frequency.setValueAtTime(8000 + Math.random() * 20, t); 
         
         gain.gain.setValueAtTime(0.005, t);
         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);

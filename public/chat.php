@@ -125,6 +125,28 @@ if ($action === 'presence' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+if ($action === 'leave' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $json = file_get_contents('php://input');
+    $data = json_decode($json, true);
+    if (isset($data['nickname'])) {
+        $nick = $data['nickname'];
+        unset($users[$nick]);
+        save_data($users_file, $users);
+        
+        $messages = fetch_data($log_file);
+        $messages[] = [
+            'id' => microtime(true) . rand(),
+            'type' => 'system',
+            'text' => "*** $nick has left (disconnected)",
+            'timestamp' => date('c')
+        ];
+        save_data($log_file, array_slice($messages, -100));
+        
+        echo json_encode(["status" => "ok"]);
+        exit;
+    }
+}
+
 if ($action === 'users') {
     echo json_encode(array_values(array_keys($users)));
     exit;
