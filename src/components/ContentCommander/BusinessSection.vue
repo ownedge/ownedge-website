@@ -2,6 +2,27 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import SoundManager from '../../sfx/SoundManager';
 
+// Import logos
+import barclaysLogo from '../../assets/customers/barclays.jpg';
+import controlinvestLogo from '../../assets/customers/controlinvest.jpg';
+import copidataLogo from '../../assets/customers/copidata.jpeg';
+import fluxygenLogo from '../../assets/customers/fluxygen.png';
+import kabisaLogo from '../../assets/customers/kabisa.jpeg';
+import lithoformasLogo from '../../assets/customers/lithoformas.png';
+import philipsLogo from '../../assets/customers/philips.png';
+import thalesLogo from '../../assets/customers/thales.jpg';
+
+const customers = [
+  { name: 'BARCLAYS', logo: barclaysLogo },
+  { name: 'CONTROLINVEST', logo: controlinvestLogo },
+  { name: 'COPIDATA', logo: copidataLogo },
+  { name: 'FLUXYGEN', logo: fluxygenLogo },
+  { name: 'KABISA', logo: kabisaLogo },
+  { name: 'LITHO FORMAS', logo: lithoformasLogo },
+  { name: 'PHILIPS', logo: philipsLogo },
+  { name: 'THALES', logo: thalesLogo }
+];
+
 const businessTabs = [
   { id: 'group', name: 'THE GROUP' },
   { id: 'services', name: 'SERVICES' },
@@ -135,16 +156,11 @@ onUnmounted(() => {
         <div v-if="activeTabId === 'customers'" class="tab-content">
           <h4>CUSTOMERS</h4>
           <p>Strategic partnerships with global industry leaders and visionaries.</p>
-          <ul class="customer-list">
-            <li>CONTROLINVEST (GLOBAL MEDIA GROUP)</li>
-            <li>THALES</li>
-            <li>LITHO FORMAS</li>
-            <li>COPIDATA</li>
-            <li>BARCLAYS</li>
-            <li>KABISA</li>
-            <li>PHILIPS</li>
-            <li>FLUXYGEN</li>
-          </ul>
+          <div class="logo-grid">
+            <div v-for="customer in customers" :key="customer.name" class="logo-item" :title="customer.name">
+              <img :src="customer.logo" :alt="customer.name" />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -283,6 +299,54 @@ onUnmounted(() => {
     transform: translateY(-50%);
 }
 
+.logo-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.logo-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 10px;
+    aspect-ratio: 3/2;
+    transition: all 0.3s ease;
+}
+
+.logo-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.logo-item img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    /* Removed grayscale, keeping original colors with subtle enhancement */
+    filter: contrast(1.1) brightness(1.1);
+    mix-blend-mode: screen;
+    opacity: 0.85;
+    transition: all 0.3s ease;
+    
+    /* Rounded corners and bezel effect on the image itself */
+    border-radius: 8px;
+    box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.5),
+        inset 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+.logo-item:hover img {
+    filter: brightness(1.2) contrast(1.2);
+    opacity: 1;
+    transform: scale(1.05);
+    box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.6),
+        inset 0 1px 3px rgba(255, 255, 255, 0.3);
+}
+
 .animate-in {
     animation: slideUp 0.3s ease-out;
 }
@@ -362,6 +426,11 @@ onUnmounted(() => {
         padding-right: 0;
         padding-bottom: 15px;
         overflow-x: auto;
+    }
+
+    .logo-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
     }
 }
 </style>
