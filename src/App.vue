@@ -403,7 +403,7 @@ const cursorStyle = computed(() => {
     
     return {
         transform: `translate3d(${x}px, ${y}px, 0)`,
-        opacity: isCursorVisible.value ? 0.8 : 0
+        opacity: isCursorVisible.value ? 0.85 : 0
     };
 });
 
@@ -653,7 +653,6 @@ html, body, .crt-wrapper, * {
 
 <style scoped>
 /* Custom Cursor Element */
-/* Custom Cursor Element */
 .custom-cursor {
   position: absolute;
   top: 0;
@@ -672,7 +671,7 @@ html, body, .crt-wrapper, * {
   /* Add a drop shadow for glowing effect */
   filter: drop-shadow(0 0 5px rgb(255, 51, 51));
   /* opacity controlled by JS */
-  transition: opacity 0.5s ease;
+  transition: opacity 0.3s ease;
 }
 
 /* CRT Wrapper (The Bezel/Room) */

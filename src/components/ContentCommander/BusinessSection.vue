@@ -158,6 +158,7 @@ onUnmounted(() => {
           <p>Strategic partnerships with global industry leaders and visionaries.</p>
           <div class="logo-grid">
             <div v-for="customer in customers" :key="customer.name" class="logo-item" :title="customer.name">
+              <span class="logo-hover-name">{{ customer.name }}</span>
               <img :src="customer.logo" :alt="customer.name" />
             </div>
           </div>
@@ -174,9 +175,9 @@ onUnmounted(() => {
     border-bottom: 1px solid rgba(64, 224, 208, 0.3);
     display: inline-block;
     padding-bottom: 5px;
-    margin-bottom: 30px;
-    font-size: 1.2rem;
-    letter-spacing: 2px;
+    margin-bottom: 20px;
+    font-size: 1.4rem;
+    letter-spacing: 1px;
 }
 
 .business-layout {
@@ -315,36 +316,57 @@ onUnmounted(() => {
     padding: 10px;
     aspect-ratio: 3/2;
     transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
 }
 
 .logo-item:hover {
     background: rgba(255, 255, 255, 0.06);
 }
 
+.logo-hover-name {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80%;
+    height: 80%;
+    background: #ffffff;
+    color: #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 5px;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2;
+    pointer-events: none;
+    border-radius: 4px;
+}
+
+.logo-item:hover .logo-hover-name {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
 .logo-item img {
     max-width: 90%;
     max-height: 90%;
     object-fit: contain;
-    /* Removed grayscale, keeping original colors with subtle enhancement */
-    filter: contrast(1.1) brightness(1.1);
+    /* Maintain original colors */
+    filter: contrast(1.05) brightness(1.05);
     mix-blend-mode: screen;
     opacity: 0.85;
-    transition: all 0.3s ease;
-    
-    /* Rounded corners and bezel effect on the image itself */
-    border-radius: 8px;
-    box-shadow: 
-        0 2px 8px rgba(0, 0, 0, 0.5),
-        inset 0 1px 2px rgba(255, 255, 255, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .logo-item:hover img {
-    filter: brightness(1.2) contrast(1.2);
-    opacity: 1;
-    transform: scale(1.05);
-    box-shadow: 
-        0 4px 12px rgba(0, 0, 0, 0.6),
-        inset 0 1px 3px rgba(255, 255, 255, 0.3);
+    opacity: 0;
+    transform: scale(0.85);
 }
 
 .animate-in {

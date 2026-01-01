@@ -3,9 +3,24 @@ import { ref, onMounted, onUnmounted, computed, nextTick, watch } from 'vue';
 import SoundManager from '../../sfx/SoundManager';
 import { chatStore } from '../../store/chatStore';
 
-const inputMessage = ref('');
-const inputRef = ref(null);
-const chatScroll = ref(null);
+const message = ref('');
+const messageInput = ref(null);
+const logContainer = ref(null);
+const cursorOffset = ref(0);
+const measurementSpan = ref(null);
+
+const updateCursorPosition = () => {
+    if (!messageInput.value || !measurementSpan.value) return;
+    
+    // Get text before cursor
+    const textBeforeCursor = message.value.slice(0, messageInput.value.selectionStart);
+    
+    // We update a hidden span with the same font to measure width
+    measurementSpan.value.textContent = textBeforeCursor;
+    
+    // Get width of text before cursor
+    cursorOffset.value = measurementSpan.value.offsetWidth;
+};
 
 const isValidNickname = computed(() => chatStore.nickname.trim().length >= 3);
 
@@ -13,8 +28,8 @@ const focusInput = async () => {
     // Retry focus a few times to account for rendering/animation
     for (let i = 0; i < 3; i++) {
         await nextTick();
-        if (inputRef.value) {
-            inputRef.value.focus();
+        if (messageInput.value) {
+            messageInput.value.focus();
             scrollToBottom();
             break;
         }
@@ -24,15 +39,15 @@ const focusInput = async () => {
 
 const scrollToBottom = async () => {
     await nextTick();
-    if (chatScroll.value) {
-        chatScroll.value.scrollTop = chatScroll.value.scrollHeight;
+    if (logContainer.value) {
+        logContainer.value.scrollTop = logContainer.value.scrollHeight;
     }
 };
 
-const sendMessage = async () => {
-    if (!inputMessage.value.trim()) return;
+const handleSend = async () => {
+    if (!message.value.trim()) return;
     
-    const text = inputMessage.value.trim();
+    const text = message.value.trim();
     
     if (text.startsWith('/')) {
         handleCommand(text);
@@ -45,8 +60,9 @@ const sendMessage = async () => {
         SoundManager.playTypingSound();
     }
     
-    inputMessage.value = '';
+    message.value = '';
     scrollToBottom();
+    updateCursorPosition(); // Reset cursor position after sending
 };
 
 const handleCommand = (cmd) => {
@@ -98,7 +114,7 @@ const formatTime = (isoString) => {
 
 <template>
   <div class="section-content animate-in">
-    <h3>> IRC.CLIENT -- #OWNEDGE</h3>
+    <h3>> IRC.OWNEDGE.NET</h3>
 
     <!-- IRC Interface -->
     <div v-if="chatStore.isConnected" class="irc-container">
@@ -108,7 +124,7 @@ const formatTime = (isoString) => {
           <span v-if="!chatStore.isServerOnline" class="server-status">[OFFLINE: SYNC DISABLED]</span>
           <span class="topic">MODIFIED: 2025.12.30 | TOPIC: OWNEDGE - EST 2011</span>
         </div>
-        <div class="irc-log" ref="chatScroll">
+        <div class="irc-log" ref="logContainer">
           <div v-for="msg in chatStore.messages" :key="msg.id" :class="['msg', msg.type]">
             <span class="msg-time">[{{ formatTime(msg.timestamp) }}]</span>
             <template v-if="msg.type === 'system'">
@@ -124,14 +140,25 @@ const formatTime = (isoString) => {
           </div>
         </div>
         <div class="irc-input-row">
-          <span class="nick">[{{ chatStore.nickname }}]</span>
+        <div class="input-wrapper">
           <input 
-            ref="inputRef"
-            v-model="inputMessage" 
-            placeholder="Type message or /command..." 
-            @keyup.enter="sendMessage"
+            ref="messageInput"
+            v-model="message" 
+            type="text" 
+            autocomplete="off"
+            placeholder="type message or /command..."
+            @keydown.enter="handleSend"
+            @input="updateCursorPosition"
+            @click="updateCursorPosition"
+            @keyup="updateCursorPosition"
           />
+          <span ref="measurementSpan" class="measurement-span"></span>
+          <div 
+            class="block-cursor" 
+            :style="{ left: `calc(10px + ${cursorOffset}px)` }"
+          ></div>
         </div>
+      </div>
       </div>
       <div class="irc-sidebar">
         <div class="sidebar-header">USERS [{{ chatStore.users.length + 1 }}]</div>
@@ -145,18 +172,32 @@ const formatTime = (isoString) => {
 </template>
 
 <style scoped>
-.persistent-mode {
+.section-content h3 {
+    margin-top: 0;
+    color: var(--color-accent);
+    border-bottom: 1px solid rgba(64, 224, 208, 0.3);
+    display: inline-block;
+    padding-bottom: 5px;
+    margin-bottom: 20px;
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+}
+
+.section-content {
+    display: flex;
+    flex-direction: column;
+    height: 90%;
     padding: 0 !important;
-    height: 100%;
 }
 
 .irc-container {
     display: grid;
     grid-template-columns: 1fr 200px; /* Slightly wider sidebar */
-    height: 500px; /* Fixed height for the IRC "window" */
+    flex: 1; /* Fill available height */
     background: #050505;
     border: 1px solid #333;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Microgramma', sans-serif;
+    letter-spacing: 0.5px;
     overflow: hidden; /* Prevent container from expanding */
 }
 
@@ -170,9 +211,9 @@ const formatTime = (isoString) => {
 
 .irc-header {
     background: #111;
-    padding: 8px 12px;
+    padding: 10px 14px;
     border-bottom: 1px solid #333;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     display: flex;
     gap: 20px;
 }
@@ -190,32 +231,70 @@ const formatTime = (isoString) => {
     scrollbar-color: #333 transparent;
 }
 
-.msg { margin-bottom: 4px; line-height: 1.4; display: flex; gap: 8px; }
-.msg-time { color: #555; font-size: 0.8rem; flex-shrink: 0; }
-.msg.system { color: #00ff00; font-size: 0.8rem; opacity: 0.8; }
+.msg { margin-bottom: 6px; line-height: 1.5; display: flex; gap: 8px; }
+.msg-time { color: #555; font-size: 0.9rem; flex-shrink: 0; }
+.msg.system { color: #00ff00; font-size: 0.9rem; opacity: 0.8; }
 .msg.action { color: var(--color-accent); font-style: italic; }
 .msg-user { color: #fff; font-weight: bold; flex-shrink: 0; }
 .msg-text { color: rgba(255,255,255,0.9); }
 .msg-content { white-space: pre-wrap; word-break: break-all; }
 
 .irc-input-row {
-    padding: 10px;
-    background: #0a0a0a;
-    border-top: 1px solid #333;
     display: flex;
-    gap: 10px;
+    align-items: center;
+    padding: 12px 15px;
+    background: #0a0a0a;
+    border-top: 1px solid #222;
+    gap: 12px;
+}
+
+.input-wrapper {
+    position: relative;
+    flex: 1;
+    display: flex;
     align-items: center;
 }
 
-.irc-input-row .nick { color: var(--color-accent); font-size: 0.85rem; }
+
 .irc-input-row input {
     flex: 1;
     background: transparent;
     border: none;
     color: #fff;
-    font-family: inherit;
-    font-size: 0.9rem;
+    font-family: 'Microgramma', sans-serif;
+    font-size: 1.05rem;
     outline: none;
+    padding: 0 10px;
+    letter-spacing: 0.5px;
+    caret-color: transparent; /* Hide native OS cursor */
+}
+
+.measurement-span {
+    position: absolute;
+    visibility: hidden;
+    white-space: pre;
+    font-family: 'Microgramma', sans-serif;
+    font-size: 1.05rem;
+    letter-spacing: 0.5px;
+    pointer-events: none;
+    left: 10px; /* Match input padding */
+}
+
+.block-cursor {
+    position: absolute;
+    width: 10px;
+    height: 1.2rem;
+    background: #bbb;
+    pointer-events: none;
+    animation: smooth-blink 1.1s ease-in-out infinite;
+    top: 50%;
+    transform: translateY(-50%);
+    box-shadow: 0 0 5px #bbb;
+}
+
+@keyframes smooth-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
 }
 
 .irc-sidebar {
@@ -227,10 +306,10 @@ const formatTime = (isoString) => {
 }
 
 .sidebar-header {
-    padding: 9px 12px;
+    padding: 10px 14px;
     background: #111;
     border-bottom: 1px solid #333;
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     color: #666;
     letter-spacing: 1px;
 }
@@ -238,7 +317,7 @@ const formatTime = (isoString) => {
 .user-list {
     flex: 1;
     padding: 10px;
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     overflow-y: auto; /* Scrollable users if list is long */
     scrollbar-width: thin;
     scrollbar-color: #333 transparent;

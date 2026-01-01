@@ -105,7 +105,7 @@ onUnmounted(() => {
       />
 
       <!-- Main Contents -->
-      <div class="tui-viewport custom-scroll" ref="viewportContent">
+      <div class="tui-viewport custom-scroll" :class="{ 'no-overflow': activeTab === ChatSection }" ref="viewportContent">
           <component :is="activeTab" v-if="activeTab" />
           <div v-else class="home-placeholder">
               <!-- No content for HOME tab inside Commander, as it maps back to Hero -->
@@ -207,6 +207,13 @@ onUnmounted(() => {
   overflow-y: auto;
   font-size: 1.2rem;
   line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+}
+
+.tui-viewport.no-overflow {
+    overflow: hidden;
+    padding: 30px 40px 0; /* Align title vertical position with other pages */
 }
 
 /* Custom Scroll */

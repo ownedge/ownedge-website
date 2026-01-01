@@ -1,6 +1,6 @@
 <template>
   <div class="section-content animate-in">
-    <h3>EST. 2011</h3>
+    <h3>> EST. 2011</h3>
     
     <div class="manifesto-wrapper">
       <div class="manifesto-content">
@@ -46,9 +46,9 @@
     border-bottom: 1px solid rgba(64, 224, 208, 0.3);
     display: inline-block;
     padding-bottom: 5px;
-    margin-bottom: 25px;
-    font-size: 1.2rem;
-    letter-spacing: 2px;
+    margin-bottom: 20px;
+    font-size: 1.4rem;
+    letter-spacing: 1px;
 }
 
 .manifesto-wrapper {
