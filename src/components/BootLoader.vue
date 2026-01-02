@@ -75,7 +75,7 @@ const runBiosSequence = async () => {
     for (let p = 0; p <= 100; p += 5) {
         const bars = '█'.repeat(Math.floor(p / 10));
         const spaces = ' '.repeat(10 - Math.floor(p / 10));
-        bootMessages.value[barLineIdx] = parseMessage(`LOADING KERNEL [${bars}${spaces}] ${p}%`);
+        bootMessages.value[barLineIdx] = parseMessage(`> LOADING KERNEL [${bars}${spaces}] ${p}%`);
         emit('progress', 30 + (p * 0.4)); // Map 30-70% to kernel load
         await new Promise(r => setTimeout(r, 40));
     }
@@ -111,11 +111,11 @@ const handleConnect = async () => {
     // Status sequencing for VFD
     setTimeout(() => { 
         if (bootStage.value === 'connecting') emit('status-update', 'connecting...'); 
-    }, 3250);
+    }, 2850);
     
     setTimeout(() => { 
         if (bootStage.value === 'connecting') emit('status-update', 'LINK OK!'); 
-    }, 9300);
+    }, 6300);
 
     await nextTick();
     startVisualization();
@@ -133,7 +133,7 @@ const handleConnect = async () => {
     for (let p = 0; p <= 100; p += 10) {
         const bars = '█'.repeat(Math.floor(p / 10));
         const spaces = ' '.repeat(10 - Math.floor(p / 10));
-        bootMessages.value[driverLineIdx] = parseMessage(`LOADING DRIVERS [${bars}${spaces}] ${p}%`);
+        bootMessages.value[driverLineIdx] = parseMessage(`> LOADING DRIVERS [${bars}${spaces}] ${p}%`);
         await new Promise(r => setTimeout(r, 60));
     }
     await addMessage('> VIRTUAL FILE SYSTEM MOUNTED ✔', 100);

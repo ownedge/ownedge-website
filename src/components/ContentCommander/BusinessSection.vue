@@ -24,12 +24,11 @@ const customers = [
 ];
 
 const businessTabs = [
-  { id: 'group', name: 'THE GROUP' },
   { id: 'services', name: 'SERVICES' },
   { id: 'customers', name: 'CUSTOMERS' }
 ];
 
-const activeTabId = ref('group');
+const activeTabId = ref('services');
 
 const selectTab = (id) => {
   if (activeTabId.value !== id) {
@@ -84,46 +83,6 @@ onUnmounted(() => {
 
       <!-- Right Content -->
       <div class="business-viewport">
-        <div v-if="activeTabId === 'group'" class="tab-content">
-          <h4>THE GROUP</h4>
-          <div class="group-grid">
-            <!-- Syndiscape -->
-            <div class="group-box">
-              <div class="box-header">SYNDISCAPE</div>
-              <div class="box-body">
-                <p class="box-desc">Full-stack design and software studio. Engineering digital products with a focus on high-fidelity interactive systems and creative code.</p>
-                <div class="box-meta">STATUS: ACTIVE</div>
-              </div>
-            </div>
-
-            <!-- Zizara -->
-            <div class="group-box">
-              <div class="box-header">ZIZARA</div>
-              <div class="box-body">
-                <p class="box-desc">Venture and angel capital. Providing strategic guidance and early-stage funding for ambitious startups in their embryonic phase.</p>
-                <div class="box-meta">STATUS: ACTIVE</div>
-              </div>
-            </div>
-
-            <!-- Raven -->
-            <div class="group-box">
-              <div class="box-header">RAVEN</div>
-              <div class="box-body">
-                <p class="box-desc">Comprehensive aviation solutions. Specialized in advanced flight training, certification protocols, and aircraft electronics.</p>
-                <div class="box-meta">STATUS: ACTIVE</div>
-              </div>
-            </div>
-
-            <!-- Advech Engineering -->
-            <div class="group-box">
-              <div class="box-header">ADVECH ENGINEERING</div>
-              <div class="box-body">
-                <p class="box-desc">Industrial design and precision manufacturing. Producing custom equipment and parts via composites, CNC, and 3D printing.</p>
-                <div class="box-meta">STATUS: ACTIVE</div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <div v-if="activeTabId === 'services'" class="tab-content">
           <h4>SERVICES</h4>
@@ -375,67 +334,6 @@ onUnmounted(() => {
     animation: slideUp 0.3s ease-out;
 }
 
-/* Group Grid Styles */
-.group-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    margin-top: 10px;
-}
-
-.group-box {
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.02);
-    display: flex;
-    flex-direction: column;
-}
-
-.box-header {
-    background: #fff;
-    color: #000;
-    padding: 6px 14px;
-    font-size: 1rem;
-    font-weight: bold;
-    letter-spacing: 1px;
-}
-
-.box-body {
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-.box-desc {
-    font-size: 1.1rem !important;
-    line-height: 1.6 !important;
-    margin-bottom: 12px !important;
-    color: rgba(255, 255, 255, 0.7) !important;
-}
-
-.box-meta {
-    margin-top: auto;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.9rem;
-    color: var(--color-accent);
-}
-
-.sub-entity {
-    margin-bottom: 15px;
-}
-
-.sub-entity:last-child {
-    margin-bottom: 0;
-}
-
-.entity-name {
-    color: #fff;
-    font-size: 0.9rem;
-    font-weight: bold;
-    margin-bottom: 4px;
-    border-left: 2px solid var(--color-accent);
-    padding-left: 8px;
-}
 
 @media (max-width: 768px) {
     .business-layout {
