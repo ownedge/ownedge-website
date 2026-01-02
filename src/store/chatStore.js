@@ -12,7 +12,7 @@ export const chatStore = reactive({
     pollingInterval: null,
     heartbeatInterval: null,
     isServerOnline: true,
-    topic: { text: '...', modified: '' },
+    topic: { text: '...', author: '...', modified: '' },
     lastId: 0,
     
     async init() {
@@ -33,7 +33,11 @@ export const chatStore = reactive({
             const response = await fetch(`${API_BASE}?action=topic`);
             if (response.ok) {
                 const data = await response.json();
-                this.topic = { text: data.topic, modified: data.modified };
+                this.topic = { 
+                    text: data.topic, 
+                    author: data.author || 'Admin', 
+                    modified: data.modified 
+                };
                 // Print topic to log
                 this.messages.push({
                     id: 'topic-' + Date.now(),
@@ -55,7 +59,11 @@ export const chatStore = reactive({
             });
             if (response.ok) {
                 const data = await response.json();
-                this.topic = { text: data.topic, modified: data.modified };
+                this.topic = { 
+                    text: data.topic, 
+                    author: data.author || this.nickname, 
+                    modified: data.modified 
+                };
             }
         } catch (e) {}
     },

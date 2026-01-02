@@ -126,9 +126,12 @@ const formatTime = (isoString) => {
     <div v-if="chatStore.isConnected" class="irc-container">
       <div class="irc-main">
         <div class="irc-header">
-          <span class="chan">#OWNEDGE</span>
-          <span v-if="!chatStore.isServerOnline" class="server-status">[OFFLINE: SYNC DISABLED]</span>
-          <span class="topic">MODIFIED: {{ chatStore.topic.modified || '...' }} | TOPIC: {{ chatStore.topic.text }}</span>
+          <div class="header-main">
+            <span class="chan">#OWNEDGE</span>
+            <span class="topic">"{{ chatStore.topic.text }}"</span>
+            <span class="topic-meta">set by {{ chatStore.topic.author }} on {{ chatStore.topic.modified }}</span>
+            <span v-if="!chatStore.isServerOnline" class="server-status">[OFFLINE]</span>
+          </div>
         </div>
         <div class="irc-log" ref="logContainer">
           <div v-for="msg in chatStore.messages" :key="msg.id" :class="['msg', msg.type]">
@@ -218,16 +221,31 @@ const formatTime = (isoString) => {
 
 .irc-header {
     background: #111;
-    padding: 10px 14px;
+    padding: 8px 14px;
     border-bottom: 1px solid #333;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     display: flex;
-    gap: 20px;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.header-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-meta {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 0.75rem;
 }
 
 .irc-header .chan { color: var(--color-accent); font-weight: bold; }
+.irc-header .topic { color: #fff; font-weight: bold; }
+.irc-header .topic-meta { color: #666; font-family: 'Microgramma', sans-serif; letter-spacing: 0.5px; }
 .irc-header .server-status { color: #ff0000; font-size: 0.7rem; font-weight: bold; background: rgba(255,0,0,0.1); padding: 0 5px; }
-.irc-header .topic { color: #888; }
 
 .irc-log {
     flex: 1;
@@ -313,7 +331,7 @@ const formatTime = (isoString) => {
 }
 
 .sidebar-header {
-    padding: 10px 14px;
+    padding: 8px 14px;
     background: #111;
     border-bottom: 1px solid #333;
     font-size: 0.85rem;

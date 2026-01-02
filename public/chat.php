@@ -35,7 +35,7 @@ function save_data($file, $data) {
 // Ensure files exist
 if (!file_exists($log_file)) save_data($log_file, []);
 if (!file_exists($users_file)) save_data($users_file, []);
-if (!file_exists($topic_file)) save_data($topic_file, ["topic" => "OWNEDGE - EST 2011", "modified" => "2025.12.30"]);
+if (!file_exists($topic_file)) save_data($topic_file, ["topic" => "OWNEDGE - EST 2011", "author" => "Admin", "modified" => date('Y-m-d H:i:s')]);
 
 // --- PRE-PROCESS: Atomic Cleanup (Users & Messages) ---
 $lock_file = '.cleanup.lock';
@@ -140,9 +140,11 @@ if ($action === 'topic') {
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);
         if (isset($data['topic'])) {
+            $user = isset($data['user']) ? $data['user'] : 'Admin';
             $newTopic = [
                 "topic" => $data['topic'],
-                "modified" => date('Y.m.d')
+                "author" => $user,
+                "modified" => date('Y.m.d H:i:s')
             ];
             save_data($topic_file, $newTopic);
             
