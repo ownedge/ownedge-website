@@ -126,7 +126,7 @@ const formatTime = (isoString) => {
         <div class="irc-header">
           <span class="chan">#OWNEDGE</span>
           <span v-if="!chatStore.isServerOnline" class="server-status">[OFFLINE: SYNC DISABLED]</span>
-          <span class="topic">MODIFIED: 2025.12.30 | TOPIC: OWNEDGE - EST 2011</span>
+          <span class="topic">MODIFIED: {{ chatStore.topic.modified || '...' }} | TOPIC: {{ chatStore.topic.text }}</span>
         </div>
         <div class="irc-log" ref="logContainer">
           <div v-for="msg in chatStore.messages" :key="msg.id" :class="['msg', msg.type]">

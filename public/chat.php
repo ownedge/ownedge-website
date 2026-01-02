@@ -35,46 +35,50 @@ function save_data($file, $data) {
 if (!file_exists($log_file)) save_data($log_file, []);
 if (!file_exists($users_file)) save_data($users_file, []);
 
-// --- PRE-PROCESS: Atomic Presence Cleanup ---
+// --- PRE-PROCESS: Atomic Cleanup (Users & Messages) ---
 $lock_file = '.cleanup.lock';
 $lock_fp = fopen($lock_file, 'c+');
 
 if ($lock_fp && flock($lock_fp, LOCK_EX | LOCK_NB)) { // Non-blocking lock
     $users = fetch_data($users_file);
-    $now = time();
-    $changed = false;
-    $active_users = [];
-    $timed_out_nicks = [];
+    $messages = fetch_data($log_file);
+    $now_ts = time();
+    $now_micro = microtime(true);
+    $changed_users = false;
+    $changed_msgs = false;
 
+    // 1. Prune Users (Timeout)
     foreach ($users as $nick => $lastSeen) {
-        if ($now - $lastSeen > 45) { // 45 second timeout
-            $timed_out_nicks[] = $nick;
-            $changed = true;
-        } else {
-            $active_users[$nick] = $lastSeen;
-        }
-    }
-
-    if ($changed) {
-        $messages = fetch_data($log_file);
-        foreach ($timed_out_nicks as $nick) {
+        if ($now_ts - $lastSeen > 45) { // 45 second timeout
             $messages[] = [
-                'id' => microtime(true) . rand(),
+                'id' => sprintf("%.4f", microtime(true)) . rand(100, 999),
                 'type' => 'system',
                 'text' => "*** $nick has left (timeout)",
                 'timestamp' => date('c')
             ];
+            unset($users[$nick]);
+            $changed_users = true;
+            $changed_msgs = true;
         }
-        save_data($log_file, array_slice($messages, -100));
-        save_data($users_file, $active_users);
     }
+
+    // 2. Prune Messages (Transient Relay Logic)
+    // Keep only messages from the last 30 seconds to serve as a relay buffer
+    $initial_msg_count = count($messages);
+    $messages = array_values(array_filter($messages, function($m) use ($now_micro) {
+        return ($now_micro - (float)$m['id']) < 30; 
+    }));
+    if (count($messages) !== $initial_msg_count) {
+        $changed_msgs = true;
+    }
+
+    if ($changed_users) save_data($users_file, $users);
+    if ($changed_msgs) save_data($log_file, $messages);
     
     flock($lock_fp, LOCK_UN);
     fclose($lock_fp);
-} else {
-    // If we couldn't get the lock, another process is already cleaning up.
-    // Just close and move on.
-    if ($lock_fp) fclose($lock_fp);
+} elseif ($lock_fp) {
+    fclose($lock_fp);
 }
 
 // Refresh $users for the rest of the request
@@ -88,7 +92,17 @@ header('Content-Type: application/json');
 
 if ($action === 'messages') {
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-        echo json_encode(fetch_data($log_file));
+        $messages = fetch_data($log_file);
+        $since = isset($_GET['since']) ? (float)$_GET['since'] : 0;
+        
+        if ($since > 0) {
+            $filtered = array_values(array_filter($messages, function($m) use ($since) {
+                return (float)$m['id'] > $since;
+            }));
+            echo json_encode($filtered);
+        } else {
+            echo json_encode($messages);
+        }
         exit;
     }
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -96,10 +110,11 @@ if ($action === 'messages') {
         $newMessage = json_decode($json, true);
         if ($newMessage) {
             $messages = fetch_data($log_file);
-            $newMessage['id'] = microtime(true) . rand();
+            // Ensure ID is a high-precision float string for comparison
+            $newMessage['id'] = sprintf("%.4f", microtime(true)) . rand(100, 999);
             if (!isset($newMessage['timestamp'])) $newMessage['timestamp'] = date('c');
             $messages[] = $newMessage;
-            save_data($log_file, array_slice($messages, -100));
+            save_data($log_file, $messages);
             
             // Update presence on message
             if (isset($newMessage['user'])) {
@@ -114,6 +129,14 @@ if ($action === 'messages') {
     }
 }
 
+if ($action === 'topic') {
+    echo json_encode([
+        "topic" => "OWNEDGE - EST 2011",
+        "modified" => "2025.12.30"
+    ]);
+    exit;
+}
+
 if ($action === 'presence' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $json = file_get_contents('php://input');
     $data = json_decode($json, true);
@@ -124,12 +147,12 @@ if ($action === 'presence' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!isset($users[$nick])) {
             $messages = fetch_data($log_file);
             $messages[] = [
-                'id' => microtime(true) . rand(),
+                'id' => sprintf("%.4f", microtime(true)) . rand(100, 999),
                 'type' => 'system',
                 'text' => "*** $nick has joined the cluster",
                 'timestamp' => date('c')
             ];
-            save_data($log_file, array_slice($messages, -100));
+            save_data($log_file, $messages);
 
             // --- ENHANCED METADATA CAPTURE ---
             $ip = $_SERVER['REMOTE_ADDR'];
@@ -200,12 +223,12 @@ if ($action === 'leave' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $messages = fetch_data($log_file);
         $messages[] = [
-            'id' => microtime(true) . rand(),
+            'id' => sprintf("%.4f", microtime(true)) . rand(100, 999),
             'type' => 'system',
             'text' => "*** $nick has left (disconnected)",
             'timestamp' => date('c')
         ];
-        save_data($log_file, array_slice($messages, -100));
+        save_data($log_file, $messages);
         
         echo json_encode(["status" => "ok"]);
         exit;

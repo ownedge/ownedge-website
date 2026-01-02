@@ -12,35 +12,58 @@ export const chatStore = reactive({
     pollingInterval: null,
     heartbeatInterval: null,
     isServerOnline: true,
+    topic: { text: '...', modified: '' },
+    lastId: 0,
     
     async init() {
+        // Mark joining time to avoid seeing historical messages
+        this.lastId = (Date.now() / 1000) - 0.5; // Offset slightly to guarantee catching your own join message
+        this.messages = [];
+        
         await Promise.all([
+            this.fetchTopic(),
             this.fetchMessages(),
             this.fetchUsers()
         ]);
         this.startPolling();
     },
 
-    async fetchMessages() {
+    async fetchTopic() {
         try {
-            const response = await fetch(`${API_BASE}?action=messages`);
+            const response = await fetch(`${API_BASE}?action=topic`);
             if (response.ok) {
                 const data = await response.json();
-                if (Array.isArray(data)) {
-                    const lastLocal = this.messages[this.messages.length - 1];
-                    const lastServer = data[data.length - 1];
-                    
-                    if (!lastLocal || !lastServer || lastLocal.id !== lastServer.id || data.length !== this.messages.length) {
-                        this.messages = data;
+                this.topic = { text: data.topic, modified: data.modified };
+                // Print topic to log
+                this.messages.push({
+                    id: 'topic-' + Date.now(),
+                    type: 'system',
+                    text: `*** Topic for #OWNEDGE: ${data.topic}`,
+                    timestamp: new Date().toISOString()
+                });
+            }
+        } catch (e) {}
+    },
+
+    async fetchMessages() {
+        if (!this.lastId) return;
+        try {
+            const response = await fetch(`${API_BASE}?action=messages&since=${this.lastId}`);
+            if (response.ok) {
+                const data = await response.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    // Filter out duplicates (though 'since' should handle it)
+                    const newMsgs = data.filter(m => !this.messages.find(existing => existing.id === m.id));
+                    if (newMsgs.length > 0) {
+                        this.messages.push(...newMsgs);
+                        this.lastId = data[data.length - 1].id;
                     }
                 }
                 this.isServerOnline = true;
             } else {
-                console.warn(`Chat Sync Failed: ${response.status} ${response.statusText}`);
                 this.isServerOnline = false;
             }
         } catch (e) {
-            console.error("Chat Network Error (Is PHP server running on :8000?):", e);
             this.isServerOnline = false;
         }
     },
@@ -76,7 +99,7 @@ export const chatStore = reactive({
     },
 
     async addMessage(msg) {
-        const localId = Date.now() + Math.random();
+        const localId = 'temp-' + Date.now() + Math.random();
         const localMsg = { 
             ...msg, 
             id: localId, 
@@ -94,8 +117,30 @@ export const chatStore = reactive({
             });
             
             if (response.ok) {
+                const verifiedMsg = await response.json();
+                
+                // 1. Check if background polling already grabbed this message
+                const alreadySynced = this.messages.find(m => m.id === verifiedMsg.id);
+                const tempIdx = this.messages.findIndex(m => m.id === localId);
+                
+                if (alreadySynced) {
+                    // It's already there with the real ID, so just discard the temp one
+                    if (tempIdx !== -1) this.messages.splice(tempIdx, 1);
+                } else {
+                    // Not there yet, so "upgrade" the temp one to the real ID
+                    if (tempIdx !== -1) {
+                        this.messages[tempIdx].id = verifiedMsg.id;
+                        this.messages[tempIdx].timestamp = verifiedMsg.timestamp;
+                    }
+                }
+                
+                // 2. Advance lastId to ensure we don't fetch it again
+                if (parseFloat(verifiedMsg.id) > parseFloat(this.lastId)) {
+                    this.lastId = verifiedMsg.id;
+                }
+                
                 this.isServerOnline = true;
-                await this.fetchMessages();
+                this.fetchMessages();
             } else {
                 this.isServerOnline = false;
             }
