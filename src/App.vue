@@ -2,7 +2,6 @@
 import GridOverlay from './components/GridOverlay.vue'
 import HeroDisplay from './components/HeroDisplay.vue'
 import ContentCommander from './components/ContentCommander/ContentCommander.vue'
-import PhosphorOverlay from './components/PhosphorOverlay.vue'
 import NoiseOverlay from './components/NoiseOverlay.vue'
 import SoundManager from './sfx/SoundManager'
 import BootLoader from './components/BootLoader.vue'
@@ -30,9 +29,7 @@ const windowHeight = ref(window.innerHeight)
 const mouseX = ref(window.innerWidth / 2)
 const mouseY = ref(window.innerHeight / 2)
 
-const isCursorVisible = ref(false)
 const isBooted = ref(false)
-let hideCursorTimeout = null
 const screenRect = ref(null); // Cache for performance
 const activeTabIndex = ref(0);
 const lastActiveContentTab = ref(1); // Default to BUSINESS
@@ -59,39 +56,9 @@ const handleMouseMove = (e) => {
   
   // Update rect if missing (lazy init)
   if (!screenRect.value) updateScreenRect();
-
-  // Check bounds: Only show if inside the screen container
-  if (screenRect.value) {
-      const isInside = (
-          e.clientX >= screenRect.value.left && 
-          e.clientX <= screenRect.value.right &&
-          e.clientY >= screenRect.value.top && 
-          e.clientY <= screenRect.value.bottom
-      );
-      isCursorVisible.value = isInside;
-  } else {
-      isCursorVisible.value = true; // Fallback
-  }
-  
-  // Brute-force hide OS cursor on every move to fight MacOS persistence
-  if (document.body.style.cursor !== 'none') {
-      hideCursor();
-  }
-  
-  // Reset timer to hide
-  clearTimeout(hideCursorTimeout)
-  hideCursorTimeout = setTimeout(() => {
-    isCursorVisible.value = false
-  }, 2000)
 }
 
-const hideCursor = () => {
-  const transparentCursor = "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='), none";
-  if (document.body.style.cursor !== transparentCursor) {
-      document.body.style.cursor = transparentCursor;
-      document.documentElement.style.cursor = transparentCursor;
-  }
-};
+
 
 const handleResize = () => {
     windowWidth.value = window.innerWidth
@@ -139,13 +106,6 @@ onMounted(() => {
           ro.observe(el);
       }
   });
-  // Aggressively hide cursor via CSS instead of interval
-  hideCursor();
-
-  // Re-hide on focus/entry (fixes Alt-Tab issue)
-  window.addEventListener('focus', hideCursor);
-  document.addEventListener('mouseenter', hideCursor);
-  document.addEventListener('click', hideCursor);
 
   // Monitor Lock States
   window.addEventListener('keydown', updateLockStates);
@@ -219,10 +179,6 @@ let previousVfdMode = 'spectrum';
 onUnmounted(() => {
   window.removeEventListener('mousemove', handleMouseMove)
   window.removeEventListener('resize', handleResize)
-  window.removeEventListener('focus', hideCursor)
-  document.removeEventListener('mouseenter', hideCursor)
-  
-  document.removeEventListener('click', hideCursor) // Remove old ref if needed, but handled by handleGlobalClick now
   document.removeEventListener('mouseover', handleGlobalHover);
   window.removeEventListener('keydown', handleGlobalKeydown);
   
@@ -371,21 +327,7 @@ const triggerGlitch = () => {
     setTimeout(triggerGlitch, Math.random() * 8000 + 2000); 
 };
 
-const cursorStyle = computed(() => {
-    // If no screen rect yet, hide or stick to 0,0
-    if (!screenRect.value) return { opacity: 0 };
-    
-    // Relative coordinates
-    const left = screenRect.value.left || 0;
-    const top = screenRect.value.top || 0;
-    const x = mouseX.value - left;
-    const y = mouseY.value - top;
-    
-    return {
-        transform: `translate3d(${x}px, ${y}px, 0)`,
-        opacity: isCursorVisible.value ? 0.85 : 0
-    };
-});
+
 
 const heroStyle = computed(() => {
   const x = (mouseX.value - windowWidth.value / 2) * 0.005
@@ -579,14 +521,7 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
           </section>
         </div>
         
-        <!-- Phosphor Burn Layer (simulates screen persistence) -->
-        <PhosphorOverlay />
         
-        <!-- Synthetic Cursor (Inside screen, behind effects) -->
-        <div 
-          class="custom-cursor" 
-          :style="cursorStyle"
-        ></div>
 
         <!-- Fixed Foreground Overlays -->
         <div class="scanlines"></div>
@@ -624,36 +559,10 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
   </div>
 </template>
 
-<style>
-/* Global cursor hide using Transparent Image Trick */
-/* This is more robust than 'none' as it tricks the OS into showing a valid (but invisible) cursor */
-html, body, .crt-wrapper, * {
-  cursor: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='), none !important;
-}
-</style>
+
 
 <style scoped>
-/* Custom Cursor Element */
-.custom-cursor {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 24px;
-  height: 24px;
-  background-image: url("data:image/svg+xml,%3Csvg width='34' height='34' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19135L11.7841 12.3673H5.65376Z' fill='rgba(255, 51, 51, 0.8)'/%3E%3C/svg%3E");
-  background-size: contain;
-  background-repeat: no-repeat;
-  pointer-events: none;
-  z-index: 45; /* Below Scanlines (50) and Vignette (60) */
-  /* Adjust transform to align tip of arrow */
-  transform: translate(0, 0); 
-  mix-blend-mode: normal; 
-  will-change: transform;
-  /* Add a drop shadow for glowing effect */
-  filter: drop-shadow(0 0 5px rgb(255, 51, 51));
-  /* opacity controlled by JS */
-  transition: opacity 0.3s ease;
-}
+
 
 /* CRT Wrapper (The Bezel/Room) */
 .crt-wrapper {
@@ -664,7 +573,6 @@ html, body, .crt-wrapper, * {
   align-items: center;
   justify-content: center;
   padding: 40px 40px 80px 40px; /* Thicker chin */
-  cursor: none; /* Ensure hidden here too */
   position: relative;
   overflow: hidden;
 }
