@@ -40,8 +40,8 @@ const isScrollingManually = ref(false);
 
 const tabs = [
   { id: 'home', name: 'HOME' },
-  { id: 'business', name: 'BUSINESS' },
-  { id: 'about', name: 'ABOUT' },
+  { id: 'business', name: 'WHAT' },
+  { id: 'about', name: 'WHY' },
   { id: 'guestbook', name: 'GUESTBOOK' },
   { id: 'chat', name: 'CHAT' }
 ];

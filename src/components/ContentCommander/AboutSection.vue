@@ -1,6 +1,6 @@
 <template>
   <div class="section-content animate-in">
-    <h3>> EST. 2011</h3>
+    <h3>> WHY</h3>
     
     <div class="manifesto-wrapper">
       <div class="manifesto-content">

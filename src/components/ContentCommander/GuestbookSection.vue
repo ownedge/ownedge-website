@@ -163,18 +163,17 @@ onUnmounted(() => {
 <template>
   <div class="section-content animate-in">
     <div class="header-row">
-        <h3>> GUEST LOG</h3>
+        <h3>> GUESTBOOK</h3>
         <button 
           class="sign-btn" 
           @click="openModal" 
           :disabled="isSigned"
         >
-            {{ isSigned ? '[ SIGNED ]' : '[ SIGN GUESTBOOK ]' }}
+            {{ isSigned ? '[ SIGNED ]' : '' }}
         </button>
     </div>
     
     <p class="subtitle">
-        Leave your mark on the system memory.
         <span 
           v-if="!isSigned" 
           class="enter-prompt" 
@@ -200,7 +199,7 @@ onUnmounted(() => {
       <div v-if="isModalOpen" class="modal-overlay" @click.self="closeModal">
         <div class="modal-content animate-pop">
           <div class="esc-label" @click="closeModal">ESC</div>
-          <h4>SIGN GUEST LOG</h4>
+          <h4>SIGN GUESTBOOK</h4>
           
           <div v-if="!showSuccess" class="form-body">
 
@@ -306,7 +305,7 @@ onUnmounted(() => {
 }
 
 .subtitle {
-    font-size: 0.9rem;
+    font-size: 1.1rem;
     color: #888;
     margin-bottom: 30px;
 }
@@ -527,13 +526,13 @@ onUnmounted(() => {
 
 .modal-actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     gap: 15px;
     margin-top: 30px;
 }
 
 .submit-btn {
-    padding: 10px 25px;
+    padding: 10px 45px;
     font-family: inherit;
     font-size: 0.85rem;
     cursor: pointer;

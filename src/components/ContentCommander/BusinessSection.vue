@@ -64,7 +64,7 @@ onUnmounted(() => {
 
 <template>
   <div class="section-content animate-in">
-    <h3>> BUSINESS</h3>
+    <h3>> WHAT</h3>
     
     <div class="business-layout">
       <!-- Left Menu -->

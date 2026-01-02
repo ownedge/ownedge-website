@@ -6,7 +6,7 @@ const titleFull = "OWNEDGE";
 const titleText = ref("");
 
 const subtitles = [
-  "DEFYING THE ESTABLISHMENT...",
+  "DEFYING THE ESTABLISHED...",
 ];
 
 const displayedText = ref("");
