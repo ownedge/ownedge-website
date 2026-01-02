@@ -185,6 +185,7 @@ const formatTime = (isoString) => {
     margin-bottom: 20px;
     font-size: 1.4rem;
     letter-spacing: 1px;
+    align-self: flex-start;
 }
 
 .section-content {
