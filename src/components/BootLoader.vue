@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
+import { ref, onMounted, onUnmounted, computed, nextTick, watch } from 'vue';
 import SoundManager from '../sfx/SoundManager';
 import { chatStore } from '../store/chatStore';
 // Use direct import for asset to get hashed URL
@@ -190,6 +190,14 @@ const stopVisualization = () => {
 onMounted(() => {
   if (videoRef.value) videoRef.value.playbackRate = 0.8;
   runBiosSequence();
+});
+
+watch(() => props.isBooted, (val) => {
+    if (val && videoRef.value) {
+        setTimeout(() => {
+            if (videoRef.value) videoRef.value.pause();
+        }, 2500);
+    }
 });
 
 onUnmounted(() => {

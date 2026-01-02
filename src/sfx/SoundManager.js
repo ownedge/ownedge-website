@@ -16,11 +16,13 @@ class SoundManager {
             '/sfx/music.mod',
             '/sfx/atmosphere.mod',
         ];
-        // Internal reactive state for UI
-        this.state = reactive({
-            isMusicPlaying: false,
-            currentSongIndex: 0
-        });
+        // Quality/Performance Cache
+        this._cache = {
+            frameId: 0,
+            trackerData: null,
+            audioData: null,
+            dialUpData: null
+        };
     }
 
     init() {
@@ -52,9 +54,19 @@ class SoundManager {
 
     getAudioData() {
         if (!this.analyser) return null;
+        
+        // Cache per frame to support multiple visualizers
+        const currentFrame = (window.performance && window.performance.now()) || Date.now();
+        if (this._cache.audioData && (currentFrame - this._cache.frameId < 16)) {
+            return this._cache.audioData;
+        }
+
         const bufferLength = this.analyser.frequencyBinCount;
         const dataArray = new Uint8Array(bufferLength);
         this.analyser.getByteFrequencyData(dataArray);
+        
+        this._cache.frameId = currentFrame;
+        this._cache.audioData = dataArray;
         return dataArray;
     }
 
@@ -655,14 +667,26 @@ class SoundManager {
 
     // API-Compatible wrapper for VFD/Legacy
     getTrackerData() {
+        const currentFrame = (window.performance && window.performance.now()) || Date.now();
+        // Check cache (allow 16ms grace period for same-frame calls)
+        if (this._cache.trackerData && (currentFrame - this._cache.frameId < 16)) {
+            return this._cache.trackerData;
+        }
+
         const pos = this.getTrackerPosition();
-        if (!pos) return null;
+        if (!pos) {
+            this._cache.trackerData = null;
+            return null;
+        }
         const channels = this.getPatternRowData(pos.pattern, pos.row);
-        return {
+        const data = {
             row: pos.row,
             pattern: pos.pattern,
             channels
         };
+        
+        this._cache.trackerData = data;
+        return data;
     }
 }
 

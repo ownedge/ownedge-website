@@ -139,9 +139,8 @@ onMounted(() => {
           ro.observe(el);
       }
   });
-  // Aggressively hide cursor
+  // Aggressively hide cursor via CSS instead of interval
   hideCursor();
-  cursorInterval = setInterval(hideCursor, 500);
 
   // Re-hide on focus/entry (fixes Alt-Tab issue)
   window.addEventListener('focus', hideCursor);
@@ -227,7 +226,7 @@ onUnmounted(() => {
   document.removeEventListener('mouseover', handleGlobalHover);
   window.removeEventListener('keydown', handleGlobalKeydown);
   
-  clearInterval(cursorInterval)
+  // clearInterval(cursorInterval) // Removed legacy cleanup
   if (clockInterval) clearInterval(clockInterval);
 })
 

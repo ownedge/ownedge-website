@@ -50,7 +50,8 @@ let animationFrameId = null;
             paddingLeft: parseFloat(style.paddingLeft),
             paddingRight: parseFloat(style.paddingRight),
             borderLeftWidth: parseFloat(style.borderLeftWidth),
-            lineHeight: style.lineHeight === 'normal' ? parseFloat(style.fontSize) * 1.2 : parseFloat(style.lineHeight)
+            lineHeight: style.lineHeight === 'normal' ? parseFloat(style.fontSize) * 1.2 : parseFloat(style.lineHeight),
+            opacity: parseFloat(style.opacity)
           };
         });
     }
@@ -109,8 +110,8 @@ let animationFrameId = null;
         
         if (rect.bottom < 0 || rect.top > height || rect.right < 0 || rect.left > width) return;
         
-        // Quick visibility check without full style compute
-        if (el.offsetWidth === 0 || el.offsetHeight === 0) return;
+        // Quick visibility check
+        if (el.offsetWidth === 0 || el.offsetHeight === 0 || target.opacity === 0) return;
 
         const baseAlpha = target.isImg ? 0.05 : 0.4;
         ctx.globalAlpha = baseAlpha;
