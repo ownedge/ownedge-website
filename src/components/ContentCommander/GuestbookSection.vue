@@ -1,12 +1,17 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, onUnmounted, nextTick, watch } from 'vue';
 import SoundManager from '../../sfx/SoundManager';
+import { chatStore } from '../../store/chatStore';
 
 const entries = ref([]);
 const isModalOpen = ref(false);
 const isSubmitting = ref(false);
 const showSuccess = ref(false);
 const isSigned = ref(false);
+
+const messageInput = ref(null);
+const cursorOffset = ref(0);
+const measurementSpan = ref(null);
 
 const newEntry = ref({
   name: '',
@@ -16,7 +21,7 @@ const newEntry = ref({
 
 const API_URL = import.meta.env.PROD 
   ? '/guestbook.php' 
-  : 'http://localhost:8000/guestbook.php';
+  : 'https://ownedge.com/guestbook.php';
 
 const fetchEntries = async () => {
     try {
@@ -49,8 +54,32 @@ const setRating = (val) => {
     SoundManager.playTypingSound();
 };
 
+const updateCursorPosition = () => {
+    nextTick(() => {
+        if (!messageInput.value || !measurementSpan.value) return;
+        measurementSpan.value.textContent = newEntry.value.message.substring(0, messageInput.value.selectionStart);
+        cursorOffset.value = measurementSpan.value.offsetWidth;
+    });
+};
+
+const focusInput = () => {
+    nextTick(() => {
+        if (messageInput.value) {
+            messageInput.value.focus();
+            updateCursorPosition();
+        }
+    });
+};
+
+watch(isModalOpen, (newVal) => {
+    if (newVal) focusInput();
+});
+
 const handleSubmit = async () => {
     if (isSubmitting.value || !newEntry.value.message.trim()) return;
+    
+    // Ensure we use the latest chat nickname
+    newEntry.value.name = chatStore.nickname || 'ANONYMOUS';
     
     isSubmitting.value = true;
     try {
@@ -91,9 +120,43 @@ const formatDate = (iso) => {
     });
 };
 
+const handleKeyDown = (e) => {
+    if (isModalOpen.value) {
+        // If the modal is open, we consume these specific keys and prevent them from bubbling
+        if (['ArrowLeft', 'ArrowRight', 'Escape', 'Enter'].includes(e.key)) {
+            e.stopImmediatePropagation();
+            e.stopPropagation();
+            
+            if (showSuccess.value) return; // Don't do anything else if we're in success state
+
+            if (e.key === 'Escape') {
+                closeModal();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                newEntry.value.rating = Math.max(0, newEntry.value.rating - 1);
+                SoundManager.playTypingSound();
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                newEntry.value.rating = Math.min(5, newEntry.value.rating + 1);
+                SoundManager.playTypingSound();
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSubmit();
+            }
+        }
+    } else if (e.key === 'Enter' && !isSigned.value) {
+        openModal();
+    }
+};
+
 onMounted(() => {
     fetchEntries();
     checkIsSigned();
+    window.addEventListener('keydown', handleKeyDown, { capture: true });
+});
+
+onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeyDown, { capture: true });
 });
 </script>
 
@@ -110,7 +173,14 @@ onMounted(() => {
         </button>
     </div>
     
-    <p class="subtitle">Leave your mark on the system memory.</p>
+    <p class="subtitle">
+        Leave your mark on the system memory.
+        <span 
+          v-if="!isSigned" 
+          class="enter-prompt" 
+          @click="openModal"
+        >Press <span class="enter-key">Enter ⏎</span> to sign the Guestbook.</span>
+    </p>
 
     <div class="entries-grid">
       <div v-for="entry in entries" :key="entry.id" class="entry-box">
@@ -129,17 +199,31 @@ onMounted(() => {
     <Transition name="fade">
       <div v-if="isModalOpen" class="modal-overlay" @click.self="closeModal">
         <div class="modal-content animate-pop">
+          <div class="esc-label" @click="closeModal">ESC</div>
           <h4>SIGN GUEST LOG</h4>
           
           <div v-if="!showSuccess" class="form-body">
-            <div class="form-group">
-                <label>OPERATOR NAME:</label>
-                <input v-model="newEntry.name" type="text" maxlength="32" placeholder="ANONYMOUS" />
-            </div>
 
             <div class="form-group">
                 <label>FEEDBACK (MAX 256):</label>
-                <textarea v-model="newEntry.message" maxlength="256" placeholder="TYPE MESSAGE..."></textarea>
+                <div class="input-wrapper focus-locked">
+                    <input 
+                      ref="messageInput"
+                      v-model="newEntry.message" 
+                      type="text" 
+                      maxlength="256" 
+                      placeholder="type message..."
+                      @input="updateCursorPosition"
+                      @click="updateCursorPosition"
+                      @keyup="updateCursorPosition"
+                      @blur="focusInput"
+                    />
+                    <span ref="measurementSpan" class="measurement-span"></span>
+                    <div 
+                      class="block-cursor" 
+                      :style="{ left: `calc(12px + ${cursorOffset}px)` }"
+                    ></div>
+                </div>
             </div>
 
             <div class="form-group">
@@ -156,7 +240,6 @@ onMounted(() => {
             </div>
 
             <div class="modal-actions">
-                <button class="cancel-btn" @click="closeModal">CANCEL</button>
                 <button 
                   class="submit-btn" 
                   @click="handleSubmit" 
@@ -228,6 +311,21 @@ onMounted(() => {
     margin-bottom: 30px;
 }
 
+.enter-prompt {
+    margin-left: 10px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.enter-prompt:hover {
+    color: #ccc;
+}
+
+.enter-key {
+    color: var(--color-accent);
+    font-weight: bold;
+}
+
 .entries-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -296,8 +394,8 @@ onMounted(() => {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(5px);
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -307,10 +405,33 @@ onMounted(() => {
 .modal-content {
     background: #0a0a0a;
     border: 1px solid #333;
-    padding: 30px;
+    padding: 40px 30px 30px;
     width: 450px;
     max-width: 90%;
     box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    position: relative;
+}
+
+.esc-label {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 0.7rem;
+    color: var(--color-accent);
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+    padding: 2px 5px;
+    border-left: 1px solid #333;
+    border-bottom: 1px solid #333;
+    background: rgba(0, 0, 0, 0.4);
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.esc-label:hover {
+    background: var(--color-accent);
+    color: #000;
 }
 
 .modal-content h4 {
@@ -333,26 +454,55 @@ onMounted(() => {
     letter-spacing: 1px;
 }
 
-.form-group input, 
-.form-group textarea {
+.input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.form-group input {
     width: 100%;
     background: #111;
     border: 1px solid #333;
     color: #fff;
     padding: 12px;
-    font-family: inherit;
+    font-family: 'Microgramma', sans-serif;
     font-size: 0.95rem;
     outline: none;
+    caret-color: transparent; /* Hide native cursor */
 }
 
-.form-group input:focus, 
-.form-group textarea:focus {
+.form-group input:focus {
     border-color: var(--color-accent);
 }
 
-.form-group textarea {
-    height: 100px;
-    resize: none;
+.measurement-span {
+    position: absolute;
+    visibility: hidden;
+    white-space: pre;
+    font-size: 0.95rem;
+    pointer-events: none;
+    left: 12px; /* Match input padding */
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Microgramma', sans-serif;
+}
+
+.block-cursor {
+    position: absolute;
+    width: 8px;
+    height: 1.2rem;
+    background: #bbb;
+    pointer-events: none;
+    animation: smooth-blink 1.1s ease-in-out infinite;
+    top: 50%;
+    transform: translateY(-50%);
+    box-shadow: 0 0 5px #bbb;
+    z-index: 5;
+}
+
+@keyframes smooth-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
 }
 
 .star-rating-input {
@@ -382,23 +532,14 @@ onMounted(() => {
     margin-top: 30px;
 }
 
-.cancel-btn, .submit-btn {
-    padding: 10px 20px;
+.submit-btn {
+    padding: 10px 25px;
     font-family: inherit;
     font-size: 0.85rem;
     cursor: pointer;
     border-radius: 4px;
     font-weight: bold;
     letter-spacing: 1px;
-}
-
-.cancel-btn {
-    background: transparent;
-    border: none;
-    color: #666;
-}
-
-.submit-btn {
     background: var(--color-accent);
     color: #000;
     border: none;
