@@ -156,8 +156,11 @@ onMounted(() => {
   
   simulateHddActivity();
 
-  // PRECISION: Sync scroll lock with browser's scrollend event
-  // Re-attached when isBooted changes since the element is conditional
+  document.addEventListener('mouseover', handleGlobalHover);
+  window.addEventListener('keydown', handleGlobalKeydown, { capture: true }); 
+
+  // Start glitch loop immediately
+  triggerGlitch();
 })
 
 const handleGlobalHover = (e) => {
@@ -172,9 +175,6 @@ const handleBootStart = async () => {
   if (!SoundManager.initialized) SoundManager.init();
   if (SoundManager.ctx.state === 'suspended') await SoundManager.resume();
   
-  // 2. Play Boot Sound
-  SoundManager.playBootSequence();
-
   // 2. Play Boot Sound
   SoundManager.playBootSequence();
   
@@ -197,24 +197,6 @@ const handleBootStart = async () => {
   }, 2100); 
 }
 
-onMounted(() => {
-  window.addEventListener('mousemove', handleMouseMove)
-  window.addEventListener('resize', handleResize)
-
-  // Aggressively hide cursor
-  hideCursor();
-  cursorInterval = setInterval(hideCursor, 500);
-
-  // Re-hide on focus/entry (fixes Alt-Tab issue)
-  window.addEventListener('focus', hideCursor);
-  document.addEventListener('mouseenter', hideCursor);
-  
-  document.addEventListener('mouseover', handleGlobalHover);
-  window.addEventListener('keydown', handleGlobalKeydown, { capture: true }); // Capture to intercept before inputs if needed, but we check target
-
-  // Start glitch loop immediately
-  triggerGlitch();
-})
 
 const vfdMode = ref('spectrum'); // Start with canvas for loading bar
 const vfdKnobInfo = ref({ label: '', value: '' });
@@ -361,7 +343,6 @@ const handleTabSelect = (index) => {
 const resetToDefaults = () => {
     brightness.value = 1;
     contrast.value = 1;
-    hue.value = 0.5;
     SoundManager.setMasterVolume(0.9);
     SoundManager.playTypingSound();
 };

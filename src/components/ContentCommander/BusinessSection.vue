@@ -119,7 +119,6 @@ onUnmounted(() => {
           <p>Strategic partnerships with global industry leaders and visionaries.</p>
           <div class="logo-grid">
             <div v-for="customer in customers" :key="customer.name" class="logo-item" :title="customer.name">
-              <span class="logo-hover-name">{{ customer.name }}</span>
               <img :src="customer.logo" />
             </div>
           </div>
@@ -205,15 +204,6 @@ onUnmounted(() => {
     margin-bottom: 20px;
 }
 
-.stat-box {
-    margin-top: 30px;
-    padding: 20px;
-    background: rgba(255,255,255,0.02);
-    border-left: 3px solid var(--color-accent);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.8rem;
-}
-
 .service-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -236,31 +226,6 @@ onUnmounted(() => {
     color: rgba(255, 255, 255, 0.7);
 }
 
-.customer-list {
-    list-style: none;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.customer-list li {
-    font-size: 1.15rem;
-    color: #fff;
-    padding-left: 20px;
-    position: relative;
-}
-
-.customer-list li::before {
-    content: '■';
-    position: absolute;
-    left: 0;
-    color: var(--color-accent);
-    font-size: 0.7rem;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
 .logo-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -272,62 +237,35 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    padding: 10px;
     aspect-ratio: 3/2;
-    transition: all 0.3s ease;
     position: relative;
-    overflow: hidden;
-    cursor: pointer;
-}
-
-.logo-item:hover {
-    background: rgba(255, 255, 255, 0.06);
-}
-
-.logo-hover-name {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 80%;
-    height: 80%;
-    background: #ffffff;
-    color: #000000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 900;
-    font-size: 0.8rem;
-    text-align: center;
-    padding: 5px;
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.9);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 2;
-    pointer-events: none;
-    border-radius: 4px;
-}
-
-.logo-item:hover .logo-hover-name {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    /* Removed container-level background and border */
 }
 
 .logo-item img {
+    /* Hug the content */
+    width: auto;
+    height: auto;
     max-width: 90%;
     max-height: 90%;
     object-fit: contain;
-    /* Maintain original colors */
+    
+    /* Physical Plaque Styling on the IMAGE itself */
+    padding: 0px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 5px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    
+    /* Physical Bezel Effect following the image shape */
+    box-shadow: 
+        inset 1px 1px 2px rgba(255, 255, 255, 0.1),
+        inset -1px -1px 3px rgba(0, 0, 0, 0.6),
+        0 4px 10px rgba(0, 0, 0, 0.4);
+
+    /* Maintain original colors and visibility */
     filter: contrast(1.05) brightness(1.05);
     mix-blend-mode: screen;
     opacity: 0.85;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.logo-item:hover img {
-    opacity: 0;
-    transform: scale(0.85);
 }
 
 .animate-in {
