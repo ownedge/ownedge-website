@@ -599,9 +599,10 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
     <!-- CRITICAL: Must have dimensions for mask percentages to work -->
     <svg width="100%" height="100%" style="position: absolute; top:0; left:0; pointer-events: none; z-index: 0;">
       <defs>
-        <filter id="spherical-warp" x="-10%" y="-10%" width="200%" height="200%">
-          <feTurbulence :baseFrequency="turbulenceFreq" numOctaves="4" result="noise" />
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" />
+        <filter id="spherical-warp" x="-2%" y="-2%" width="104%" height="104%">
+          <!-- numOctaves=1 is significantly faster than 4 and enough for subtle warp -->
+          <feTurbulence :baseFrequency="turbulenceFreq" numOctaves="1" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G" />
         </filter>
         
 
@@ -764,7 +765,8 @@ html, body, .crt-wrapper, * {
   position: relative;
   background: radial-gradient(circle at center, #2f2f2f00 1%, #0e0e0e 90%);
   overflow: hidden; /* Container is fixed window */
-  filter: url(#spherical-warp) brightness(v-bind(brightness*0.9)) contrast(v-bind(contrast)); /* Apply content distortion + Settings */
+  /* Reorder filters and use direct CSS where possible */
+  filter: brightness(v-bind(brightness*0.9)) contrast(v-bind(contrast)) url(#spherical-warp);
 }
 
 /* Fixed Background Layer */

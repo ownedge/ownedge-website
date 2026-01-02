@@ -27,15 +27,45 @@ let animationFrameId = null;
     mouseY.value = e.clientY;
   };
 
+  let frameCount = 0;
+  let cachedTargets = [];
+  const RE_SCAN_INTERVAL = 15; // Only re-query DOM every 15 frames
+
+  const getCachedTargets = () => {
+    // Re-query only occasionally and when visible
+    if (frameCount % RE_SCAN_INTERVAL === 0) {
+      cachedTargets = Array.from(document.querySelectorAll('.boot-video, .logo-img, .typing-wrapper, .status, .id, .percentage, .log-text, .btn-go, .hint-text, .tui-header .title, .tui-header .clock, .pane-title, .col-name, .col-type, .col-date, .pane-footer, .f-key span, .f-label, .view-content pre, .cursor, .tracker-overlay canvas'))
+        .map(el => {
+          const style = window.getComputedStyle(el);
+          return {
+            el,
+            isImg: el.tagName === 'IMG' || el.tagName === 'VIDEO' || el.tagName === 'CANVAS',
+            isPre: el.tagName === 'PRE',
+            isTyping: el.classList.contains('typing-wrapper') || el.classList.contains('log-text'),
+            color: style.color,
+            font: `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`,
+            letterSpacing: style.letterSpacing,
+            textAlign: style.textAlign,
+            paddingTop: parseFloat(style.paddingTop),
+            paddingLeft: parseFloat(style.paddingLeft),
+            paddingRight: parseFloat(style.paddingRight),
+            borderLeftWidth: parseFloat(style.borderLeftWidth),
+            lineHeight: style.lineHeight === 'normal' ? parseFloat(style.fontSize) * 1.2 : parseFloat(style.lineHeight)
+          };
+        });
+    }
+  };
+
   onMounted(() => {
     window.addEventListener('resize', resize);
     window.addEventListener('mousemove', updateMouse);
     
-    // Call resize immediately to set initial size
     setTimeout(resize, 0);
 
     const render = () => {
       if (!canvasRef.value) return;
+      frameCount++;
+
       const canvas = canvasRef.value; 
       const ctx = canvas.getContext('2d', { alpha: false });
       const width = canvas.width;
@@ -43,161 +73,121 @@ let animationFrameId = null;
 
       // 1. Decay 
       ctx.globalCompositeOperation = 'source-over';
-      // Decreased opacity to 0.05 to make trails fade slower ("more burn in")
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.06)'; 
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)'; // Slightly faster decay for better perf
       ctx.fillRect(0, 0, width, height);
 
-      // 2. Draw cursor trail
+      // 2. Scan DOM (Throttled)
+      getCachedTargets();
+
+      // 3. Draw cursor trail
       if (mouseX.value > 0 && mouseY.value > 0) {
         const rect = canvas.getBoundingClientRect();
-        // Convert global mouse coordinates to canvas-relative coordinates
         const x = mouseX.value - rect.left;
         const y = mouseY.value - rect.top;
-
         ctx.globalCompositeOperation = 'lighter';
-        ctx.fillStyle = '#FF0000'; // Red trail color
-
+        ctx.fillStyle = '#FF0000';
         ctx.save();
-        // Translate to exact position (no offset needed as SVG origin is tip)
         ctx.translate(x, y);
-        
-        // Draw the arrow shape from App.vue custom-cursor
         ctx.beginPath();
-        ctx.moveTo(0.6, 1.43);   // Top Tip
-        ctx.lineTo(14.14, 14.84); // Right Wing
-        ctx.lineTo(6.78, 14.84);  // Inner corner
-        ctx.lineTo(6.38, 15.00);  // Inner detail
-        ctx.lineTo(0.6, 20.26);   // Bottom Tip
+        ctx.moveTo(0.6, 1.43);
+        ctx.lineTo(14.14, 14.84);
+        ctx.lineTo(6.78, 14.84);
+        ctx.lineTo(6.38, 15.00);
+        ctx.lineTo(0.6, 20.26);
         ctx.closePath();
-        
         ctx.fill();
         ctx.restore();
       }
 
-      // 3. Draw new light sources
+      // 4. Draw cached targets
       ctx.globalCompositeOperation = 'lighter';
-      
       const canvasRect = canvas.getBoundingClientRect();
-      const targets = document.querySelectorAll('.boot-video, .logo-img, .typing-wrapper, .status, .id, .percentage, .log-text, .btn-go, .hint-text, .tui-header .title, .tui-header .clock, .pane-title, .col-name, .col-type, .col-date, .pane-footer, .f-key span, .f-label, .view-content pre, .cursor, .tracker-overlay canvas');
- 
-     targets.forEach(el => {
-       const rect = el.getBoundingClientRect();
-       
-       // Only draw if on screen
-       if (rect.bottom < 0 || rect.top > height || rect.right < 0 || rect.left > width) return;
-       
-       const style = window.getComputedStyle(el);
-       if (style.display === 'none' || style.visibility === 'hidden') return;
- 
-       // Opacity check
-       let fadeInOp = 1.0;
-       if (el.parentElement) {
-         const p1 = window.getComputedStyle(el.parentElement);
-         if (parseFloat(p1.opacity) < 0.99) fadeInOp = parseFloat(p1.opacity);
-       }
-       if (fadeInOp < 0.01) return;
- 
-       const baseAlpha = (el.tagName === 'IMG' || el.tagName === 'VIDEO') ? 0.05 : 0.4;
-       ctx.globalAlpha = baseAlpha * fadeInOp;
-       
-       const x = rect.left - canvasRect.left;
-       const y = rect.top - canvasRect.top;
-       const w = rect.width;
-       const h = rect.height;
-       
-       ctx.save(); // Save before potential clipping
 
-       // Check for clipping containers (Scrollable panes)
-       if (el.matches('.view-content pre, .col-name, .col-type, .col-date')) {
-           const scrollParent = el.closest('.pane-content');
-           if (scrollParent) {
-               const pRect = scrollParent.getBoundingClientRect();
-               // Create clipping path based on parent bounds
-               const clipX = pRect.left - canvasRect.left;
-               const clipY = pRect.top - canvasRect.top;
-               ctx.beginPath();
-               ctx.rect(clipX, clipY, pRect.width, pRect.height);
-               ctx.clip();
+      cachedTargets.forEach(target => {
+        const el = target.el;
+        const rect = el.getBoundingClientRect();
+        
+        if (rect.bottom < 0 || rect.top > height || rect.right < 0 || rect.left > width) return;
+        
+        // Quick visibility check without full style compute
+        if (el.offsetWidth === 0 || el.offsetHeight === 0) return;
+
+        const baseAlpha = target.isImg ? 0.05 : 0.4;
+        ctx.globalAlpha = baseAlpha;
+        
+        const x = rect.left - canvasRect.left;
+        const y = rect.top - canvasRect.top;
+        const w = rect.width;
+        const h = rect.height;
+        
+        ctx.save();
+
+        if (el.matches('.view-content pre, .col-name, .col-type, .col-date')) {
+            const scrollParent = el.closest('.pane-content');
+            if (scrollParent) {
+                const pRect = scrollParent.getBoundingClientRect();
+                ctx.beginPath();
+                ctx.rect(pRect.left - canvasRect.left, pRect.top - canvasRect.top, pRect.width, pRect.height);
+                ctx.clip();
+            }
+        }
+        
+        if (target.isImg) {
+           try {
+               ctx.drawImage(el, x, y, w, h);
+           } catch(e) {}
+        } else {
+           ctx.fillStyle = target.color;
+           ctx.font = target.font;
+           if (target.letterSpacing !== 'normal') ctx.letterSpacing = target.letterSpacing;
+
+           const contentX = x + target.borderLeftWidth + target.paddingLeft;
+           const contentW = w - (target.borderLeftWidth + target.paddingLeft + target.paddingRight);
+
+           ctx.textAlign = (target.textAlign === 'center' || target.textAlign === 'right') ? target.textAlign : 'left';
+           
+           let drawX = contentX;
+           if (target.textAlign === 'center') drawX = contentX + contentW / 2;
+           if (target.textAlign === 'right') drawX = contentX + contentW;
+
+           let textToDraw = el.innerText;
+           if (target.isTyping) {
+               textToDraw = Array.from(el.childNodes)
+                 .filter(n => n.nodeType === Node.TEXT_NODE)
+                 .map(n => n.textContent)
+                 .join('');
            }
-       }
-       
-       ctx.shadowBlur = 0;
-       
-       if (el.tagName === 'IMG' || el.tagName === 'VIDEO' || el.tagName === 'CANVAS') {
-          try {
-              if (style.filter && style.filter !== 'none') ctx.filter = style.filter;
-              ctx.drawImage(el, x, y, w, h);
-              ctx.filter = 'none'; 
-          } catch(e) {}
-       } else {
-          // TEXT
-          ctx.fillStyle = style.color;
-          ctx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
-          if (style.letterSpacing !== 'normal') ctx.letterSpacing = style.letterSpacing;
 
-          // Alignment
-          const align = style.textAlign;
-          const pt = parseFloat(style.paddingTop);
-          const pl = parseFloat(style.paddingLeft);
-          const pr = parseFloat(style.paddingRight);
-          const bl = parseFloat(style.borderLeftWidth);
+           if (target.isPre) {
+                const lines = textToDraw.split('\n');
+                ctx.textBaseline = 'top';
+                lines.forEach((line, i) => {
+                    ctx.fillText(line, drawX, y + target.paddingTop + (i * target.lineHeight) + 4); 
+                });
+           } else if (el.classList.contains('typing-wrapper')) {
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(textToDraw, contentX, y + h / 2);
+           } else {
+                ctx.textBaseline = 'middle';
+                ctx.fillText(textToDraw, drawX, y + h / 2);
+           }
+        }
+        ctx.letterSpacing = '0px';
+        ctx.restore();
+      });
 
-          const contentX = x + bl + pl;
-          
-          const contentW = w - (bl + pl + parseFloat(style.borderRightWidth) + pr);
+      animationFrameId = requestAnimationFrame(render);
+    };
 
-          ctx.textAlign = (align === 'center' || align === 'right') ? align : 'left';
-          
-          let drawX = contentX;
-          if (align === 'center') drawX = contentX + contentW / 2;
-          if (align === 'right') drawX = contentX + contentW;
+    render();
+  });
 
-          // SPECIAL TEXT HANDLING
-          let textToDraw = el.innerText;
-          
-          // For wrappers that contain the cursor span, we want ONLY the text content
-          // to avoid double-drawing the cursor or drawing it slightly offset
-          if (el.classList.contains('typing-wrapper') || el.classList.contains('log-text')) {
-              textToDraw = Array.from(el.childNodes)
-                .filter(n => n.nodeType === Node.TEXT_NODE)
-                .map(n => n.textContent)
-                .join('');
-          }
-
-          if (el.tagName === 'PRE') {
-               const lines = textToDraw.split('\n');
-               const lh = style.lineHeight === 'normal' ? parseFloat(style.fontSize) * 1.2 : parseFloat(style.lineHeight);
-               ctx.textBaseline = 'top';
-               lines.forEach((line, i) => {
-                   ctx.fillText(line, drawX, y + pt + (i * lh) + 4); 
-               });
-          } else if (el.classList.contains('typing-wrapper')) {
-               ctx.textAlign = 'left';
-               // Revert to middle baseline to fix "under text" issue
-               // Bottom alignment caused it to drop due to line-height descent space
-               ctx.textBaseline = 'middle';
-               ctx.fillText(textToDraw, contentX, y + h / 2);
-          } else {
-               ctx.textBaseline = 'middle';
-               ctx.fillText(textToDraw, drawX, y + h / 2);
-          }
-       }
-       ctx.letterSpacing = '0px';
-       
-       ctx.restore(); // Restore from clipping
-     });
-
-    animationFrameId = requestAnimationFrame(render);
-  };
-
-  render();
-});
-
-onUnmounted(() => {
-  window.removeEventListener('resize', resize);
-  window.removeEventListener('mousemove', updateMouse);
-  cancelAnimationFrame(animationFrameId);
-});
+  onUnmounted(() => {
+    window.removeEventListener('resize', resize);
+    window.removeEventListener('mousemove', updateMouse);
+    cancelAnimationFrame(animationFrameId);
+  });
 </script>
 
 <template>

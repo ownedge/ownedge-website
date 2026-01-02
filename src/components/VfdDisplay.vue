@@ -377,25 +377,18 @@ const startSpectrumAnalyzer = () => {
 
         // Draw Visualization
         for (let i = 0; i < cols; i++) {
-            // Map freq bin to column
             const binIndex = Math.floor((i / cols) * data.length * 0.5); 
-            const value = data[binIndex] || 0; // 0-255
+            const value = data[binIndex] || 0; 
             
-            // Calculate active dots for this column
             const heightPercent = value / 255;
-            const activeDots = Math.floor(heightPercent * rows);
+            const barHeight = heightPercent * (canvas.height - (paddingY * 2));
             
-            for (let j = 0; j < rows; j++) {
-                // Draw from bottom up
-                if (j < activeDots) {
-                    // Invert Y to draw from bottom, accounting for padding
-                    const y = canvas.height - paddingY - (j * step) - dotSize;
-                    const x = paddingX + (i * step);
-                    
-                    // Opacity falloff for "glow"
-                    ctx.globalAlpha = 0.8 + (value / 1200); 
-                    ctx.fillRect(x, y, dotSize, dotSize);
-                }
+            if (barHeight > 0) {
+                const x = paddingX + (i * step);
+                const y = canvas.height - paddingY - barHeight;
+                
+                ctx.globalAlpha = 0.8 + (value / 1200); 
+                ctx.fillRect(x, y, dotSize, barHeight);
             }
         }
         

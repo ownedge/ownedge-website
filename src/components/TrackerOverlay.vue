@@ -19,15 +19,20 @@ const draw = () => {
         return;
     }
     
-    // Resize if needed
-    if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+    // Resize only on dedicated resize event or if seriously different
+    const targetW = window.innerWidth;
+    const targetH = window.innerHeight;
+    if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width = targetW;
+        canvas.height = targetH;
     }
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: true });
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
+    if (props.reflectionOnly) {
+        ctx.filter = 'blur(4px)'; // Apply blur in canvas instead of CSS for full-screen performance
+    }
     // Style
     ctx.font = '16px "Courier New", monospace';
     ctx.textAlign = 'center';
@@ -150,6 +155,10 @@ const draw = () => {
         ctx.restore();
     }
     
+    if (props.reflectionOnly) {
+        ctx.filter = 'none';
+    }
+    
     animationFrameId = requestAnimationFrame(draw);
 };
 
@@ -189,9 +198,9 @@ onUnmounted(() => {
     left: 0;
     width: 100vw;
     height: 100vh;
-    opacity: 0.55;
-    filter: blur(4.45px);
-    z-index: 100; /* Force above everything */
+    opacity: 0.35; /* Lowered opacity */
+    /* filter: blur(4.45px); Moved to canvas context for performance */
+    z-index: 100; 
 }
 
 canvas {
