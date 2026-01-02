@@ -6,7 +6,7 @@ const titleFull = "OWNEDGE";
 const titleText = ref("");
 
 const subtitles = [
-  "DEFYING THE ESTABLISHED...",
+  "INDEPENDENT BY DESIGN...",
 ];
 
 const displayedText = ref("");
@@ -175,7 +175,7 @@ onUnmounted(() => {
   position: absolute;
   top: 40%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scaleX(1.08); /* 👈 stretch 10% horizontally */
   z-index: -1;
   font-family: var(--font-mono);
   font-weight: bold;

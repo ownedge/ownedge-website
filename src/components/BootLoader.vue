@@ -334,7 +334,7 @@ onUnmounted(() => {
     transform: translate(-50%, -50%);
     width: 350px;
     background: #000;
-    opacity: 0.5;
+    opacity: 0.75;
     border: 1px solid var(--color-accent);
     box-shadow: 0 0 30px rgba(64, 224, 208, 0.1);
     z-index: 1000;

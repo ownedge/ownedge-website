@@ -198,8 +198,10 @@ onUnmounted(() => {
     <Transition name="fade">
       <div v-if="isModalOpen" class="modal-overlay" @click.self="closeModal">
         <div class="modal-content animate-pop">
-          <div class="esc-label" @click="closeModal">ESC</div>
-          <h4>SIGN GUESTBOOK</h4>
+          <div class="popup-header">
+            <span>SIGN GUESTBOOK</span>
+            <div class="esc-label" @click="closeModal">ESC</div>
+          </div>
           
           <div v-if="!showSuccess" class="form-body">
 
@@ -244,13 +246,15 @@ onUnmounted(() => {
                   @click="handleSubmit" 
                   :disabled="isSubmitting || !newEntry.message.trim()"
                 >
-                    {{ isSubmitting ? 'TRANSMITTING...' : 'SUBMIT ENTRY' }}
+                    {{ isSubmitting ? '[ TRANSMITTING... ]' : '[ SUBMIT ]' }}
                 </button>
             </div>
           </div>
 
-          <div v-else class="success-message">
-              <span class="blink">></span> ENTRY RECORDED SUCCESSFULLY.
+          <div v-else class="form-body">
+            <div class="success-message">
+                <span class="blink">></span> ENTRY RECORDED SUCCESSFULLY.
+            </div>
           </div>
         </div>
       </div>
@@ -393,52 +397,56 @@ onUnmounted(() => {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.25);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    opacity: 0.65;
 }
 
 .modal-content {
-    background: #0a0a0a;
-    border: 1px solid #333;
-    padding: 40px 30px 30px;
+    background: #000;
+    opacity: 0.95; /* Modal needs more opaque background for readability than the dial-up */
+    border: 1px solid var(--color-accent);
+    box-shadow: 0 0 30px rgba(64, 224, 208, 0.1);
     width: 450px;
     max-width: 90%;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
     position: relative;
+    overflow: hidden;
+}
+
+.popup-header {
+    background: var(--color-accent);
+    color: #000;
+    padding: 4px 10px;
+    font-weight: bold;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .esc-label {
-    position: absolute;
-    top: 0;
-    right: 0;
     font-size: 0.7rem;
-    color: var(--color-accent);
+    color: #000;
     cursor: pointer;
     font-family: 'JetBrains Mono', monospace;
     letter-spacing: 1px;
-    padding: 2px 5px;
-    border-left: 1px solid #333;
-    border-bottom: 1px solid #333;
-    background: rgba(0, 0, 0, 0.4);
+    padding: 0 5px;
+    background: rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.2);
     transition: all 0.2s ease;
-    z-index: 10;
 }
 
 .esc-label:hover {
-    background: var(--color-accent);
-    color: #000;
+    background: #000;
+    color: var(--color-accent);
 }
 
-.modal-content h4 {
-    margin-top: 0;
-    color: #fff;
-    margin-bottom: 25px;
-    letter-spacing: 2px;
-    text-align: center;
+.form-body {
+    padding: 30px;
 }
 
 .form-group {
@@ -468,10 +476,6 @@ onUnmounted(() => {
     font-size: 0.95rem;
     outline: none;
     caret-color: transparent; /* Hide native cursor */
-}
-
-.form-group input:focus {
-    border-color: var(--color-accent);
 }
 
 .measurement-span {
@@ -532,21 +536,23 @@ onUnmounted(() => {
 }
 
 .submit-btn {
-    padding: 10px 45px;
-    font-family: inherit;
-    font-size: 0.85rem;
-    cursor: pointer;
-    border-radius: 4px;
-    font-weight: bold;
-    letter-spacing: 1px;
-    background: var(--color-accent);
-    color: #000;
+    background: transparent;
     border: none;
+    color: var(--color-accent);
+    font-family: 'Microgramma', monospace;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: all 0.2s;
 }
 
 .submit-btn:disabled {
-    opacity: 0.5;
-    cursor: default;
+    color: #6e6e6e;
+    cursor: not-allowed;
+    opacity: 1; /* Override default opacity */
+}
+
+.submit-btn:not(:disabled):hover {
+    text-shadow: 0 0 10px var(--color-accent);
 }
 
 .success-message {

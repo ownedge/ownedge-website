@@ -177,7 +177,7 @@ if ($action === 'presence' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $messages[] = [
                 'id' => sprintf("%.4f", microtime(true)) . rand(100, 999),
                 'type' => 'system',
-                'text' => "*** $nick has joined the cluster",
+                'text' => "*** $nick has joined the channel",
                 'timestamp' => date('c')
             ];
             save_data($log_file, $messages);
