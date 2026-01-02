@@ -18,7 +18,7 @@ const customers = [
   { name: 'COPIDATA', logo: copidataLogo },
   { name: 'FLUXYGEN', logo: fluxygenLogo },
   { name: 'KABISA', logo: kabisaLogo },
-  { name: 'LITHO FORMAS', logo: lithoformasLogo },
+  { name: 'LITHOFORMAS', logo: lithoformasLogo },
   { name: 'PHILIPS', logo: philipsLogo },
   { name: 'THALES', logo: thalesLogo }
 ];
@@ -116,10 +116,15 @@ onUnmounted(() => {
 
         <div v-if="activeTabId === 'customers'" class="tab-content">
           <h4>CUSTOMERS</h4>
-          <p>Strategic partnerships with global industry leaders and visionaries.</p>
+          <p>Past and present colaborations and partnerships.</p>
           <div class="logo-grid">
             <div v-for="customer in customers" :key="customer.name" class="logo-item">
-              <img :src="customer.logo" />
+              <div class="logo-plaque">
+                <img :src="customer.logo" />
+                <div class="logo-overlay">
+                  <span class="overlay-name">{{ customer.name }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -230,39 +235,71 @@ onUnmounted(() => {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 30px;
-    margin-top: 10px; /* Standardize with other grids */
+    margin-top: 10px;
 }
 
 .logo-item {
     display: flex;
     align-items: center;
     justify-content: center;
-    aspect-ratio: 3/2;
-    position: relative;
-    /* Removed container-level background and border */
 }
 
-.logo-item img {
-    /* Hug the content */
-    width: auto;
-    height: auto;
-    max-width: 90%;
-    max-height: 90%;
-    object-fit: contain;
+.logo-plaque {
+    aspect-ratio: 1/1; /* STRICT SQUARE */
+    position: relative;
+    overflow: hidden; /* Contain the name slide */
+    width: 100%;
+    max-width: 160px; /* Preserve reasonable sizing */
     
-    /* Physical Plaque Styling on the IMAGE itself */
-    padding: 0px;
+    /* Physical Plaque Styling moved here */
     background: rgba(255, 255, 255, 0.02);
     border: 5px solid rgba(255, 255, 255, 0.05);
     border-radius: 20px;
-    
-    /* Physical Bezel Effect following the image shape */
     box-shadow: 
         inset 1px 1px 2px rgba(255, 255, 255, 0.1),
         inset -1px -1px 3px rgba(0, 0, 0, 0.6),
         0 4px 10px rgba(0, 0, 0, 0.4);
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-    /* Maintain original colors and visibility */
+.logo-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translateY(100%);
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2;
+    pointer-events: none;
+}
+
+.logo-plaque:hover .logo-overlay {
+    transform: translateY(0);
+}
+
+.overlay-name {
+    color: var(--color-accent);
+    font-weight: 900;
+    font-size: 0.8rem;
+    text-align: center;
+    letter-spacing: 1px;
+    padding: 10px;
+    text-transform: uppercase;
+}
+
+.logo-plaque img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
     filter: contrast(1.05) brightness(1.05);
     mix-blend-mode: screen;
     opacity: 0.85;
