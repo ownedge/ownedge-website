@@ -38,6 +38,9 @@ const focusInput = async () => {
 };
 
 const scrollToBottom = async () => {
+    // We wait for two ticks to be absolutely sure the DOM has updated
+    // and the container height has been recalculated.
+    await nextTick();
     await nextTick();
     if (logContainer.value) {
         logContainer.value.scrollTop = logContainer.value.scrollHeight;
@@ -81,12 +84,13 @@ const handleCommand = (cmd) => {
     } else {
         chatStore.addMessage({ type: 'system', text: `*** Unknown command: ${command}` });
     }
+    scrollToBottom();
 };
 
-// Auto-scroll when new messages arrive from polling
-watch(() => chatStore.messages.length, () => {
+// Auto-scroll when new messages arrive or history is cleared
+watch(() => chatStore.messages, () => {
     scrollToBottom();
-});
+}, { deep: true });
 
 onMounted(() => {
     if (chatStore.isConnected) {

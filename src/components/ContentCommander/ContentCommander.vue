@@ -221,11 +221,6 @@ onUnmounted(() => {
 .custom-scroll::-webkit-scrollbar-track { background: transparent; }
 .custom-scroll::-webkit-scrollbar-thumb { background: #333; }
 
-/* Custom Scroll */
-.custom-scroll::-webkit-scrollbar { width: 6px; }
-.custom-scroll::-webkit-scrollbar-track { background: transparent; }
-.custom-scroll::-webkit-scrollbar-thumb { background: #333; }
-
 /* Footer */
 .tui-footer {
     display: flex;
