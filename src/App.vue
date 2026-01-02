@@ -574,7 +574,6 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
 }
 
 
-
 .crt-wrapper::after {
   content: '';
   position: absolute;
