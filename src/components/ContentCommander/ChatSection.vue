@@ -77,10 +77,12 @@ const handleCommand = (cmd) => {
             type: 'action',
             text: `* ${chatStore.nickname} ${parts.slice(1).join(' ')}`
         });
+    } else if (command === '/topic' && parts.length > 1) {
+        chatStore.updateTopic(parts.slice(1).join(' '));
     } else if (command === '/clear') {
         chatStore.clearHistory();
     } else if (command === '/help') {
-        chatStore.addMessage({ type: 'system', text: 'Available commands: /me <action>, /clear, /help' });
+        chatStore.addMessage({ type: 'system', text: 'Commands: /me <action>, /topic <text>, /clear, /help' });
     } else {
         chatStore.addMessage({ type: 'system', text: `*** Unknown command: ${command}` });
     }
@@ -130,7 +132,7 @@ const formatTime = (isoString) => {
         </div>
         <div class="irc-log" ref="logContainer">
           <div v-for="msg in chatStore.messages" :key="msg.id" :class="['msg', msg.type]">
-            <span class="msg-time">[{{ formatTime(msg.timestamp) }}]</span>
+            <span class="msg-time">{{ formatTime(msg.timestamp) }}</span>
             <template v-if="msg.type === 'system'">
               <span class="msg-content">{{ msg.text }}</span>
             </template>

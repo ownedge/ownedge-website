@@ -45,6 +45,21 @@ export const chatStore = reactive({
         } catch (e) {}
     },
 
+    async updateTopic(newText) {
+        try {
+            const response = await fetch(`${API_BASE}?action=topic`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                // Include nickname so we know who changed it
+                body: JSON.stringify({ topic: newText, user: this.nickname })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                this.topic = { text: data.topic, modified: data.modified };
+            }
+        } catch (e) {}
+    },
+
     async fetchMessages() {
         if (!this.lastId) return;
         try {
@@ -57,6 +72,11 @@ export const chatStore = reactive({
                     if (newMsgs.length > 0) {
                         this.messages.push(...newMsgs);
                         this.lastId = data[data.length - 1].id;
+
+                        // Sync header topic if anyone changed it
+                        if (newMsgs.some(m => m.type === 'system' && m.text.includes('changed the topic to:'))) {
+                            this.fetchTopic();
+                        }
                     }
                 }
                 this.isServerOnline = true;

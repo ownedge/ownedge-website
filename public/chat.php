@@ -8,6 +8,7 @@ ini_set('display_errors', 1);
 
 $log_file = 'chat-log.json';
 $users_file = 'chat-users.json';
+$topic_file = 'chat-topic.json';
 
 // CORS Implementation
 header("Access-Control-Allow-Origin: *");
@@ -34,6 +35,7 @@ function save_data($file, $data) {
 // Ensure files exist
 if (!file_exists($log_file)) save_data($log_file, []);
 if (!file_exists($users_file)) save_data($users_file, []);
+if (!file_exists($topic_file)) save_data($topic_file, ["topic" => "OWNEDGE - EST 2011", "modified" => "2025.12.30"]);
 
 // --- PRE-PROCESS: Atomic Cleanup (Users & Messages) ---
 $lock_file = '.cleanup.lock';
@@ -130,11 +132,35 @@ if ($action === 'messages') {
 }
 
 if ($action === 'topic') {
-    echo json_encode([
-        "topic" => "OWNEDGE - EST 2011",
-        "modified" => "2025.12.30"
-    ]);
-    exit;
+    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+        echo json_encode(fetch_data($topic_file));
+        exit;
+    }
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+        if (isset($data['topic'])) {
+            $newTopic = [
+                "topic" => $data['topic'],
+                "modified" => date('Y.m.d')
+            ];
+            save_data($topic_file, $newTopic);
+            
+            // Broadcast change to chat log
+            $messages = fetch_data($log_file);
+            $user = isset($data['user']) ? $data['user'] : 'Admin';
+            $messages[] = [
+                'id' => sprintf("%.4f", microtime(true)) . rand(100, 999),
+                'type' => 'system',
+                'text' => "*** $user changed the topic to: " . $data['topic'],
+                'timestamp' => date('c')
+            ];
+            save_data($log_file, $messages);
+            
+            echo json_encode($newTopic);
+            exit;
+        }
+    }
 }
 
 if ($action === 'presence' && $_SERVER['REQUEST_METHOD'] === 'POST') {
