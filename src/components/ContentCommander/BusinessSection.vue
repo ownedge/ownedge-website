@@ -43,27 +43,29 @@ const handleKeydown = (e) => {
   
   if (e.key === 'ArrowDown') {
       e.preventDefault();
+      e.stopImmediatePropagation();
       const nextIndex = (currentIndex + 1) % businessTabs.length;
       selectTab(businessTabs[nextIndex].id);
   } else if (e.key === 'ArrowUp') {
       e.preventDefault();
+      e.stopImmediatePropagation();
       const prevIndex = (currentIndex - 1 + businessTabs.length) % businessTabs.length;
-      selectTab(businessTabs[prevIndex].id);
+      selectTab(prevIndex >= 0 ? businessTabs[prevIndex].id : businessTabs[businessTabs.length - 1].id);
   }
 };
 
 onMounted(() => {
-    window.addEventListener('keydown', handleKeydown);
+    window.addEventListener('keydown', handleKeydown, { capture: true });
 });
 
 onUnmounted(() => {
-    window.removeEventListener('keydown', handleKeydown);
+    window.removeEventListener('keydown', handleKeydown, { capture: true });
 });
 </script>
 
 <template>
   <div class="section-content animate-in">
-    <h3>> BUSINESS.SYS</h3>
+    <h3>> BUSINESS</h3>
     
     <div class="business-layout">
       <!-- Left Menu -->
@@ -159,7 +161,7 @@ onUnmounted(() => {
           <div class="logo-grid">
             <div v-for="customer in customers" :key="customer.name" class="logo-item" :title="customer.name">
               <span class="logo-hover-name">{{ customer.name }}</span>
-              <img :src="customer.logo" :alt="customer.name" />
+              <img :src="customer.logo" />
             </div>
           </div>
         </div>
@@ -304,7 +306,7 @@ onUnmounted(() => {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 30px;
-    margin-top: 20px;
+    margin-top: 10px; /* Standardize with other grids */
 }
 
 .logo-item {
