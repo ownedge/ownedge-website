@@ -2,7 +2,6 @@
 import GridOverlay from './components/GridOverlay.vue'
 import HeroDisplay from './components/HeroDisplay.vue'
 import ContentCommander from './components/ContentCommander/ContentCommander.vue'
-import NoiseOverlay from './components/NoiseOverlay.vue'
 import SoundManager from './sfx/SoundManager'
 import BootLoader from './components/BootLoader.vue'
 import VfdDisplay from './components/VfdDisplay.vue'
@@ -498,7 +497,6 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
           @connecting="() => vfdBootState = 'connecting'"
           @status-update="(s) => vfdStatusText = s"
         />
-        <NoiseOverlay />
 
         <div class="fixed-background">
             <GridOverlay />
@@ -553,13 +551,11 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
 
     <!-- Vintage Sony Sticker (Top Left) -->
     <div class="bezel-sticker">
-        <img src="./assets/sony-sticker.png" alt="It's a Sony" />
+        <img src="./assets/sony-sticker.png" />
         <div class="sticker-wear"></div>
     </div>
   </div>
 </template>
-
-
 
 <style scoped>
 
@@ -577,27 +573,7 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
   overflow: hidden;
 }
 
-/* Bezel Texture Layers */
-.crt-wrapper::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1;
-  /* Generated Leather Texture (Inline SVG for reliability) */
-  background-color: #222; /* Brighter base */
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='leather'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' result='noise'/%3E%3CfeDiffuseLighting in='noise' lighting-color='white' surfaceScale='3'%3E%3CfeDistantLight azimuth='45' elevation='35'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23leather)' opacity='1'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 200px 200px;
-  filter: contrast(1.9) brightness(0.4); 
-  opacity: 0.1;
-  /* Apply Mask */
-  -webkit-mask: url(#bezel-mask);
-  mask: url(#bezel-mask);
-}
+
 
 .crt-wrapper::after {
   content: '';
@@ -609,15 +585,7 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
   pointer-events: none;
   z-index: 1;
   /* Scratches and wear marks */
-  background-image: 
-    url('./assets/bezel-scratches.png'), /* Top Right Scratch */
-    url('./assets/bezel-scratches.png'), /* Bottom Left Scratch */
-    linear-gradient(15deg, transparent 48%, rgba(255,255,255,0.03) 49%, rgba(255,255,255,0.03) 50%, transparent 51%),
-    linear-gradient(165deg, transparent 28%, rgba(0,0,0,0.08) 29%, rgba(0,0,0,0.08) 30%, transparent 31%),
-    linear-gradient(75deg, transparent 73%, rgba(255,255,255,0.02) 74%, rgba(255,255,255,0.02) 75%, transparent 76%),
-    radial-gradient(ellipse at 15% 20%, rgba(0,0,0,0.05) 0%, transparent 50%),
-    radial-gradient(ellipse at 85% 70%, rgba(0,0,0,0.03) 0%, transparent 40%),
-    radial-gradient(ellipse at 40% 90%, rgba(0,0,0,0.04) 0%, transparent 45%);
+
   background-repeat: no-repeat, no-repeat, repeat, repeat, repeat, repeat, repeat, repeat;
   background-position: 95% 5%, 5% 95%, center, center, center, center, center, center;
   background-size: 400px 400px, 400px 400px, auto, auto, auto, auto, auto, auto;
