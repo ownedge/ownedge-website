@@ -28,7 +28,7 @@
               </svg>
             </a>PEDRO C.
           </div>
-          <div class="signature-title">OWNER</div>
+          <div class="signature-title">FOUNDER</div>
         </div>
       </div>
     </div>
