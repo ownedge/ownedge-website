@@ -118,7 +118,7 @@ onUnmounted(() => {
           <h4>CUSTOMERS</h4>
           <p>Strategic partnerships with global industry leaders and visionaries.</p>
           <div class="logo-grid">
-            <div v-for="customer in customers" :key="customer.name" class="logo-item" :title="customer.name">
+            <div v-for="customer in customers" :key="customer.name" class="logo-item">
               <img :src="customer.logo" />
             </div>
           </div>
