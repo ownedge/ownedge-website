@@ -7,6 +7,7 @@ import BootLoader from './components/BootLoader.vue'
 import VfdDisplay from './components/VfdDisplay.vue'
 import CrtControls from './components/CrtControls.vue'
 import TrackerOverlay from './components/TrackerOverlay.vue'
+import NoiseOverlay from './components/NoiseOverlay.vue'
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { chatStore } from './store/chatStore';
 
@@ -604,6 +605,7 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
         </div>
         
         <!-- Fixed Foreground Overlays -->
+        <NoiseOverlay />
         <div class="scanlines"></div>
         <div class="vignette"></div>
       </div>
