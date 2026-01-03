@@ -265,7 +265,7 @@ watch(isBooted, (booted) => {
 
                 if (activeTabIndex.value > 0) {
                     // Jump to content immediately after boot if we started on a deep link
-                    scrollToContent();
+                    scrollToContent('auto');
                 }
             }
         });
@@ -332,18 +332,23 @@ const updateUrlFromIndex = (index) => {
 };
 
 const updateIndexFromUrl = () => {
-    const path = window.location.pathname;
+    // Normalize path by removing trailing slash if exists (e.g. /chat/ -> /chat)
+    let path = window.location.pathname;
+    if (path.length > 1 && path.endsWith('/')) {
+        path = path.slice(0, -1);
+    }
+    
     const index = routeMap[path];
     if (index !== undefined && index !== activeTabIndex.value) {
         handleTabSelect(index);
     }
 };
 
-const scrollToContent = () => {
+const scrollToContent = (behavior = 'smooth') => {
     const scrollContainer = document.querySelector('.scroll-content');
     const sections = document.querySelectorAll('.page-section');
     if (sections.length > 1) {
-        sections[1].scrollIntoView({ behavior: 'smooth' });
+        sections[1].scrollIntoView({ behavior });
     }
 };
 
