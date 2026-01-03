@@ -143,6 +143,7 @@ onUnmounted(() => {
 .content {
   text-align: center;
   position: relative;
+  margin-top: 10vh;
 }
 
 .typing-wrapper {

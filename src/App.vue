@@ -603,8 +603,6 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
           </section>
         </div>
         
-        
-
         <!-- Fixed Foreground Overlays -->
         <div class="scanlines"></div>
         <div class="vignette"></div>
@@ -615,13 +613,6 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
     <!-- CRITICAL: Must have dimensions for mask percentages to work -->
     <svg width="100%" height="100%" style="position: absolute; top:0; left:0; pointer-events: none; z-index: 0;">
       <defs>
-        <filter id="spherical-warp" x="-2%" y="-2%" width="104%" height="104%">
-          <!-- numOctaves=1 is significantly faster than 4 and enough for subtle warp -->
-          <feTurbulence :baseFrequency="turbulenceFreq" numOctaves="1" result="noise" />
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G" />
-        </filter>
-        
-
         <!-- Bezel Mask: Reveals bezel only, hides screen center -->
         <mask id="bezel-mask" maskUnits="userSpaceOnUse">
            <rect width="100%" height="100%" fill="white" />
@@ -770,7 +761,7 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
 }
 
 .hero-section {
-  height: 85%; /* Reveal next section peeking from bottom */
+  height: calc(100% - 120px); /* Reveal next section peeking from bottom */
   transition: transform 0.1s ease-out;
 }
 

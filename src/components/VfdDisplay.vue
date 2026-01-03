@@ -389,7 +389,7 @@ const startSpectrumAnalyzer = () => {
                 const x = paddingX + (i * step);
                 const y = canvas.height - paddingY - barHeight;
                 
-                ctx.globalAlpha = 0.8 + (value / 1200); 
+                ctx.globalAlpha = 0.8 + (value / 1200);
                 ctx.fillRect(x, y, dotSize, barHeight);
             }
         }
