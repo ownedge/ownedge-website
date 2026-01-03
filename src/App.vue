@@ -267,8 +267,29 @@ const handleScroll = (e) => {
     if (nextIndex !== activeTabIndex.value) {
         activeTabIndex.value = nextIndex;
         updateUrlFromIndex(nextIndex);
+        updateMetadata(nextIndex);
     }
 }
+
+const metadataMap = {
+  home: { title: "Ownedge | Independent by Design", description: "Defying the establishment. A digital window for independent creators and builders." },
+  business: { title: "Ownedge | What We Do", description: "Exploring the boundaries of digital products, strategy, and engineering." },
+  about: { title: "Ownedge | Why We Exist", description: "The Ownedge manifesto: our vision for a more intentional, independent digital future." },
+  guestbook: { title: "Ownedge | Leave Your Mark", description: "Sign the guestbook and join the lineage of terminal users." },
+  chat: { title: "Ownedge | Terminal Cluster", description: "Communicate in real-time with other nodes connected to the Ownedge cluster." }
+};
+
+const updateMetadata = (index) => {
+    const tab = tabs[index];
+    const data = metadataMap[tab.id];
+    if (data) {
+        document.title = data.title;
+        const descriptionTag = document.querySelector('meta[name="description"]');
+        if (descriptionTag) {
+            descriptionTag.setAttribute('content', data.description);
+        }
+    }
+};
 
 const routeMap = {
   '/': 0,
@@ -313,6 +334,7 @@ const handleTabSelect = (index) => {
     }
 
     updateUrlFromIndex(index);
+    updateMetadata(index);
 
     const finishScroll = () => {
         // Fallback timeout: Increased to 2000ms to cover long wrap-around scrolls (Chat -> Home)
