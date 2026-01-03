@@ -30,7 +30,7 @@ const VISUALIZATION_CONFIG = {
 
 const isValidNickname = computed(() => {
     const n = chatStore.nickname.trim();
-    return n.length === 0 || n.length >= 3;
+    return n.length >= 3;
 });
 
 const parseMessage = (text) => {

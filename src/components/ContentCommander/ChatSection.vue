@@ -62,12 +62,22 @@ const handleCommand = (cmd) => {
         });
     } else if (command === '/topic' && parts.length > 1) {
         chatStore.updateTopic(parts.slice(1).join(' '));
+    } else if (command === '/nick' && parts.length > 1) {
+        chatStore.changeNickname(parts[1]);
     } else if (command === '/clear') {
         chatStore.clearHistory();
     } else if (command === '/help') {
-        chatStore.addMessage({ type: 'system', text: 'Commands: /me <action>, /topic <text>, /clear, /help' });
+        chatStore.addMessage({ 
+            type: 'system', 
+            text: 'Commands: /me <action>, /topic <text>, /nick <name>, /clear, /help',
+            localOnly: true 
+        });
     } else {
-        chatStore.addMessage({ type: 'system', text: `*** Unknown command: ${command}` });
+        chatStore.addMessage({ 
+            type: 'system', 
+            text: `*** Unknown command: ${command}`,
+            localOnly: true 
+        });
     }
     scrollToBottom();
 };

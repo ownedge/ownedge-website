@@ -136,6 +136,7 @@ export const chatStore = reactive({
         };
         
         this.messages.push(localMsg);
+        if (msg.localOnly) return;
 
         try {
             const response = await fetch(`${API_BASE}?action=messages`, {
@@ -247,6 +248,35 @@ export const chatStore = reactive({
             document.removeEventListener('visibilitychange', this._handler);
             this._handler = null;
         }
+    },
+
+    async changeNickname(newNick) {
+        if (!newNick || newNick.trim().length < 3) {
+            this.addMessage({ 
+                type: 'system', 
+                text: '*** Nickname must be at least 3 characters.',
+                localOnly: true 
+            });
+            return;
+        }
+
+        const oldNick = this.nickname;
+        const cleanNick = newNick.trim();
+
+        // 1. Leave with old nick
+        await this.leave();
+
+        // 2. Update state and persistence
+        this.nickname = cleanNick;
+        localStorage.setItem('chat_nickname', cleanNick);
+
+        // 3. Confirm with new presence
+        await this.sendHeartbeat();
+        this.addMessage({ 
+            type: 'system', 
+            text: `*** Your nickname is now ${cleanNick}`,
+            localOnly: true 
+        });
     },
 
     clearHistory() {
