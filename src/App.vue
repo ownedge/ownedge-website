@@ -161,6 +161,30 @@ const handleBootStart = async () => {
   }, 2100); 
 }
 
+const handleBootSkip = async () => {
+    // 1. Initialize Audio (Immediate jump)
+    if (!SoundManager.initialized) SoundManager.init();
+    if (SoundManager.ctx.state === 'suspended') await SoundManager.resume();
+    
+    // 2. Initialize Chat if needed
+    if (!chatStore.nickname || chatStore.nickname.trim() === '') {
+        const rand = Math.floor(1000 + Math.random() * 9000);
+        chatStore.nickname = `guest-${rand}`;
+    }
+    chatStore.isConnected = true;
+    chatStore.showPopup = false;
+    await chatStore.init();
+
+    // 3. Start Tracker Music immediately
+    SoundManager.loadVisualizer('/music/impulse.s3m');
+    SoundManager.playTrackerMusic('/music/impulse.s3m');
+    
+    // 4. Reveal Content
+    isBooted.value = true;
+    vfdBootState.value = 'complete'; 
+    vfdMode.value = 'spectrum';
+};
+
 
 const vfdMode = ref('spectrum'); // Start with canvas for loading bar
 const vfdKnobInfo = ref({ label: '', value: '' });
@@ -551,6 +575,7 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
         <BootLoader 
           :is-booted="isBooted" 
           @start="handleBootStart"
+          @skip="handleBootSkip"
           @progress="(p) => bootProgress = p"
           @ready="() => vfdBootState = 'ready'"
           @connecting="() => vfdBootState = 'connecting'"

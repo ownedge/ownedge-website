@@ -12,7 +12,7 @@ const nicknameInputRef = ref(null);
 const props = defineProps({
   isBooted: { type: Boolean, default: false }
 });
-const emit = defineEmits(['start', 'progress', 'ready', 'connecting', 'status-update']);
+const emit = defineEmits(['start', 'progress', 'ready', 'connecting', 'status-update', 'skip']);
 
 const bootStage = ref('bios'); // bios, login, connecting, ready
 const bootMessages = ref([]);
@@ -28,7 +28,24 @@ const VISUALIZATION_CONFIG = {
     horizontalPadding: 10
 };
 
-const isValidNickname = computed(() => chatStore.nickname.trim().length >= 3);
+const isValidNickname = computed(() => {
+    const n = chatStore.nickname.trim();
+    return n.length === 0 || n.length >= 3;
+});
+
+// --- Custom Cursor Logic ---
+const cursorPosition = ref(0);
+const measurementSpan = ref(null);
+
+const updateCursorPosition = () => {
+    nextTick(() => {
+        if (measurementSpan.value) {
+            cursorPosition.value = measurementSpan.value.offsetWidth;
+        }
+    });
+};
+
+watch(() => chatStore.nickname, updateCursorPosition);
 
 const parseMessage = (text) => {
     // Regex to split by chunks of special characters: > or █ or ✔
@@ -97,6 +114,12 @@ const runBiosSequence = async () => {
 const handleConnect = async () => {
     if (!isValidNickname.value || isConnecting.value) return;
     
+    // Generate guest name if empty
+    if (chatStore.nickname.trim() === '') {
+        const rand = Math.floor(1000 + Math.random() * 9000);
+        chatStore.nickname = `guest-${rand}`;
+    }
+
     isConnecting.value = true;
     bootStage.value = 'connecting';
     emit('connecting');
@@ -152,6 +175,16 @@ const handleConnect = async () => {
     }, 800);
 };
 
+const handleSkip = () => {
+    emit('skip');
+};
+
+const handleGlobalKeydown = (e) => {
+    if (e.key === 'Escape' && !props.isBooted) {
+        handleSkip();
+    }
+};
+
 const startVisualization = () => {
     if (!canvasRef.value) return;
     const canvas = canvasRef.value;
@@ -189,6 +222,15 @@ const stopVisualization = () => {
 
 onMounted(() => {
   if (videoRef.value) videoRef.value.playbackRate = 0.8;
+  
+  // Auto-Nickname handling
+  const savedNick = localStorage.getItem('chat_nickname');
+  if (savedNick) {
+      chatStore.nickname = savedNick;
+  }
+  updateCursorPosition();
+
+  window.addEventListener('keydown', handleGlobalKeydown);
   runBiosSequence();
 });
 
@@ -202,6 +244,7 @@ watch(() => props.isBooted, (val) => {
 
 onUnmounted(() => {
   stopVisualization();
+  window.removeEventListener('keydown', handleGlobalKeydown);
 });
 </script>
 
@@ -227,19 +270,30 @@ onUnmounted(() => {
           <!-- Dial-Up Popup -->
           <transition name="fade">
             <div v-if="bootStage === 'login' || bootStage === 'connecting'" class="popup-overlay">
-              <div class="popup-header">REMOTE NODE LINK</div>
+              <div class="popup-header">
+                  <span>REMOTE NODE LINK</span>
+                  <div class="esc-label" @click="handleSkip">ESC</div>
+              </div>
               <div class="popup-body">
                 <template v-if="bootStage === 'login'">
                     <p>PLEASE IDENTIFY YOUR TERMINAL NODE TO INITIALIZE SYNC.</p>
                     <div class="input-group">
                         <span class="prompt">NICKNAME:</span>
-                        <input 
-                            ref="nicknameInputRef"
-                            v-model="chatStore.nickname" 
-                            type="text" 
-                            maxlength="12"
-                            @keyup.enter="handleConnect"
-                        />
+                        <div class="input-wrapper">
+                            <input 
+                                ref="nicknameInputRef"
+                                v-model="chatStore.nickname" 
+                                type="text" 
+                                maxlength="12"
+                                @keyup.enter="handleConnect"
+                                @input="updateCursorPosition"
+                            />
+                            <span ref="measurementSpan" class="measurement-span">{{ chatStore.nickname }}</span>
+                            <div 
+                                class="block-cursor" 
+                                :style="{ left: `${cursorPosition}px` }"
+                            ></div>
+                        </div>
                     </div>
                     <button 
                         class="connect-btn" 
@@ -347,6 +401,26 @@ onUnmounted(() => {
     font-weight: bold;
     font-size: 0.8rem;
     letter-spacing: 1px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.esc-label {
+    font-size: 0.7rem;
+    color: #000;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+    padding: 0 5px;
+    background: rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+}
+
+.esc-label:hover {
+    background: #000;
+    color: var(--color-accent);
 }
 
 .popup-body {
@@ -371,6 +445,11 @@ onUnmounted(() => {
     border: 1px solid #333;
 }
 
+.input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
 .prompt { color: var(--color-accent); font-size: 0.8rem; font-weight: bold; }
 .input-group input {
     background: transparent;
@@ -380,6 +459,34 @@ onUnmounted(() => {
     font-size: 1rem;
     width: 100%;
     outline: none;
+    caret-color: transparent; /* Hide native cursor */
+}
+
+.measurement-span {
+    position: absolute;
+    visibility: hidden;
+    white-space: pre;
+    font-size: 1rem;
+    pointer-events: none;
+    left: 0;
+    font-family: 'Microgramma', monospace;
+    letter-spacing: normal;
+}
+
+.block-cursor {
+    position: absolute;
+    width: 8px;
+    height: 1.2rem;
+    background: #bbb;
+    pointer-events: none;
+    animation: smooth-blink 1.1s ease-in-out infinite;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+@keyframes smooth-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
 }
 
 .connection-status {
