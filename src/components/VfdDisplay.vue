@@ -373,7 +373,9 @@ const startSpectrumAnalyzer = () => {
         const cols = Math.floor((canvas.width - (paddingX * 2)) / step);
         const rows = Math.floor((canvas.height - (paddingY * 2)) / step);
         
-        ctx.fillStyle = '#40e0d0'; // Teal VFD color
+        ctx.fillStyle = '#48ffed'; // Teal VFD color
+        ctx.shadowColor = '#40e0d0';
+        ctx.shadowBlur = 1;
 
         // Draw Visualization
         for (let i = 0; i < cols; i++) {
@@ -391,6 +393,8 @@ const startSpectrumAnalyzer = () => {
                 ctx.fillRect(x, y, dotSize, barHeight);
             }
         }
+        
+        ctx.shadowBlur = 0; // Reset for other frames
         
         animationFrameId = requestAnimationFrame(draw);
     };
@@ -673,7 +677,7 @@ watch(() => props.mode, (newMode) => {
 
 .vfd-value {
     font-family: 'Microgramma', monospace; 
-    color: #40e0d0;
+    color: #48ffed;
     font-size: 1.8rem; /* Large Value */
     letter-spacing: 2px;
     font-weight: bold;
@@ -681,5 +685,8 @@ watch(() => props.mode, (newMode) => {
     text-shadow: 0 0 8px #40e0d0;
     line-height: 1;
     margin-top: 4px; /* Slight optical adjustment */
+}
+.vfd-canvas {
+    filter: drop-shadow(0 0 1px rgba(67, 255, 236, 0.1));
 }
 </style>
