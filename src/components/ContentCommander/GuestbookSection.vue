@@ -10,8 +10,6 @@ const showSuccess = ref(false);
 const isSigned = ref(false);
 
 const messageInput = ref(null);
-const cursorOffset = ref(0);
-const measurementSpan = ref(null);
 
 const newEntry = ref({
   name: '',
@@ -54,19 +52,10 @@ const setRating = (val) => {
     SoundManager.playTypingSound();
 };
 
-const updateCursorPosition = () => {
-    nextTick(() => {
-        if (!messageInput.value || !measurementSpan.value) return;
-        measurementSpan.value.textContent = newEntry.value.message.substring(0, messageInput.value.selectionStart);
-        cursorOffset.value = measurementSpan.value.offsetWidth;
-    });
-};
-
 const focusInput = () => {
     nextTick(() => {
         if (messageInput.value) {
             messageInput.value.focus();
-            updateCursorPosition();
         }
     });
 };
@@ -214,16 +203,8 @@ onUnmounted(() => {
                       type="text" 
                       maxlength="256" 
                       placeholder="type message..."
-                      @input="updateCursorPosition"
-                      @click="updateCursorPosition"
-                      @keyup="updateCursorPosition"
                       @blur="focusInput"
                     />
-                    <span ref="measurementSpan" class="measurement-span"></span>
-                    <div 
-                      class="block-cursor" 
-                      :style="{ left: `calc(12px + ${cursorOffset}px)` }"
-                    ></div>
                 </div>
             </div>
 
@@ -475,37 +456,6 @@ onUnmounted(() => {
     font-family: 'Microgramma', sans-serif;
     font-size: 0.95rem;
     outline: none;
-    caret-color: transparent; /* Hide native cursor */
-}
-
-.measurement-span {
-    position: absolute;
-    visibility: hidden;
-    white-space: pre;
-    font-size: 0.95rem;
-    pointer-events: none;
-    left: 12px; /* Match input padding */
-    top: 50%;
-    transform: translateY(-50%);
-    font-family: 'Microgramma', sans-serif;
-}
-
-.block-cursor {
-    position: absolute;
-    width: 8px;
-    height: 1.2rem;
-    background: #bbb;
-    pointer-events: none;
-    animation: smooth-blink 1.1s ease-in-out infinite;
-    top: 50%;
-    transform: translateY(-50%);
-    box-shadow: 0 0 5px #bbb;
-    z-index: 5;
-}
-
-@keyframes smooth-blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
 }
 
 .star-rating-input {

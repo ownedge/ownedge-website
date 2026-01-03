@@ -6,22 +6,6 @@ import { chatStore } from '../../store/chatStore';
 const message = ref('');
 const messageInput = ref(null);
 const logContainer = ref(null);
-const cursorOffset = ref(0);
-const measurementSpan = ref(null);
-
-const updateCursorPosition = () => {
-    if (!messageInput.value || !measurementSpan.value) return;
-    
-    // Get text before cursor
-    const textBeforeCursor = message.value.slice(0, messageInput.value.selectionStart);
-    
-    // We update a hidden span with the same font to measure width
-    measurementSpan.value.textContent = textBeforeCursor;
-    
-    // Get width of text before cursor
-    cursorOffset.value = measurementSpan.value.offsetWidth;
-};
-
 const isValidNickname = computed(() => chatStore.nickname.trim().length >= 3);
 
 const focusInput = async () => {
@@ -65,7 +49,6 @@ const handleSend = async () => {
     
     message.value = '';
     scrollToBottom();
-    updateCursorPosition(); // Reset cursor position after sending
 };
 
 const handleCommand = (cmd) => {
@@ -157,15 +140,7 @@ const formatTime = (isoString) => {
             autocomplete="off"
             placeholder="type message or /command..."
             @keydown.enter="handleSend"
-            @input="updateCursorPosition"
-            @click="updateCursorPosition"
-            @keyup="updateCursorPosition"
           />
-          <span ref="measurementSpan" class="measurement-span"></span>
-          <div 
-            class="block-cursor" 
-            :style="{ left: `calc(10px + ${cursorOffset}px)` }"
-          ></div>
         </div>
       </div>
       </div>
@@ -291,35 +266,6 @@ const formatTime = (isoString) => {
     outline: none;
     padding: 0 10px;
     letter-spacing: 0.5px;
-    caret-color: transparent; /* Hide native OS cursor */
-}
-
-.measurement-span {
-    position: absolute;
-    visibility: hidden;
-    white-space: pre;
-    font-family: 'Microgramma', sans-serif;
-    font-size: 1.05rem;
-    letter-spacing: 0.5px;
-    pointer-events: none;
-    left: 10px; /* Match input padding */
-}
-
-.block-cursor {
-    position: absolute;
-    width: 10px;
-    height: 1.2rem;
-    background: #bbb;
-    pointer-events: none;
-    animation: smooth-blink 1.1s ease-in-out infinite;
-    top: 50%;
-    transform: translateY(-50%);
-    box-shadow: 0 0 5px #bbb;
-}
-
-@keyframes smooth-blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
 }
 
 .irc-sidebar {

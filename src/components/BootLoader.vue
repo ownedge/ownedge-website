@@ -33,20 +33,6 @@ const isValidNickname = computed(() => {
     return n.length === 0 || n.length >= 3;
 });
 
-// --- Custom Cursor Logic ---
-const cursorPosition = ref(0);
-const measurementSpan = ref(null);
-
-const updateCursorPosition = () => {
-    nextTick(() => {
-        if (measurementSpan.value) {
-            cursorPosition.value = measurementSpan.value.offsetWidth;
-        }
-    });
-};
-
-watch(() => chatStore.nickname, updateCursorPosition);
-
 const parseMessage = (text) => {
     // Regex to split by chunks of special characters: > or █ or ✔
     // We keep the delimiters in the result
@@ -228,7 +214,6 @@ onMounted(() => {
   if (savedNick) {
       chatStore.nickname = savedNick;
   }
-  updateCursorPosition();
 
   window.addEventListener('keydown', handleGlobalKeydown);
   runBiosSequence();
@@ -286,13 +271,7 @@ onUnmounted(() => {
                                 type="text" 
                                 maxlength="12"
                                 @keyup.enter="handleConnect"
-                                @input="updateCursorPosition"
                             />
-                            <span ref="measurementSpan" class="measurement-span">{{ chatStore.nickname }}</span>
-                            <div 
-                                class="block-cursor" 
-                                :style="{ left: `${cursorPosition}px` }"
-                            ></div>
                         </div>
                     </div>
                     <button 
@@ -459,34 +438,6 @@ onUnmounted(() => {
     font-size: 1rem;
     width: 100%;
     outline: none;
-    caret-color: transparent; /* Hide native cursor */
-}
-
-.measurement-span {
-    position: absolute;
-    visibility: hidden;
-    white-space: pre;
-    font-size: 1rem;
-    pointer-events: none;
-    left: 0;
-    font-family: 'Microgramma', monospace;
-    letter-spacing: normal;
-}
-
-.block-cursor {
-    position: absolute;
-    width: 8px;
-    height: 1.2rem;
-    background: #bbb;
-    pointer-events: none;
-    animation: smooth-blink 1.1s ease-in-out infinite;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-@keyframes smooth-blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
 }
 
 .connection-status {
