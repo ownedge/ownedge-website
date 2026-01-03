@@ -577,10 +577,10 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
           :is-booted="isBooted" 
           @start="handleBootStart"
           @skip="handleBootSkip"
-          @progress="(p) => bootProgress = p"
-          @ready="() => vfdBootState = 'ready'"
-          @connecting="() => vfdBootState = 'connecting'"
-          @status-update="(s) => vfdStatusText = s"
+          @progress="(p) => { if (!isBooted) bootProgress = p }"
+          @ready="() => { if (!isBooted) vfdBootState = 'ready' }"
+          @connecting="() => { if (!isBooted) vfdBootState = 'connecting' }"
+          @status-update="(s) => { if (!isBooted) vfdStatusText = s }"
         />
 
         <div class="fixed-background">
