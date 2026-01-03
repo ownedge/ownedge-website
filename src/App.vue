@@ -113,13 +113,19 @@ onMounted(() => {
   window.addEventListener('mousemove', updateLockStates); 
   
   simulateHddActivity();
-
   document.addEventListener('mouseover', handleGlobalHover);
   window.addEventListener('keydown', handleGlobalKeydown, { capture: true }); 
+  window.addEventListener('popstate', handlePopState);
+  
+  // Initial Route Check
+  updateIndexFromUrl();
 
-  // Start glitch loop immediately
   triggerGlitch();
 })
+
+const handlePopState = (e) => {
+    updateIndexFromUrl();
+};
 
 const handleGlobalHover = (e) => {
   // Check if target is interactive
@@ -231,6 +237,11 @@ watch(isBooted, (booted) => {
                 scrollContainer.addEventListener('scrollend', () => {
                     isScrollingManually.value = false;
                 });
+
+                if (activeTabIndex.value > 0) {
+                    // Jump to content immediately after boot if we started on a deep link
+                    scrollToContent();
+                }
             }
         });
     }
@@ -241,22 +252,46 @@ const handleScroll = (e) => {
     if (isScrollingManually.value) return;
 
     const scrollTop = e.target.scrollTop;
+    const heroThreshold = window.innerHeight * 0.15;
+    const contentThreshold = window.innerHeight * 0.55;
     
-    // TWEAK: Decisive thresholds to prevent flickering
-    // High sensitivity for HOME when at top, larger gap for content
-    const heroThreshold = window.innerHeight * 0.15; // Re-select HOME very early when scrolling UP
-    const contentThreshold = window.innerHeight * 0.55; // Re-select CONTENT only when half-way down
-    
+    let nextIndex = activeTabIndex.value;
     if (scrollTop < heroThreshold) {
-        if (activeTabIndex.value !== 0) {
-            activeTabIndex.value = 0;
-        }
+        nextIndex = 0;
     } else if (scrollTop >= contentThreshold) {
         if (activeTabIndex.value === 0) {
-            activeTabIndex.value = lastActiveContentTab.value;
+            nextIndex = lastActiveContentTab.value;
         }
     }
+
+    if (nextIndex !== activeTabIndex.value) {
+        activeTabIndex.value = nextIndex;
+        updateUrlFromIndex(nextIndex);
+    }
 }
+
+const routeMap = {
+  '/': 0,
+  '/what': 1,
+  '/why': 2,
+  '/guestbook': 3,
+  '/chat': 4
+};
+
+const updateUrlFromIndex = (index) => {
+    const path = Object.keys(routeMap).find(key => routeMap[key] === index);
+    if (path && window.location.pathname !== path) {
+        history.pushState({ index }, '', path);
+    }
+};
+
+const updateIndexFromUrl = () => {
+    const path = window.location.pathname;
+    const index = routeMap[path];
+    if (index !== undefined && index !== activeTabIndex.value) {
+        handleTabSelect(index);
+    }
+};
 
 const scrollToContent = () => {
     const scrollContainer = document.querySelector('.scroll-content');
@@ -276,6 +311,8 @@ const handleTabSelect = (index) => {
     if (index > 0) {
         lastActiveContentTab.value = index;
     }
+
+    updateUrlFromIndex(index);
 
     const finishScroll = () => {
         // Fallback timeout: Increased to 2000ms to cover long wrap-around scrolls (Chat -> Home)
