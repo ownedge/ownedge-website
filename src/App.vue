@@ -118,19 +118,6 @@ onMounted(() => {
   window.addEventListener('keydown', handleGlobalKeydown, { capture: true }); 
   window.addEventListener('popstate', handlePopState);
   
-  // 404 Redirect Restoration logic
-  (function() {
-    var p = new URLSearchParams(window.location.search).get('p');
-    if (p) {
-        // Restore the path and clear the 'p' search param
-        var newPath = p.replace(/~and~/g, '&');
-        window.history.replaceState(null, null, 
-            window.location.pathname.slice(0, 1) + newPath +
-            (window.location.hash || '')
-        );
-    }
-  })();
-
   // Initial Route Check
   updateIndexFromUrl();
 
