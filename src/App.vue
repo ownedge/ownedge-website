@@ -35,6 +35,13 @@ const activeTabIndex = ref(0);
 const lastActiveContentTab = ref(1); // Default to BUSINESS
 const isScrollingManually = ref(false);
 
+// Marquee Selection State
+const isSelecting = ref(false);
+const startSelectionX = ref(0);
+const startSelectionY = ref(0);
+const currentSelectionX = ref(0);
+const currentSelectionY = ref(0);
+
 const tabs = [
   { id: 'home', name: 'HOME' },
   { id: 'business', name: 'WHAT' },
@@ -89,7 +96,11 @@ const simulateHddActivity = () => {
 };
 
 onMounted(() => {
-  window.addEventListener('mousemove', handleMouseMove)
+  window.addEventListener('mousemove', (e) => {
+    handleMouseMove(e);
+    if (isSelecting.value) updateSelection(e);
+  });
+  window.addEventListener('mouseup', endSelection);
   window.addEventListener('resize', handleResize)
   
   // Robust Screen Rect Init
@@ -107,11 +118,10 @@ onMounted(() => {
       }
   });
 
-  // Monitor Lock States
+  // Monitor Lock States (keydown/up for CapsLock)
   window.addEventListener('keydown', updateLockStates);
   window.addEventListener('keyup', updateLockStates);
-  window.addEventListener('mousedown', updateLockStates);
-  window.addEventListener('mousemove', updateLockStates); 
+  window.addEventListener('mousedown', updateLockStates); // For initial state on click
   
   simulateHddActivity();
   document.addEventListener('mouseover', handleGlobalHover);
@@ -123,6 +133,48 @@ onMounted(() => {
 
   triggerGlitch();
 })
+
+const startSelection = (e) => {
+    if (!isBooted.value) return;
+    // Don't start selection if clicking an input or button
+    if (e.target.matches('button, a, input, textarea, [role="button"]')) return;
+
+    isSelecting.value = true;
+    updateScreenRect(); // Refresh rect before calculation
+    
+    // Coordinates relative to the screen (.app-container)
+    startSelectionX.value = e.clientX - (screenRect.value?.left || 0);
+    startSelectionY.value = e.clientY - (screenRect.value?.top || 0);
+    currentSelectionX.value = startSelectionX.value;
+    currentSelectionY.value = startSelectionY.value;
+};
+
+const updateSelection = (e) => {
+    if (!isSelecting.value || !screenRect.value) return;
+    
+    currentSelectionX.value = e.clientX - screenRect.value.left;
+    currentSelectionY.value = e.clientY - screenRect.value.top;
+};
+
+const endSelection = () => {
+    if (isSelecting.value) isSelecting.value = false;
+};
+
+const selectionBoxStyle = computed(() => {
+    if (!isSelecting.value) return { display: 'none' };
+    
+    const left = Math.min(startSelectionX.value, currentSelectionX.value);
+    const top = Math.min(startSelectionY.value, currentSelectionY.value);
+    const width = Math.abs(currentSelectionX.value - startSelectionX.value);
+    const height = Math.abs(currentSelectionY.value - startSelectionY.value);
+    
+    return {
+        left: `${left}px`,
+        top: `${top}px`,
+        width: `${width}px`,
+        height: `${height}px`
+    };
+});
 
 const handlePopState = (e) => {
     updateIndexFromUrl();
@@ -207,7 +259,14 @@ const vfdLabelGlow = computed(() => {
 let previousVfdMode = 'spectrum';
 
 onUnmounted(() => {
-  window.removeEventListener('mousemove', handleMouseMove)
+  // Remove combined mousemove listener
+  window.removeEventListener('mousemove', (e) => {
+    handleMouseMove(e);
+    updateLockStates(e);
+    if (isSelecting.value) updateSelection(e);
+  });
+  window.removeEventListener('mouseup', endSelection);
+
   window.removeEventListener('resize', handleResize)
   document.removeEventListener('mouseover', handleGlobalHover);
   window.removeEventListener('keydown', handleGlobalKeydown);
@@ -250,6 +309,11 @@ const handleGlobalKeydown = (e) => {
       if (activeTabIndex.value === 0) {
           handleTabSelect(lastActiveContentTab.value);
       }
+  }
+
+  // 4. Reboot (Esc)
+  if (e.key === 'Escape') {
+      window.location.reload();
   }
 }
 
@@ -588,13 +652,20 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
           @status-update="(s) => { if (!isBooted) vfdStatusText = s }"
         />
 
-        <div class="fixed-background">
+        <!-- Selection Marquee -->
+        <div 
+          v-if="isSelecting" 
+          class="selection-marquee" 
+          :style="selectionBoxStyle"
+        ></div>
+
+        <div class="fixed-background" @mousedown="startSelection">
             <GridOverlay />
             <TrackerOverlay />
         </div>
 
         <!-- Scrollable Content -->
-        <div class="scroll-content" v-if="isBooted" @scroll.passive="handleScroll">
+        <div class="scroll-content" v-if="isBooted" @scroll.passive="handleScroll" @mousedown="startSelection">
           <section class="page-section hero-section" :style="heroStyle">
             <HeroDisplay />
           </section>
@@ -653,6 +724,14 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
   padding: 40px 40px 80px 40px; /* Thicker chin */
   position: relative;
   overflow: hidden;
+  user-select: none; /* Disable global text selection */
+}
+
+/* Allow selection in inputs/textareas */
+.crt-wrapper input,
+.crt-wrapper textarea,
+.crt-wrapper [contenteditable="true"] {
+    user-select: text;
 }
 
 
@@ -804,6 +883,14 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
   border-radius: 5px;
 }
 
+.selection-marquee {
+    position: absolute;
+    border: 1px solid rgba(72, 255, 237, 0.3);
+    background-color: rgba(72, 255, 237, 0.05);
+    z-index: 100;
+    pointer-events: none; /* Let clicks pass through to content */
+    box-shadow: 0 0 5px rgba(72, 255, 237, 0.1);
+}
 /* VFD Display Styling (Replaces Monitor Brand) */
 .vfd-display {
     position: absolute;
