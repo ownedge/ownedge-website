@@ -65,6 +65,17 @@ const handleMouseMove = (e) => {
   if (!screenRect.value) updateScreenRect();
 }
 
+const handleCombinedMouseMove = (e) => {
+    handleMouseMove(e);
+    if (isSelecting.value) updateSelection(e);
+};
+
+const handleGlobalMouseDown = (e) => {
+    updateLockStates(e);
+    handleGlobalClick(e);
+    startSelection(e);
+};
+
 
 
 const handleResize = () => {
@@ -96,10 +107,7 @@ const simulateHddActivity = () => {
 };
 
 onMounted(() => {
-  window.addEventListener('mousemove', (e) => {
-    handleMouseMove(e);
-    if (isSelecting.value) updateSelection(e);
-  });
+  window.addEventListener('mousemove', handleCombinedMouseMove);
   window.addEventListener('mouseup', endSelection);
   window.addEventListener('resize', handleResize)
   
@@ -121,7 +129,7 @@ onMounted(() => {
   // Monitor Lock States (keydown/up for CapsLock)
   window.addEventListener('keydown', updateLockStates);
   window.addEventListener('keyup', updateLockStates);
-  window.addEventListener('mousedown', updateLockStates); // For initial state on click
+  window.addEventListener('mousedown', handleGlobalMouseDown);
   
   simulateHddActivity();
   document.addEventListener('mouseover', handleGlobalHover);
@@ -185,6 +193,39 @@ const handleGlobalHover = (e) => {
   if (e.target.matches('button, a, input, [role="button"]')) {
      SoundManager.playHoverSound();
   }
+}
+
+const handleGlobalClick = (e) => {
+    // Prevent focus stealing if clicking interactive elements
+    if (e.target.matches('button, a, input, textarea, [role="button"], select, label, .interactive-star, .esc-label')) return;
+
+    // Delay slightly to let standard focus change finish, then steal it back
+    setTimeout(() => {
+        // 1. Dial-up Popup (BootLoader)
+        const dialupInput = document.querySelector('.popup-overlay .input-group input');
+        if (dialupInput) {
+            dialupInput.focus();
+            return;
+        }
+
+        // 2. Guestbook Modal
+        const guestbookInput = document.querySelector('.modal-content .form-group input');
+        if (guestbookInput) {
+            guestbookInput.focus();
+            return;
+        }
+
+        // 3. Chat Focus Lock
+        if (activeTabIndex.value === 4) { // Chat index
+            const chatInput = document.querySelector('.irc-input-row input');
+            if (chatInput && document.activeElement !== chatInput) {
+                // Don't steal if user purposefully clicked another input (unlikely due to matches check above)
+                if (!document.activeElement.matches('input, textarea, button, a')) {
+                    chatInput.focus();
+                }
+            }
+        }
+    }, 10);
 }
 
 const handleBootStart = async () => {
@@ -259,13 +300,9 @@ const vfdLabelGlow = computed(() => {
 let previousVfdMode = 'spectrum';
 
 onUnmounted(() => {
-  // Remove combined mousemove listener
-  window.removeEventListener('mousemove', (e) => {
-    handleMouseMove(e);
-    updateLockStates(e);
-    if (isSelecting.value) updateSelection(e);
-  });
+  window.removeEventListener('mousemove', handleCombinedMouseMove);
   window.removeEventListener('mouseup', endSelection);
+  window.removeEventListener('mousedown', handleGlobalMouseDown);
 
   window.removeEventListener('resize', handleResize)
   document.removeEventListener('mouseover', handleGlobalHover);
