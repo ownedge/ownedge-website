@@ -35,12 +35,7 @@ const selectTab = (index) => {
       emit('update:activeIndex', index);
       SoundManager.playHoverSound();
       
-      // If we are peeking, scroll to ourselves (unless it's HOME)
-      if (props.tabs[index].id !== 'home') {
-          const el = document.querySelector('.page-section:nth-child(2)');
-          if (el) el.scrollIntoView({ behavior: 'smooth' });
-      }
-
+      // If we are peeking, the parent (App.vue) will handle the scroll via activeIndex change
       if (viewportContent.value) viewportContent.value.scrollTop = 0;
   }
 };

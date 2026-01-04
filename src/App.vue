@@ -447,9 +447,16 @@ const updateIndexFromUrl = () => {
 
 const scrollToContent = (behavior = 'smooth') => {
     const scrollContainer = document.querySelector('.scroll-content');
+    if (!scrollContainer) return;
+    
     const sections = document.querySelectorAll('.page-section');
     if (sections.length > 1) {
-        sections[1].scrollIntoView({ behavior });
+        const targetTop = sections[1].offsetTop;
+        // Optimization: If we are already at the target area, don't trigger a scroll.
+        // This prevents Safari from flickering/jumping when switching tabs inside ContentCommander.
+        if (Math.abs(scrollContainer.scrollTop - targetTop) < 30) return;
+
+        scrollContainer.scrollTo({ top: targetTop, behavior });
     }
 };
 
@@ -479,6 +486,8 @@ const handleTabSelect = (index) => {
             finishScroll();
         }
     } else {
+        // Only scroll to the content section if we aren't already there.
+        // This is key for Safari stability.
         scrollToContent();
         finishScroll();
     }
