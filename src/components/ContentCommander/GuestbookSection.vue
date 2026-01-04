@@ -112,13 +112,13 @@ const formatDate = (iso) => {
 const handleKeyDown = (e) => {
     if (isModalOpen.value) {
         // If the modal is open, we consume these specific keys and prevent them from bubbling
-        if (['ArrowLeft', 'ArrowRight', 'Escape', 'Enter'].includes(e.key)) {
+        if (['ArrowLeft', 'ArrowRight', 'Escape', 'Esc', 'Enter'].includes(e.key)) {
             e.stopImmediatePropagation();
             e.stopPropagation();
             
-            if (showSuccess.value) return; // Don't do anything else if we're in success state
+            if (showSuccess.value) return; // Don't do anything else if we'm in success state
 
-            if (e.key === 'Escape') {
+            if (e.key === 'Escape' || e.key === 'Esc') {
                 closeModal();
             } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();

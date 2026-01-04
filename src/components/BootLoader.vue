@@ -165,12 +165,6 @@ const handleSkip = () => {
     emit('skip');
 };
 
-const handleGlobalKeydown = (e) => {
-    if (e.key === 'Escape' && !props.isBooted) {
-        handleSkip();
-    }
-};
-
 const startVisualization = () => {
     if (!canvasRef.value) return;
     const canvas = canvasRef.value;
@@ -215,7 +209,6 @@ onMounted(() => {
       chatStore.nickname = savedNick;
   }
 
-  window.addEventListener('keydown', handleGlobalKeydown);
   runBiosSequence();
 });
 
@@ -229,7 +222,6 @@ watch(() => props.isBooted, (val) => {
 
 onUnmounted(() => {
   stopVisualization();
-  window.removeEventListener('keydown', handleGlobalKeydown);
 });
 </script>
 

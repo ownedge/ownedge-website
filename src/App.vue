@@ -229,26 +229,25 @@ const handleGlobalClick = (e) => {
 }
 
 const handleBootStart = async () => {
-  // 1. Initialize Audio (User gesture is the click on "GO!")
-  if (!SoundManager.initialized) SoundManager.init();
-  if (SoundManager.ctx.state === 'suspended') await SoundManager.resume();
-  
-  // 2. Play Boot Sound
-  SoundManager.playBootSequence();
-  
-  // 3. Preload Tracker Data for Visuals (Offline)
-  SoundManager.loadVisualizer('/music/impulse.s3m');
-
-  // 4. Start Tracker Music
-  setTimeout(() => {
-    SoundManager.playTrackerMusic('/music/impulse.s3m');
-  }, 3800); 
-  
-  // 4. Reveal Content
+  // 1. Reveal Content IMMEDIATELY (Safari Fix)
   isBooted.value = true;
   vfdBootState.value = 'complete'; 
   
-  // 5. Trigger Post-Boot SONY Logo
+  // 2. Initialize Audio in background (don't await)
+  try {
+      if (!SoundManager.initialized) SoundManager.init();
+      SoundManager.resume().then(() => {
+          SoundManager.playBootSequence();
+          SoundManager.loadVisualizer('/music/impulse.s3m');
+          setTimeout(() => {
+            SoundManager.playTrackerMusic('/music/impulse.s3m');
+          }, 3800); 
+      });
+  } catch (e) {
+      console.warn('Audio auto-start blocked by browser');
+  }
+  
+  // 3. Trigger Post-Boot SONY Logo
   vfdMode.value = 'logo';
   setTimeout(() => {
         vfdMode.value = 'spectrum';
@@ -256,11 +255,23 @@ const handleBootStart = async () => {
 }
 
 const handleBootSkip = async () => {
-    // 1. Initialize Audio (Immediate jump)
-    if (!SoundManager.initialized) SoundManager.init();
-    if (SoundManager.ctx.state === 'suspended') await SoundManager.resume();
+    // 1. Reveal Content IMMEDIATELY (Safari Fix)
+    isBooted.value = true;
+    vfdBootState.value = 'complete'; 
+    vfdMode.value = 'spectrum';
+
+    // 2. Initialize Audio in background (don't await)
+    try {
+        if (!SoundManager.initialized) SoundManager.init();
+        SoundManager.resume().then(() => {
+            SoundManager.loadVisualizer('/music/impulse.s3m');
+            SoundManager.playTrackerMusic('/music/impulse.s3m');
+        });
+    } catch (e) {
+        console.warn('Audio skip blocked by browser');
+    }
     
-    // 2. Initialize Chat if needed
+    // 3. Initialize Chat if needed
     if (!chatStore.nickname || chatStore.nickname.trim() === '') {
         const rand = Math.floor(1000 + Math.random() * 9000);
         chatStore.nickname = `guest-${rand}`;
@@ -268,15 +279,6 @@ const handleBootSkip = async () => {
     chatStore.isConnected = true;
     chatStore.showPopup = false;
     await chatStore.init();
-
-    // 3. Start Tracker Music immediately
-    SoundManager.loadVisualizer('/music/impulse.s3m');
-    SoundManager.playTrackerMusic('/music/impulse.s3m');
-    
-    // 4. Reveal Content
-    isBooted.value = true;
-    vfdBootState.value = 'complete'; 
-    vfdMode.value = 'spectrum';
 };
 
 
@@ -306,16 +308,36 @@ onUnmounted(() => {
 
   window.removeEventListener('resize', handleResize)
   document.removeEventListener('mouseover', handleGlobalHover);
-  window.removeEventListener('keydown', handleGlobalKeydown);
+  window.removeEventListener('keydown', handleGlobalKeydown, { capture: true });
   
   // clearInterval(cursorInterval) // Removed legacy cleanup
   if (clockInterval) clearInterval(clockInterval);
 })
 
 const handleGlobalKeydown = (e) => {
+  const isEscape = e.key === 'Escape' || e.key === 'Esc';
+
+  // 1. Handle Skip/Reboot early (Safari Fix)
+  if (isEscape) {
+      if (!isBooted.value) {
+          // If NOT booted, Escape ALWAYS skips the BIOS/Dialup sequence
+          e.preventDefault();
+          e.stopPropagation();
+          setTimeout(() => handleBootSkip(), 0);
+          return;
+      } else {
+          // IF booted, only allow Escape reboot if NO modal/popup is open
+          const hasOverlay = document.querySelector('.modal-overlay, .popup-overlay');
+          if (hasOverlay) return; // Let modals/popups handle their own Escape
+
+          window.location.reload();
+      }
+      return;
+  }
+
   if (!isBooted.value) return;
 
-  // 1. Ignore if typing in an input or textarea
+  // 2. Ignore if typing in an input or textarea
   const target = e.target;
   if (target.matches('input, textarea, [contenteditable="true"]')) {
       return; 
@@ -340,17 +362,11 @@ const handleGlobalKeydown = (e) => {
       SoundManager.playTypingSound();
   }
 
-  // 3. Hero Transition
   if (isAtTop && (e.key === 'ArrowDown' || e.key === 'Enter')) {
       // Move to the last active content tab (or Business)
       if (activeTabIndex.value === 0) {
           handleTabSelect(lastActiveContentTab.value);
       }
-  }
-
-  // 4. Reboot (Esc)
-  if (e.key === 'Escape') {
-      window.location.reload();
   }
 }
 
