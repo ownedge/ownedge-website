@@ -111,7 +111,7 @@ const draw = () => {
         } else {
             // Future Rows
             // Fade out slightly
-            const opacity = 0.45 - (offset * 0.05);
+            const opacity = 0.7 - (offset * 0.15);
             ctx.fillStyle = `rgba(33, 241, 235, ${opacity})`;
             ctx.font = '16px "Courier New", monospace';
         }

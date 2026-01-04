@@ -10,9 +10,9 @@
         
         <p>At its core, Ownedge is about ownership in the deepest sense: not just legal ownership, but intellectual ownership, responsibility, and pride in what exists because you made it.</p>
         
-        <p>We design systems the way artisans shape objects: with attention to structure, balance, and longevity. </p>
+        <p>We design systems the way artisans shape objects: with attention to detail, structure, balance, and longevity. </p>
 
-        <p>Our work is not about chasing trends. — <span>We set the trends.</span></p>
+        <p>Our work is not about chasing trends — <span>We set the trends.</span></p>
       </div>
 
       <div class="ceo-profile">
