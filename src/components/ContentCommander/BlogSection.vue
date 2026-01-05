@@ -47,4 +47,10 @@
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+@media (max-width: 900px) {
+    .section-content h3 {
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+    }
+}
 </style>

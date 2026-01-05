@@ -91,4 +91,32 @@ const handleTabKeydown = (e, index) => {
     font-weight: bold;
     letter-spacing: 1px;
 }
+@media (max-width: 900px) {
+    .tui-tab-bar {
+        overflow-x: auto;
+        padding-bottom: 5px; /* Space for scrollbar if any */
+        height: 50px;
+        scrollbar-width: none;
+    }
+
+    .tui-tab-bar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .tui-tab-bar::before,
+    .tui-tab-bar::after {
+        display: none;
+    }
+    
+    .tui-tab,
+    .tui-tab.active {
+        padding: 0 15px;
+        flex-shrink: 0;
+        height: 40px;
+    }
+    
+    .tab-name {
+        font-size: 0.75rem;
+    }
+}
 </style>

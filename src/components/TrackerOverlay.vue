@@ -50,8 +50,8 @@ const draw = () => {
     // Y-Logic:
     if (props.reflectionOnly && props.screenRect) {
         startY = props.screenRect.top;
-        // X-Logic: Match the inner data's visual position.
-        startX = props.screenRect.left + (canvas.width / 2);
+        // X-Logic: Center within the screen area
+        startX = props.screenRect.left + (props.screenRect.width / 2);
     }
 
     // --- DATA FETCH ---
@@ -139,21 +139,16 @@ const draw = () => {
         }
     }
     
-    // EDGE FADE MASK (Reflection Only)
-    // "Hide reflected line from absolute 0 to 40 and -40 to full width"
-    if (props.reflectionOnly) {
-        ctx.save();
-        ctx.globalCompositeOperation = 'destination-in';
-        ctx.fillStyle = '#000';
-        ctx.fillRect(65, 0, canvas.width - 130, canvas.height);
-        ctx.restore();
-    } else {
-        ctx.save();
-        ctx.globalCompositeOperation = 'destination-in';
-        ctx.fillStyle = '#000';
-        ctx.fillRect(15, 0, canvas.width - 130, canvas.height);
-        ctx.restore();
-    }
+    // EDGE FADE MASK
+    // Proportional side margins to prevent abrupt cutoff on side edges
+    const marginSide = canvas.width < 900 ? 5 : 65;
+    
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.fillStyle = '#000';
+    // Center the mask with the calculated margins
+    ctx.fillRect(marginSide, 0, canvas.width - (marginSide * 2), canvas.height);
+    ctx.restore();
     
     if (props.reflectionOnly) {
         ctx.filter = 'none';

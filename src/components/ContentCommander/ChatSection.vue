@@ -315,4 +315,39 @@ const formatTime = (isoString) => {
 
 .fade-leave-active { transition: opacity 0.5s; }
 .fade-leave-to { opacity: 0; }
+@media (max-width: 900px) {
+    .irc-container {
+        grid-template-columns: 1fr; /* Hide sidebar list */
+    }
+    .irc-sidebar {
+        display: none !important;
+    }
+    .irc-header .topic {
+        display: none !important; /* Hide topic for space */
+    }
+    .topic-meta {
+        font-size: 0.6rem;
+    }
+    .chan {
+        font-size: 0.8rem;
+    }
+    .msg-time {
+        font-size: 0.75rem;
+    }
+    .msg-text, .msg-user {
+        font-size: 0.85rem;
+    }
+    .irc-input-row {
+        padding: 10px;
+    }
+    .irc-input-row input {
+        font-size: 0.9rem;
+    }
+    .irc-log {
+        scrollbar-width: none;
+    }
+    .irc-log::-webkit-scrollbar {
+        display: none;
+    }
+}
 </style>

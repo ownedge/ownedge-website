@@ -201,22 +201,46 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 900px) {
     .manifesto-wrapper {
         grid-template-columns: 1fr;
+        gap: 25px;
+    }
+
+    .section-content h3 {
+        font-size: 1.1rem;
+        margin-bottom: 15px;
     }
     
     .ceo-profile {
-        align-items: flex-start;
+        align-items: center;
+        text-align: center;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255,255,255,0.1);
     }
     
     .signature {
-        text-align: left;
+        text-align: center;
+        margin-top: 10px;
+        padding-right: 0;
     }
-}
 
-@media (max-width: 768px) {
-    .trend-statement {
+    .manifesto-content p {
+        font-size: 0.95rem;
+        margin-bottom: 15px;
+    }
+
+    .manifesto-content p.highlight {
+        font-size: 1.1rem;
+        padding-left: 15px;
+        margin-bottom: 20px;
+    }
+
+    .ceo-photo {
+        width: 150px;
+    }
+
+    .signature-line {
         font-size: 1.1rem;
     }
 }

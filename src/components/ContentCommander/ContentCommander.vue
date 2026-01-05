@@ -252,13 +252,23 @@ onUnmounted(() => {
 }
 
 /* Mobile Responsive */
-@media (max-width: 768px) {
-    .tui-tab-bar {
-        overflow-x: auto;
-        padding-bottom: 5px;
+@media (max-width: 900px) {
+    .tui-viewport {
+        padding: 20px 15px;
+        font-size: 1rem;
+        scrollbar-width: none;
     }
-    .tui-tab {
-        flex-shrink: 0;
+
+    .tui-viewport::-webkit-scrollbar {
+        display: none;
+    }
+
+    .tui-footer {
+        display: none !important;
+    }
+
+    .tui-container {
+        padding: 0;
     }
 }
 </style>

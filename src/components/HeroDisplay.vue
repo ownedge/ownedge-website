@@ -272,4 +272,22 @@ onUnmounted(() => {
   50% { opacity: 1; }
   100% { transform: rotate(45deg) translate(10px, 10px); opacity: 0; }
 }
+@media (max-width: 900px) {
+  .title {
+    font-size: 13.5vw;
+    margin-bottom: 10px;
+  }
+  .subtitle {
+    font-size: 1.0rem;
+  }
+  .content {
+    margin-top: -5vh; 
+  }
+  .logo-img {
+    width: 45vw;
+  }
+  .scroll-indicator {
+    bottom: 30px;
+  }
+}
 </style>

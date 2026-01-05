@@ -533,9 +533,20 @@ onUnmounted(() => {
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .entries-grid {
         grid-template-columns: 1fr;
+        scrollbar-width: none;
+    }
+    .entries-grid::-webkit-scrollbar {
+        display: none;
+    }
+    .section-content h3 {
+        font-size: 1.1rem;
+    }
+    .subtitle {
+        font-size: 0.9rem;
+        margin-bottom: 20px;
     }
 }
 </style>

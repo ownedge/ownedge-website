@@ -41,6 +41,7 @@ const startSelectionX = ref(0);
 const startSelectionY = ref(0);
 const currentSelectionX = ref(0);
 const currentSelectionY = ref(0);
+const isMobile = computed(() => windowWidth.value <= 900);
 
 const tabs = [
   { id: 'home', name: 'HOME' },
@@ -668,6 +669,7 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
     <!-- Fixed Status LEDs -->
     <!-- Extracted Controls (LEDs + Knobs) -->
     <CrtControls
+        class="crt-controls"
         v-model:volume="volume"
         v-model:brightness="brightness"
         v-model:contrast="contrast"
@@ -692,6 +694,7 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
     
     <!-- VFD Display (Extracted to component) -->
     <VfdDisplay 
+        class="vfd-display"
         :mode="vfdMode"
         :knob-info="vfdKnobInfo"
         :boot-state="vfdBootState"
@@ -762,7 +765,7 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
     </svg>
     
     <!-- Bezel Reflection Overlay -->
-    <TrackerOverlay :reflection-only="true" :screen-rect="screenRect" />
+    <TrackerOverlay class="bezel-reflection" :reflection-only="true" :screen-rect="screenRect" />
 
     <!-- Vintage Sony Sticker (Top Left) -->
     <div class="bezel-sticker">
@@ -1025,5 +1028,46 @@ const vfdBgColor = `hsl(188, 42%, 7%)`;
     -webkit-background-clip: text;
 }
 
-/* VFD Styles moved to VfdDisplay.vue */
+/* Mobile Responsiveness */
+@media screen and (max-width: 900px) {
+    .crt-wrapper {
+        padding: 0;
+        background: #000;
+    }
+
+    .crt-wrapper::after,
+    .bezel-sticker,
+    .bezel-reflection,
+    .vfd-label-box {
+        display: none !important;
+    }
+
+    /* Hide Hardware Components */
+    .crt-controls,
+    .vfd-display {
+        display: none !important;
+    }
+
+    .crt-screen {
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+        width: 100vw;
+        height: 100vh;
+    }
+
+    .app-container {
+        width: 100%;
+        height: 100%;
+        filter: brightness(v-bind(brightness*0.9)) contrast(v-bind(contrast)); /* Remove spherical-warp */
+    }
+
+    .scroll-content {
+        height: 100%;
+    }
+
+    .hero-section {
+        height: 100%; /* No peek on mobile to maximize content */
+    }
+}
 </style>

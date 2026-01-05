@@ -315,10 +315,15 @@ onUnmounted(() => {
 }
 
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+    .section-content h3 {
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+    }
+
     .business-layout {
         grid-template-columns: 1fr;
-        gap: 30px;
+        gap: 20px;
     }
     
     .business-menu {
@@ -326,13 +331,47 @@ onUnmounted(() => {
         border-right: none;
         border-bottom: 1px solid rgba(255,255,255,0.1);
         padding-right: 0;
-        padding-bottom: 15px;
+        padding-bottom: 10px;
         overflow-x: auto;
+        gap: 10px;
+        scrollbar-width: none;
+    }
+
+    .business-menu::-webkit-scrollbar {
+        display: none;
+    }
+
+    .menu-item {
+        font-size: 0.8rem;
+        padding: 5px;
+        flex-shrink: 0;
+    }
+
+    .tab-content h4 {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+    }
+
+    .tab-content p {
+        font-size: 0.95rem;
+    }
+
+    .service-grid {
+        grid-template-columns: 1fr !important;
+        gap: 15px;
+    }
+
+    .service-block h5 {
+        font-size: 0.95rem;
+    }
+
+    .service-block p {
+        font-size: 0.9rem;
     }
 
     .logo-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
+        gap: 12px;
     }
 }
 </style>

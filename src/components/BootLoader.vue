@@ -489,4 +489,15 @@ onUnmounted(() => {
   opacity: 0;
 }
 
+@media (max-width: 900px) {
+    .terminal-overlay {
+        padding: 20px;
+    }
+    .boot-line {
+        font-size: 0.8rem;
+    }
+    .popup-overlay {
+        width: 90%;
+    }
+}
 </style>
