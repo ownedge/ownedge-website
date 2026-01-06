@@ -30,9 +30,6 @@ const draw = () => {
     const ctx = canvas.getContext('2d', { alpha: true });
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    if (props.reflectionOnly) {
-        ctx.filter = 'blur(4px)'; // Apply blur in canvas instead of CSS for full-screen performance
-    }
     // Style
     ctx.font = '16px "Courier New", monospace';
     ctx.textAlign = 'center';
