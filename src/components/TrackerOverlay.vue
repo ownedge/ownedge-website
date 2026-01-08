@@ -12,6 +12,35 @@ const hasStarted = ref(false);
 const dataFadeProgress = ref(0); // 0 to 1 for smooth fade-in
 let animationFrameId = null;
 
+// Cache for channel strings to avoid re-fetching/decoding WASM every frame
+const rowCache = new Map();
+const getCachedRow = (pattern, row) => {
+    const key = `${pattern}:${row}`;
+    if (rowCache.has(key)) return rowCache.get(key);
+    
+    // Not in cache, fetch and store
+    // Note: This assumes pattern data is static (music doesn't change at runtime)
+    const channels = SoundManager.getPatternRowData(pattern, row) || [];
+    const formatted = (channels.length > 0 ? channels : ["???", "???", "???", "???"])
+        .map(c => c ? c.replace(/\.\.\./g, '...') : '...');
+    
+    // Limit cache size to avoid memory leaks over long sessions
+    if (rowCache.size > 2000) rowCache.clear();
+    
+    rowCache.set(key, formatted);
+    return formatted;
+};
+
+// Pre-calc styles
+const MAIN_COLOR = 'rgba(33, 241, 235)';
+const FADE_STYLES = Array.from({ length: 11 }, (_, i) => {
+    // offset 0 is special, handled separately
+    if (i === 0) return `rgba(33, 241, 235, 1)`;
+    const opacity = 0.7 - (i * 0.15);
+    return `rgba(33, 241, 235, ${Math.max(0, opacity)})`;
+});
+
+
 const draw = () => {
     const canvas = canvasRef.value;
     if (!canvas) {
@@ -30,8 +59,7 @@ const draw = () => {
     const ctx = canvas.getContext('2d', { alpha: true });
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Style
-    ctx.font = '16px "Courier New", monospace';
+    // Base Style
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
 
@@ -75,66 +103,80 @@ const draw = () => {
         animationFrameId = requestAnimationFrame(draw);
         return;
     }
+    
+    // Global Alpha for the whole visualizer fade-in
+    ctx.globalAlpha = dataFadeProgress.value;
 
-    for (let offset = 0; offset <= ROWS_TO_SHOW; offset++) {
-        // Reflection Only: Draw top row only (offset 0)
-        if (props.reflectionOnly && offset > 0) continue;
+    // --- RENDER ---
+    
+    // 1. Draw Active Row (High Impact)
+    // We treat offset 0 specially for glow effects
+    if (!props.reflectionOnly) {
+        const rowChannels = getCachedRow(currentPos.pattern, currentPos.row);
+        const channelStr = rowChannels.join('  ');
+        const str = `${String(currentPos.row).padStart(2,'0')} | ${channelStr}`;
         
-        let rPos = currentPos.row + offset;
-        let pPos = currentPos.pattern;
+        ctx.font = 'bold 16px "Courier New", monospace';
+        ctx.fillStyle = MAIN_COLOR;
         
-        // Handle Pattern Boundary Wrapping (Simple)
-        let channels = [];
+        // Glow Effect
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = MAIN_COLOR;
         
-        if (rPos >= 0 && rPos < (currentPos.numRows || 64)) {
-            channels = SoundManager.getPatternRowData(pPos, rPos) || [];
-            if (channels.length === 0) channels = ["???", "???", "???", "???"];
-        } else {
-            // Out of bounds
-            channels = ["", "", "", ""]; 
-        }
+        ctx.fillText(str, startX, startY);
+        
+        // Reset Shadow for subsequent draws
+        ctx.shadowBlur = 0;
+        ctx.shadowColor = 'transparent';
+    } else {
+        // Reflection Mode: Active Row
+        const rowChannels = getCachedRow(currentPos.pattern, currentPos.row);
+        const str = `${String(currentPos.row).padStart(2,'0')} | ${rowChannels.join('  ')}`;
+        
+        ctx.font = 'bold 16px "Courier New", monospace';
+        ctx.fillStyle = 'rgba(33, 241, 235, 0.5)';
+        
+        ctx.save();
+        ctx.translate(0, startY);
+        ctx.scale(1, -0.35); // Flip UP
+        ctx.fillText(str, startX +1, -4); 
+        ctx.restore();
+    }
+    
+    // 2. Draw Future Rows
+    // We skip offset 0 as it's already drawn
+    // Reflection Only: Draw top row only (offset 0), so we skip the loop entirely if reflecting
+    if (!props.reflectionOnly) {
+        ctx.font = '16px "Courier New", monospace'; // Reset font for loop
+        
+        for (let offset = 1; offset <= ROWS_TO_SHOW; offset++) {
+            let rPos = currentPos.row + offset;
+            let pPos = currentPos.pattern;
+            let rowsInPattern = currentPos.numRows || 64;
 
-        // Draw
-        // Normal: startY + offset*lineHeight
-        // Reflection: startY (screenTop) 
-        let y = startY + (offset * lineHeight);
-        
-        // Style
-        if (offset === 0) {
-            // Current Row
-            ctx.fillStyle = 'rgba(33, 241, 235)';
-            if (props.reflectionOnly) ctx.fillStyle = 'rgba(33, 241, 235, 0.5)'; // Stronger reflection
-            ctx.font = 'bold 16px "Courier New", monospace';
-        } else {
-            // Future Rows
-            // Fade out slightly
-            const opacity = 0.7 - (offset * 0.15);
-            ctx.fillStyle = `rgba(33, 241, 235, ${opacity})`;
-            ctx.font = '16px "Courier New", monospace';
-        }
-        
-        // Render
-        const channelStr = (channels || []).map(c => c ? c.replace(/\.\.\./g, '...') : '...').join('  ');
-        // If empty row (out of bounds), show structure or blank?
-        // Let's show blank if it's truly out of bounds, but keep alignment
-        if (channels[0] !== "") {
-            const str = `${String(rPos).padStart(2,'0')} | ${channelStr}`;
-            if (props.reflectionOnly) {
-                  // Mirror on Bezel
-                  ctx.save();
-                  ctx.translate(0, startY);
-                  ctx.scale(1, -0.35); // Flip UP
-                  ctx.fillText(str, startX +1, -4); // Small gap adjustment
-                  ctx.restore();
-             } else {
-                 // Normal - apply fade-in
-                 const prevAlpha = ctx.globalAlpha;
-                 ctx.globalAlpha = dataFadeProgress.value;
-                 ctx.fillText(str, startX, y);
-                 ctx.globalAlpha = prevAlpha;
-             }
+            // Simple Pattern Wrapping for visualization continuity
+            // If we go past end of pattern, just show empty or "???" to indicate boundary
+            let rowChannels = ["", "", "", ""]; 
+            
+            if (rPos < rowsInPattern) {
+               rowChannels = getCachedRow(pPos, rPos);
+            }
+            
+            // Optimization: Skip empty rows
+            if (rowChannels[0] === "") continue;
+
+            const y = startY + (offset * lineHeight);
+            
+            // Pre-calculated style
+            ctx.fillStyle = FADE_STYLES[offset] || FADE_STYLES[10];
+            
+            const str = `${String(rPos).padStart(2,'0')} | ${rowChannels.join('  ')}`;
+            ctx.fillText(str, startX, y);
         }
     }
+    
+    // Restore Alpha
+    ctx.globalAlpha = 1.0;
     
     // EDGE FADE MASK
     // Proportional side margins to prevent abrupt cutoff on side edges
@@ -142,19 +184,15 @@ const draw = () => {
     
     // EDGE FADE MASK (Reflection Only)
     // "Hide reflected line from absolute 0 to 40 and -40 to full width"
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.fillStyle = '#000';
     if (props.reflectionOnly) {
-        ctx.save();
-        ctx.globalCompositeOperation = 'destination-in';
-        ctx.fillStyle = '#000';
         ctx.fillRect(65, 0, canvas.width - (marginSide * 2), canvas.height);
-        ctx.restore();
     } else {
-        ctx.save();
-        ctx.globalCompositeOperation = 'destination-in';
-        ctx.fillStyle = '#000';
         ctx.fillRect(15, 0, canvas.width - (marginSide * 2), canvas.height);
-        ctx.restore();
     }
+    ctx.restore();
     
     animationFrameId = requestAnimationFrame(draw);
 };
@@ -165,8 +203,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
-    // Optional: Clear history on unmount? Or keep for persistency?
-    // window.trackerHistory = []; 
+    rowCache.clear();
 });
 </script>
 
@@ -182,12 +219,10 @@ onUnmounted(() => {
     top: 0; /* Align to top of screen */
     left: 0;
     width: 100%;
-    height: 80px; /* Constrained height */
+    height: 180px; /* Extended height to prevent cutoff of fade */
     pointer-events: none;
     z-index: 15; /* Behind content (20) but above generic BG/Grid (10) */
     overflow: hidden;
-    /* Optional: borders */
-    /* border-bottom: 1px solid rgba(64, 224, 208, 0.1); */
 }
 
 .tracker-overlay.reflection-mode {
@@ -196,7 +231,6 @@ onUnmounted(() => {
     width: 100vw;
     height: 100vh;
     opacity: 0.35; /* Lowered opacity */
-    /* filter: blur(4.45px); Moved to canvas context for performance */
     z-index: 100; 
 }
 
