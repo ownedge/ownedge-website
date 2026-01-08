@@ -8,8 +8,8 @@ const indexPath = path.join(distPath, 'index.html');
 
 // Define your application routes (matching App.vue)
 const routes = [
-    'business',
-    'about',
+    'what',
+    'why',
     'guestbook',
     'chat'
 ];
