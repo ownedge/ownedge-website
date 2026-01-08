@@ -45,8 +45,8 @@ const isMobile = computed(() => windowWidth.value <= 900);
 
 const tabs = [
   { id: 'home', name: 'HOME' },
-  { id: 'business', name: 'WHAT' },
-  { id: 'about', name: 'WHY' },
+  { id: 'what', name: 'WHAT' },
+  { id: 'why', name: 'WHY' },
   { id: 'guestbook', name: 'GUESTBOOK' },
   { id: 'chat', name: 'CHAT' }
 ];
@@ -416,8 +416,8 @@ const handleScroll = (e) => {
 
 const metadataMap = {
   home: { title: "Ownedge | Independent by Design", description: "Defying the establishment. A digital window for independent creators and builders." },
-  business: { title: "Ownedge | What We Do", description: "Exploring the boundaries of digital products, strategy, and engineering." },
-  about: { title: "Ownedge | Why We Exist", description: "The Ownedge manifesto: our vision for a more intentional, independent digital future." },
+  what: { title: "Ownedge | What We Do", description: "Exploring the boundaries of digital products, strategy, and engineering." },
+  why: { title: "Ownedge | Why We Exist", description: "The Ownedge manifesto: our vision for a more intentional, independent digital future." },
   guestbook: { title: "Ownedge | Leave Your Mark", description: "Sign the guestbook and join the lineage of terminal users." },
   chat: { title: "Ownedge | Terminal Cluster", description: "Communicate in real-time with other nodes connected to the Ownedge cluster." }
 };
@@ -436,18 +436,16 @@ const updateMetadata = (index) => {
 
 const routeMap = {
   '/': 0,
-  '/business': 1,
-  '/about': 2,
-  '/guestbook': 3,
-  '/chat': 4,
   '/what': 1,
-  '/why': 2
+  '/why': 2,
+  '/guestbook': 3,
+  '/chat': 4
 };
 
 const routePathByIndex = {
   0: '/',
-  1: '/business',
-  2: '/about',
+  1: '/what',
+  2: '/why',
   3: '/guestbook',
   4: '/chat'
 };

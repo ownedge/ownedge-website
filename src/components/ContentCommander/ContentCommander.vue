@@ -1,8 +1,8 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import SoundManager from '../../sfx/SoundManager';
-import AboutSection from './AboutSection.vue';
-import BusinessSection from './BusinessSection.vue';
+import WhySection from './WhySection.vue';
+import WhatSection from './WhatSection.vue';
 import BlogSection from './BlogSection.vue';
 import GuestbookSection from './GuestbookSection.vue';
 import ChatSection from './ChatSection.vue';
@@ -16,8 +16,8 @@ const props = defineProps({
 const emit = defineEmits(['update:activeIndex', 'reset-settings']);
 
 const sections = {
-  business: BusinessSection,
-  about: AboutSection,
+  what: WhatSection,
+  why: WhySection,
   guestbook: GuestbookSection,
   chat: ChatSection
 };
