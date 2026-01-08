@@ -436,14 +436,24 @@ const updateMetadata = (index) => {
 
 const routeMap = {
   '/': 0,
-  '/what': 1,
-  '/why': 2,
+  '/business': 1,
+  '/about': 2,
   '/guestbook': 3,
-  '/chat': 4
+  '/chat': 4,
+  '/what': 1,
+  '/why': 2
+};
+
+const routePathByIndex = {
+  0: '/',
+  1: '/business',
+  2: '/about',
+  3: '/guestbook',
+  4: '/chat'
 };
 
 const updateUrlFromIndex = (index) => {
-    const path = Object.keys(routeMap).find(key => routeMap[key] === index);
+    const path = routePathByIndex[index];
     if (path && window.location.pathname !== path) {
         history.pushState({ index }, '', path);
     }
