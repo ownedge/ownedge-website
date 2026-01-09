@@ -2,8 +2,6 @@
 import { ref, onMounted, onUnmounted, computed, nextTick, watch } from 'vue';
 import SoundManager from '../sfx/SoundManager';
 import { chatStore } from '../store/chatStore';
-// Use direct import for asset to get hashed URL
-import bootVideoUrl from '../assets/ownedge.mp4';
 
 const videoRef = ref(null);
 const canvasRef = ref(null);
@@ -228,7 +226,7 @@ onUnmounted(() => {
 <template>
   <div class="boot-loader">
     <video ref="videoRef" class="boot-video" autoplay muted loop playsinline>
-        <source :src="bootVideoUrl" type="video/mp4">
+        <source src="/ownedge.mp4" type="video/mp4">
     </video>
     
     <template v-if="!isBooted">
