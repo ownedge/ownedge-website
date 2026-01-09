@@ -1,6 +1,21 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, reactive } from 'vue';
 import SoundManager from '../sfx/SoundManager';
+
+const activeKeys = reactive({
+    ArrowUp: false,
+    ArrowDown: false,
+    ArrowLeft: false,
+    ArrowRight: false
+});
+
+const handleKeyDown = (e) => {
+    if (activeKeys.hasOwnProperty(e.key)) activeKeys[e.key] = true;
+};
+
+const handleKeyUp = (e) => {
+    if (activeKeys.hasOwnProperty(e.key)) activeKeys[e.key] = false;
+};
 
 const titleFull = "OWNEDGE";
 const titleText = ref("");
@@ -93,12 +108,17 @@ onMounted(() => {
 
   // Start decode effect immediately
   decodeEffect();
+  
+  window.addEventListener('keydown', handleKeyDown);
+  window.addEventListener('keyup', handleKeyUp);
 });
 
 onUnmounted(() => {
   if (observer) observer.disconnect();
   clearTimeout(typingTimeout);
   clearInterval(titleTimeout);
+  window.removeEventListener('keydown', handleKeyDown);
+  window.removeEventListener('keyup', handleKeyUp);
 });
 </script>
 
@@ -124,6 +144,55 @@ onUnmounted(() => {
     <div class="scroll-indicator">
       <div class="mouse-icon"></div>
       <div class="arrow-scroll"></div>
+    </div>
+
+    <div class="nav-hint">
+        <svg class="keyboard-svg" viewBox="0 0 280 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <g id="big-iso-key">
+                    <path d="M10 20 L50 40 L90 20 L50 0 Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M10 20 L10 35 L50 55 L90 35 L90 20" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M50 55 L50 40" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                </g>
+            </defs>
+
+            <!-- UP KEY (Centered on top row) -->
+            <g transform="translate(139, 39)">
+                <g class="key-inner" :class="{ active: activeKeys.ArrowUp }">
+                    <use href="#big-iso-key" />
+                    <path d="M40 25 L60 15" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M50 14 L60 15 L56 24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </g>
+            </g>
+
+            <!-- LEFT KEY (Bottom row left) -->
+            <g transform="translate(40, 40)">
+                <g class="key-inner" :class="{ active: activeKeys.ArrowLeft }">
+                    <use href="#big-iso-key" />
+                    <path d="M60 25 L40 15" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M50 14 L40 15 L44 24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </g>
+            </g>
+
+            <!-- DOWN KEY (Bottom row center) -->
+            <g transform="translate(90, 65)">
+                <g class="key-inner" :class="{ active: activeKeys.ArrowDown }">
+                    <use href="#big-iso-key" />
+                    <path d="M60 15 L40 25" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M50 26 L40 25 L44 16" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </g>
+            </g>
+
+            <!-- RIGHT KEY (Bottom row right) -->
+            <g transform="translate(140, 90)">
+                <g class="key-inner" :class="{ active: activeKeys.ArrowRight }">
+                    <use href="#big-iso-key" />
+                    <path d="M40 15 L60 25" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M50 26 L60 25 L56 16" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </g>
+            </g>
+        </svg>
+        <div class="hint-label">NAVIGATE</div>
     </div>
   </div>
 </template>
@@ -289,5 +358,69 @@ onUnmounted(() => {
   .scroll-indicator {
     bottom: 30px;
   }
+}
+
+.nav-hint {
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    font-family: var(--font-mono);
+    color: var(--color-accent);
+    opacity: 0;
+    animation: fadeInHint 1s ease-out 5s forwards;
+    pointer-events: none;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.keyboard-svg {
+    width: 120px;
+    height: auto;
+    stroke: var(--color-accent);
+    filter: drop-shadow(0 0 2px var(--color-accent));
+    /* Subtle breathing animation for keys */
+    animation: pulseKeys 4s ease-in-out infinite 5s;
+}
+
+.hint-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.2rem;
+    font-weight: bold;
+    text-shadow: 0 0 5px var(--color-accent);
+}
+
+@keyframes fadeInHint {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 0.8; transform: translateY(0); }
+}
+
+@keyframes pulseKeys {
+    0%, 100% { filter: drop-shadow(0 0 2px var(--color-accent)); }
+    50% { filter: drop-shadow(0 0 8px var(--color-accent)); }
+}
+
+@media (max-width: 900px) {
+    .nav-hint {
+        bottom: 20px;
+        right: 20px;
+    }
+    .keyboard-svg {
+        width: 90px;
+    }
+    .hint-label {
+        font-size: 0.6rem;
+    }
+}
+
+.key-inner {
+    transition: transform 0.1s ease-out;
+}
+.key-inner.active {
+    transform: translateY(4px);
+    transition: transform 0.05s ease-in;
+    filter: drop-shadow(0 0 8px var(--color-accent));
 }
 </style>
