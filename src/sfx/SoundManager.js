@@ -255,6 +255,31 @@ class SoundManager {
         osc.stop(t + 0.3);
     }
 
+    playGlitchSound() {
+        if (!this.ctx || this.isMuted) return;
+        const t = this.ctx.currentTime;
+        
+        // Series of 3-4 rapid noise/oscillator bursts
+        for (let i = 0; i < 4; i++) {
+            const burstTime = t + (i * 0.05);
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            
+            osc.type = Math.random() > 0.5 ? 'square' : 'sawtooth';
+            osc.frequency.setValueAtTime(Math.random() * 5000 + 2000, burstTime);
+            osc.frequency.exponentialRampToValueAtTime(100, burstTime + 0.04);
+            
+            gain.gain.setValueAtTime(0.05, burstTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, burstTime + 0.04);
+            
+            osc.connect(gain);
+            gain.connect(this.masterGain);
+            
+            osc.start(burstTime);
+            osc.stop(burstTime + 0.04);
+        }
+    }
+
     playSparkleSound() {
         if (!this.ctx || this.isMuted) return;
         const t = this.ctx.currentTime;

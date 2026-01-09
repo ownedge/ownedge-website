@@ -42,6 +42,7 @@ const selectTab = (index) => {
 
 // Keyboard Navigation
 const handleKeydown = (e) => {
+    if (e.defaultPrevented) return;
 
     // F-keys visual feedback
     if (e.key.startsWith('F')) {
@@ -51,16 +52,8 @@ const handleKeydown = (e) => {
         return;
     }
 
-    // Tab switching
-    if (e.key === 'ArrowRight' || e.key === 'Tab') {
-        e.preventDefault();
-        selectTab((props.activeIndex + 1) % props.tabs.length);
-        SoundManager.playTypingSound();
-    } else if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        selectTab((props.activeIndex - 1 + props.tabs.length) % props.tabs.length);
-        SoundManager.playTypingSound();
-    }
+    // Tab switching is handled globally by App.vue to ensure consistent behavior 
+    // and support for the Easter Egg navigation lock.
 
     // Content Scroll
     if (e.key === 'ArrowDown') {

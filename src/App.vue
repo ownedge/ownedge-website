@@ -8,7 +8,7 @@ import VfdDisplay from './components/VfdDisplay.vue'
 import CrtControls from './components/CrtControls.vue'
 import TrackerOverlay from './components/TrackerOverlay.vue'
 import NoiseOverlay from './components/NoiseOverlay.vue'
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { chatStore } from './store/chatStore';
 
 
@@ -107,6 +107,15 @@ const simulateHddActivity = () => {
     setTimeout(simulateHddActivity, 50 + Math.random() * 200);
 };
 
+const isUpHeld = ref(false);
+
+const handleGlobalKeyup = (e) => {
+  updateLockStates(e);
+  if (e.key === 'ArrowUp' || e.key === 'Up') {
+      isUpHeld.value = false;
+  }
+};
+
 onMounted(() => {
   window.addEventListener('mousemove', handleCombinedMouseMove);
   window.addEventListener('mouseup', endSelection);
@@ -129,7 +138,7 @@ onMounted(() => {
 
   // Monitor Lock States (keydown/up for CapsLock)
   window.addEventListener('keydown', updateLockStates);
-  window.addEventListener('keyup', updateLockStates);
+  window.addEventListener('keyup', handleGlobalKeyup);
   window.addEventListener('mousedown', handleGlobalMouseDown);
   
   simulateHddActivity();
@@ -317,8 +326,24 @@ onUnmounted(() => {
 
 const handleGlobalKeydown = (e) => {
   const isEscape = e.key === 'Escape' || e.key === 'Esc';
+  const isUpKey = e.key === 'ArrowUp' || e.key === 'Up';
 
-  // 1. Handle Skip/Reboot early (Safari Fix)
+  if (isUpKey) isUpHeld.value = true;
+
+  // 1. Check if we should block navigation (Easter Egg in progress)
+  // If Up is held AND the current key is NOT the Up key, we block navigation
+  if (isUpHeld.value && !isUpKey) {
+      const navKeys = ['ArrowRight', 'ArrowLeft', 'ArrowDown', 'Tab', 'Enter', 'Right', 'Left', 'Down'];
+      if (navKeys.includes(e.key)) {
+          // Prevent browser behavior like scrolling or tab switching
+          e.preventDefault();
+          // We return here to skip the tab selection logic below in this function,
+          // but we DON'T stop propagation so HeroDisplay.vue still sees the key.
+          return;
+      }
+  }
+
+  // 3. Handle Skip/Reboot early (Safari Fix)
   if (isEscape) {
       if (!isBooted.value) {
           // If NOT booted, Escape ALWAYS skips the BIOS/Dialup sequence
@@ -351,19 +376,19 @@ const handleGlobalKeydown = (e) => {
   const isAtTop = scrollContainer.scrollTop < window.innerHeight / 2;
 
   // 2. Tab Navigation (Centralized)
-  if (e.key === 'ArrowRight' || e.key === 'Tab') {
+  if (e.key === 'ArrowRight' || e.key === 'Right' || e.key === 'Tab') {
       e.preventDefault();
       const nextIndex = (activeTabIndex.value + 1) % tabs.length;
       handleTabSelect(nextIndex);
       SoundManager.playTypingSound();
-  } else if (e.key === 'ArrowLeft') {
+  } else if (e.key === 'ArrowLeft' || e.key === 'Left') {
       e.preventDefault();
       const prevIndex = (activeTabIndex.value - 1 + tabs.length) % tabs.length;
       handleTabSelect(prevIndex);
       SoundManager.playTypingSound();
   }
 
-  if (isAtTop && (e.key === 'ArrowDown' || e.key === 'Enter')) {
+  if (isAtTop && (e.key === 'ArrowDown' || e.key === 'Down' || e.key === 'Enter')) {
       // Move to the last active content tab (or Business)
       if (activeTabIndex.value === 0) {
           handleTabSelect(lastActiveContentTab.value);

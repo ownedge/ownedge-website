@@ -1,20 +1,96 @@
 <script setup>
-import { ref, onMounted, onUnmounted, reactive } from 'vue';
+import { ref, onMounted, onUnmounted, reactive, watch } from 'vue';
 import SoundManager from '../sfx/SoundManager';
 
 const activeKeys = reactive({
     ArrowUp: false,
     ArrowDown: false,
     ArrowLeft: false,
-    ArrowRight: false
+    ArrowRight: false,
+    // Support legacy names
+    Up: false,
+    Down: false,
+    Left: false,
+    Right: false
 });
 
+let comboStarted = false;
+
+const isUp = (k) => k === 'ArrowUp' || k === 'Up';
+const isDown = (k) => k === 'ArrowDown' || k === 'Down';
+const isLeft = (k) => k === 'ArrowLeft' || k === 'Left';
+const isRight = (k) => k === 'ArrowRight' || k === 'Right';
+
 const handleKeyDown = (e) => {
-    if (activeKeys.hasOwnProperty(e.key)) activeKeys[e.key] = true;
+    if (activeKeys.hasOwnProperty(e.key)) {
+        // Only start the combo if ArrowUp is the FIRST key to be pressed
+        const noOtherKeysDown = !activeKeys.ArrowUp && !activeKeys.Up && 
+                              !activeKeys.ArrowDown && !activeKeys.Down &&
+                              !activeKeys.ArrowLeft && !activeKeys.Left &&
+                              !activeKeys.ArrowRight && !activeKeys.Right;
+        
+        if (isUp(e.key) && noOtherKeysDown) {
+            comboStarted = true;
+        }
+        activeKeys[e.key] = true;
+    }
 };
 
 const handleKeyUp = (e) => {
-    if (activeKeys.hasOwnProperty(e.key)) activeKeys[e.key] = false;
+    if (activeKeys.hasOwnProperty(e.key)) {
+        activeKeys[e.key] = false;
+        // If ArrowUp is released, the combo is broken
+        if (isUp(e.key)) {
+            comboStarted = false;
+        }
+    }
+};
+
+// Explosion Logic
+const explosionStyles = ref([]);
+
+// Watch for the "Konami-ish" all-arrows press
+watch(activeKeys, () => {
+    const up = activeKeys.ArrowUp || activeKeys.Up;
+    const down = activeKeys.ArrowDown || activeKeys.Down;
+    const left = activeKeys.ArrowLeft || activeKeys.Left;
+    const right = activeKeys.ArrowRight || activeKeys.Right;
+
+    if (comboStarted && up && down && left && right) {
+        triggerExplosion();
+        comboStarted = false; // Reset after successful trigger
+    }
+});
+
+const triggerExplosion = () => {
+    if (explosionStyles.value.length === 0 || explosionStyles.value.length !== titleText.value.length) {
+        // Init styles if needed (should match length)
+        explosionStyles.value = new Array(titleText.value.length).fill({});
+    }
+
+    // Explode
+    SoundManager.playGlitchSound(); // Use glitch sound for impact
+    
+    // Generate random velocities
+    explosionStyles.value = titleText.value.split('').map(() => {
+        const rX = (Math.random() - 0.5) * 800; // Spread x
+        const rY = (Math.random() - 0.5) * 800; // Spread y
+        const rot = (Math.random() - 0.5) * 720; // Spin
+        return {
+            transform: `translate(${rX}px, ${rY}px) rotate(${rot}deg)`,
+            opacity: 0,
+            transition: 'transform 0.8s cubic-bezier(0.1, 0.7, 1.0, 0.1), opacity 0.8s ease-out'
+        };
+    });
+
+    // Reassemble
+    setTimeout(() => {
+       explosionStyles.value = titleText.value.split('').map(() => ({
+            transform: 'translate(0, 0) rotate(0deg)',
+            opacity: 1,
+            transition: 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)' // bouncier return
+       }));
+    }, 1000);
 };
 
 const titleFull = "OWNEDGE";
@@ -127,7 +203,12 @@ onUnmounted(() => {
     <div class="content">
       <h1 class="title">
         <span class="typing-wrapper">
-          {{ titleText }}
+          <span 
+            v-for="(char, i) in titleText" 
+            :key="i" 
+            class="char-span"
+            :style="explosionStyles[i]"
+          >{{ char }}</span>
         </span>
       </h1>
       <div class="large-counter" aria-hidden="true">
@@ -158,7 +239,7 @@ onUnmounted(() => {
 
             <!-- UP KEY (Centered on top row) -->
             <g transform="translate(139, 39)">
-                <g class="key-inner" :class="{ active: activeKeys.ArrowUp }">
+                <g class="key-inner" :class="{ active: activeKeys.ArrowUp || activeKeys.Up }">
                     <use href="#big-iso-key" />
                     <path d="M40 25 L60 15" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
                     <path d="M50 14 L60 15 L56 24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
@@ -167,7 +248,7 @@ onUnmounted(() => {
 
             <!-- LEFT KEY (Bottom row left) -->
             <g transform="translate(40, 40)">
-                <g class="key-inner" :class="{ active: activeKeys.ArrowLeft }">
+                <g class="key-inner" :class="{ active: activeKeys.ArrowLeft || activeKeys.Left }">
                     <use href="#big-iso-key" />
                     <path d="M60 25 L40 15" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
                     <path d="M50 14 L40 15 L44 24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
@@ -176,7 +257,7 @@ onUnmounted(() => {
 
             <!-- DOWN KEY (Bottom row center) -->
             <g transform="translate(90, 65)">
-                <g class="key-inner" :class="{ active: activeKeys.ArrowDown }">
+                <g class="key-inner" :class="{ active: activeKeys.ArrowDown || activeKeys.Down }">
                     <use href="#big-iso-key" />
                     <path d="M60 15 L40 25" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
                     <path d="M50 26 L40 25 L44 16" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
@@ -185,7 +266,7 @@ onUnmounted(() => {
 
             <!-- RIGHT KEY (Bottom row right) -->
             <g transform="translate(140, 90)">
-                <g class="key-inner" :class="{ active: activeKeys.ArrowRight }">
+                <g class="key-inner" :class="{ active: activeKeys.ArrowRight || activeKeys.Right }">
                     <use href="#big-iso-key" />
                     <path d="M40 15 L60 25" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
                     <path d="M50 26 L60 25 L56 16" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
@@ -235,6 +316,14 @@ onUnmounted(() => {
     0 0 30px rgba(255,255,255,0.3);
   /* Removed animation: fadeInUp since we are typing it now */
   min-height: 1.2em; /* Prevent layout shift */
+  display: flex;       /* Added centered flex for the spans */
+  justify-content: center; 
+}
+
+.char-span {
+    display: inline-block;
+    white-space: pre;
+    will-change: transform, opacity;
 }
 
 /* Rest of styles remain mostly same, just ensuring fadeInUp is not conflicting */
