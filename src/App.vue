@@ -365,8 +365,27 @@ const handleGlobalKeydown = (e) => {
 
   // 2. Ignore if typing in an input or textarea
   const target = e.target;
-  if (target.matches('input, textarea, [contenteditable="true"]')) {
-      return; 
+  const isInput = target.matches('input, textarea, [contenteditable="true"]');
+  if (isInput) {
+      // Allow navigation keys to pass through IF they are at the boundaries
+      // This lets users move the cursor within the chat/guestbook but still "pop out" to next tabs
+      const isNavKey = ['ArrowRight', 'ArrowLeft', 'Tab', 'Right', 'Left'].includes(e.key);
+      
+      if (isNavKey) {
+          if (e.key === 'Tab') {
+              // Tab always navigates
+          } else if (e.key === 'ArrowLeft' || e.key === 'Left') {
+              // Only navigate if cursor is at the very start
+              if (target.selectionStart !== 0 || target.selectionEnd !== 0) return;
+          } else if (e.key === 'ArrowRight' || e.key === 'Right') {
+              // Only navigate if cursor is at the very end
+              const valLen = target.value ? target.value.length : 0;
+              if (target.selectionStart !== valLen) return;
+          }
+      } else {
+          // Block all other keys (typing) from triggering global site actions
+          return;
+      }
   }
 
   // Check if we are currently at the top (Hero section)

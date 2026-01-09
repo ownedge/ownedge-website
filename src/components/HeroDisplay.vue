@@ -273,7 +273,7 @@ onUnmounted(() => {
                 </g>
             </g>
         </svg>
-        <div class="hint-label">NAVIGATE</div>
+        <div class="hint-label">Keyboard: ON</div>
     </div>
   </div>
 </template>
@@ -451,12 +451,12 @@ onUnmounted(() => {
 
 .nav-hint {
     position: absolute;
-    bottom: 40px;
+    bottom: 20px;
     right: 40px;
     font-family: var(--font-mono);
     color: var(--color-accent);
     opacity: 0;
-    animation: fadeInHint 1s ease-out 5s forwards;
+    animation: fadeInHint 1s ease-out 3.5s forwards;
     pointer-events: none;
     z-index: 50;
     display: flex;
@@ -493,14 +493,7 @@ onUnmounted(() => {
 
 @media (max-width: 900px) {
     .nav-hint {
-        bottom: 20px;
-        right: 20px;
-    }
-    .keyboard-svg {
-        width: 90px;
-    }
-    .hint-label {
-        font-size: 0.6rem;
+        display: none;
     }
 }
 

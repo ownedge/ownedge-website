@@ -40,6 +40,7 @@ const handleKnobDown = (e, type) => {
     document.addEventListener('mousemove', handleKnobMove);
     document.addEventListener('mouseup', handleKnobUp);
     e.preventDefault(); 
+    e.stopPropagation(); // Stop propagation to prevent selection marquee in App.vue
 };
 
 const handleKnobMove = (e) => {
