@@ -3,16 +3,16 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import SoundManager from '../../sfx/SoundManager';
 
 // Import logos
-import barclaysLogo from '../../assets/customers/barclays.jpg';
-import controlinvestLogo from '../../assets/customers/controlinvest.jpg';
-import copidataLogo from '../../assets/customers/copidata.jpeg';
-import fluxygenLogo from '../../assets/customers/fluxygen.png';
-import kabisaLogo from '../../assets/customers/kabisa.jpeg';
-import lithoformasLogo from '../../assets/customers/lithoformas.png';
-import philipsLogo from '../../assets/customers/philips.png';
-import thalesLogo from '../../assets/customers/thales.jpg';
+import barclaysLogo from '../../assets/collabs/barclays.jpg';
+import controlinvestLogo from '../../assets/collabs/controlinvest.jpg';
+import copidataLogo from '../../assets/collabs/copidata.jpeg';
+import fluxygenLogo from '../../assets/collabs/fluxygen.png';
+import kabisaLogo from '../../assets/collabs/kabisa.jpeg';
+import lithoformasLogo from '../../assets/collabs/lithoformas.png';
+import philipsLogo from '../../assets/collabs/philips.png';
+import thalesLogo from '../../assets/collabs/thales.jpg';
 
-const customers = [
+const collabs = [
   { name: 'BARCLAYS', logo: barclaysLogo },
   { name: 'CONTROLINVEST', logo: controlinvestLogo },
   { name: 'COPIDATA', logo: copidataLogo },
@@ -25,7 +25,7 @@ const customers = [
 
 const businessTabs = [
   { id: 'services', name: 'SERVICES' },
-  { id: 'customers', name: 'CUSTOMERS' }
+  { id: 'collabs', name: 'COLLABS' }
 ];
 
 const activeTabId = ref('services');
@@ -114,15 +114,15 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <div v-if="activeTabId === 'customers'" class="tab-content">
-          <h4>CUSTOMERS</h4>
-          <p>Past and present colaborations and partnerships.</p>
+        <div v-if="activeTabId === 'collabs'" class="tab-content">
+          <h4>COLLABS</h4>
+          <p>Past and present collaborations and partnerships.</p>
           <div class="logo-grid">
-            <div v-for="customer in customers" :key="customer.name" class="logo-item">
+            <div v-for="collab in collabs" :key="collab.name" class="logo-item">
               <div class="logo-plaque">
-                <img :src="customer.logo" />
+                <img :src="collab.logo" />
                 <div class="logo-overlay">
-                  <span class="overlay-name">{{ customer.name }}</span>
+                  <span class="overlay-name">{{ collab.name }}</span>
                 </div>
               </div>
             </div>
